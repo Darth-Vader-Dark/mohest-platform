@@ -1,0 +1,1352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ICT Administration — MoHEST Staff Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/enterprise.css">
+<link rel="stylesheet" href="assets/dashboard.css">
+<script src="assets/api.js"></script>
+</head>
+<body>
+<div class="shell" id="app">
+
+  <!-- ═══════════ SIDEBAR ═══════════ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">M</div>
+      <div class="brand-text">MoHEST Portal</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="label">Overview</div>
+      <div class="nav-item active" data-section="overview" onclick="showSection('overview',this)"><span class="ic">⊟</span> Dashboard</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="label">ICT · Administration</div>
+      <div class="nav-item" data-section="users" onclick="showSection('users',this)"><span class="ic">👤</span> User management</div>
+      <div class="nav-item" data-section="departments" onclick="showSection('departments',this)"><span class="ic">🏢</span> Departments</div>
+      <div class="nav-item" data-section="roles" onclick="showSection('roles',this)"><span class="ic">🛡️</span> Roles</div>
+      <div class="nav-item" data-section="audit" onclick="showSection('audit',this)"><span class="ic">📋</span> Audit logs</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="label">Public Site Content</div>
+      <div class="nav-item" data-section="news" onclick="showSection('news',this)"><span class="ic">📰</span> News articles</div>
+      <div class="nav-item" data-section="institutions" onclick="showSection('institutions',this)"><span class="ic">🏫</span> Institutions</div>
+      <div class="nav-item" data-section="scholarships" onclick="showSection('scholarships',this)"><span class="ic">🎓</span> Scholarships</div>
+      <div class="nav-item" data-section="leaders" onclick="showSection('leaders',this)"><span class="ic">👔</span> Leadership</div>
+    </div>
+
+    <div class="sidebar-foot">
+      <div class="avatar" id="sidebar-avatar"></div>
+      <div>
+        <div class="who" id="sidebar-name">—</div>
+        <div class="role" id="sidebar-role">ICT Administrator</div>
+      </div>
+      <div style="margin-left:auto; cursor:pointer; color:var(--ink-faint); font-size:16px;" onclick="logout()" title="Sign out">⏻</div>
+    </div>
+  </aside>
+
+  <!-- ═══════════ MAIN ═══════════ -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-right">
+        <div class="icon-btn-e" title="Notifications">🔔<span class="dot-badge"></span></div>
+        <button class="btn-sm" id="topbar-action-btn" style="display:none;" onclick="handleTopbarAction()"></button>
+      </div>
+    </div>
+
+    <!-- ─── OVERVIEW SECTION ─── -->
+    <div class="content" id="section-overview">
+      <div class="page-title">
+        <div>
+          <h1 id="welcome-heading">Welcome back</h1>
+          <div class="sub">Ministry of Higher Education, Science & Technology — ICT Control Panel</div>
+        </div>
+      </div>
+
+      <div class="kpi-grid" id="kpi-grid">
+        <div class="kpi-card">
+          <div class="label">Active staff accounts</div>
+          <div class="value mono" id="kpi-users">—</div>
+          <div class="delta up" id="kpi-users-sub">Loading...</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">Total audit events</div>
+          <div class="value mono" id="kpi-logs">—</div>
+          <div class="delta up" id="kpi-logs-sub">Loading...</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">News articles</div>
+          <div class="value mono" id="kpi-news">—</div>
+          <div class="delta up" id="kpi-news-sub">Loading...</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">Institutions registered</div>
+          <div class="value mono" id="kpi-inst">—</div>
+          <div class="delta up" id="kpi-inst-sub">Loading...</div>
+        </div>
+      </div>
+
+      <div class="panel-grid">
+        <div class="panel">
+          <div class="panel-head"><h3>Recent audit activity</h3><span class="link" onclick="showSection('audit',document.querySelector('[data-section=audit]'))">View all →</span></div>
+          <div id="overview-audit-feed"><div class="loading-row">Loading…</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Recent user accounts</h3><span class="link" onclick="showSection('users',document.querySelector('[data-section=users]'))">Manage →</span></div>
+          <div id="overview-users-feed"><div class="loading-row">Loading…</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── USERS SECTION ─── -->
+    <div class="content hidden" id="section-users">
+      <div class="page-title">
+        <div>
+          <h1>User Management</h1>
+          <div class="sub">Create, edit, reset passwords, and deactivate staff accounts.</div>
+        </div>
+        <button class="btn-primary" onclick="openUserModal()">+ New user</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3>All staff accounts</h3>
+          <input type="text" id="user-search" placeholder="Search by name or email…" class="search-inline" oninput="filterUsers(this.value)">
+        </div>
+        <table class="table-e">
+          <thead><tr><th>Name</th><th>Email</th><th>Department</th><th>Role</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+          <tbody id="users-tbody"><tr><td colspan="7" class="loading-cell">Loading users…</td></tr></tbody>
+        </table>
+        <div class="table-foot" id="users-foot"></div>
+      </div>
+    </div>
+
+    <!-- ─── AUDIT SECTION ─── -->
+    <div class="content hidden" id="section-audit">
+      <div class="page-title">
+        <div>
+          <h1>Audit Logs</h1>
+          <div class="sub">A read-only chronological record of all system events.</div>
+        </div>
+        <button class="btn-secondary" onclick="loadAuditLogs()">↻ Refresh</button>
+      </div>
+
+      <div class="panel">
+        <table class="table-e">
+          <thead><tr><th>Timestamp</th><th>Actor</th><th>Action</th><th>Entity</th><th>ID</th></tr></thead>
+          <tbody id="audit-tbody"><tr><td colspan="5" class="loading-cell">Loading audit logs…</td></tr></tbody>
+        </table>
+        <div class="table-foot" id="audit-foot">
+          <button class="btn-secondary btn-sm" id="audit-prev" onclick="auditPage(-1)" disabled>← Prev</button>
+          <span id="audit-page-info">Page 1</span>
+          <button class="btn-secondary btn-sm" id="audit-next" onclick="auditPage(1)">Next →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── DEPARTMENTS SECTION ─── -->
+    <div class="content hidden" id="section-departments">
+      <div class="page-title">
+        <div>
+          <h1>Departments</h1>
+          <div class="sub">Manage MoHEST institutional departments.</div>
+        </div>
+        <button class="btn-primary" onclick="openDeptModal()">+ New department</button>
+      </div>
+
+      <div class="panel">
+        <table class="table-e">
+          <thead><tr><th>Name</th><th>Code</th><th>Description</th><th>Parent Department</th><th>Actions</th></tr></thead>
+          <tbody id="dept-tbody"><tr><td colspan="5" class="loading-cell">Loading departments…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── ROLES SECTION ─── -->
+    <div class="content hidden" id="section-roles">
+      <div class="page-title">
+        <div>
+          <h1>Roles & Permissions</h1>
+          <div class="sub">Configure access control roles and associated permissions.</div>
+        </div>
+        <button class="btn-primary" onclick="openRoleModal()">+ New role</button>
+      </div>
+
+      <div class="panel">
+        <table class="table-e">
+          <thead><tr><th>Role Name</th><th>Description</th><th>Permissions</th><th>Type</th><th>Actions</th></tr></thead>
+          <tbody id="roles-tbody"><tr><td colspan="5" class="loading-cell">Loading roles…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── NEWS SECTION ─── -->
+    <div class="content hidden" id="section-news">
+      <div class="page-title">
+        <div>
+          <h1>News Articles</h1>
+          <div class="sub">Manage articles displayed on the public website.</div>
+        </div>
+        <button class="btn-primary" onclick="openNewsModal()">+ New article</button>
+      </div>
+
+      <div class="panel">
+        <table class="table-e">
+          <thead><tr><th>Title</th><th>Published</th><th>Lead?</th><th>Link</th><th>Actions</th></tr></thead>
+          <tbody id="news-tbody"><tr><td colspan="5" class="loading-cell">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── INSTITUTIONS SECTION ─── -->
+    <div class="content hidden" id="section-institutions">
+      <div class="page-title">
+        <div>
+          <h1>Institutions</h1>
+          <div class="sub">Higher education institutions listed on the public site.</div>
+        </div>
+        <button class="btn-primary" onclick="openInstModal()">+ Add institution</button>
+      </div>
+
+      <div class="panel">
+        <table class="table-e">
+          <thead><tr><th>Name</th><th>Category</th><th>State</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="inst-tbody"><tr><td colspan="5" class="loading-cell">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── SCHOLARSHIPS SECTION ─── -->
+    <div class="content hidden" id="section-scholarships">
+      <div class="page-title">
+        <div>
+          <h1>Scholarships</h1>
+          <div class="sub">Scholarship opportunities listed on the public site.</div>
+        </div>
+        <button class="btn-primary" onclick="openScholarModal()">+ Add scholarship</button>
+      </div>
+
+      <div class="panel">
+        <table class="table-e">
+          <thead><tr><th>Title</th><th>Country</th><th>Level</th><th>Deadline</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="scholar-tbody"><tr><td colspan="6" class="loading-cell">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── LEADERS SECTION ─── -->
+    <div class="content hidden" id="section-leaders">
+      <div class="page-title">
+        <div>
+          <h1>Leadership</h1>
+          <div class="sub">Ministry leadership profiles displayed on the public site.</div>
+        </div>
+        <button class="btn-primary" onclick="openLeaderModal()">+ Add leader</button>
+      </div>
+
+      <div class="panel">
+        <div id="leaders-grid" class="leaders-grid"><div class="loading-row">Loading…</div></div>
+      </div>
+    </div>
+
+  </div><!-- .main -->
+</div><!-- .shell -->
+
+<!-- ═══════════ MODALS ═══════════ -->
+<div class="modal-backdrop hidden" id="modal-backdrop" onclick="closeModal()"></div>
+
+<!-- User Modal -->
+<div class="modal hidden" id="user-modal">
+  <div class="modal-head">
+    <h2 id="user-modal-title">Create staff account</h2>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <form id="user-form" onsubmit="submitUserForm(event)">
+    <div class="form-grid-2">
+      <div class="field"><label>First name *</label><input id="u-firstName" required class="field-input"></div>
+      <div class="field"><label>Last name *</label><input id="u-lastName" required class="field-input"></div>
+    </div>
+    <div class="field"><label>Staff email *</label><input type="email" id="u-email" required placeholder="firstname.lastname@mohest.gov.ss" class="field-input"></div>
+    <div class="form-grid-2">
+      <div class="field"><label>Department *</label>
+        <select id="u-departmentId" class="field-select" required onchange="onUserDeptChange(this.value)"></select>
+      </div>
+      <div class="field"><label>Role *</label>
+        <select id="u-roleId" class="field-select" required></select>
+      </div>
+    </div>
+    <div class="form-grid-2">
+      <div class="field" id="u-password-container"><label>Temporary Password *</label><input type="password" id="u-password" required minlength="10" placeholder="Min 10 characters" class="field-input"></div>
+      <div class="field" id="u-status-container" style="display:none;"><label>Status</label>
+        <select id="u-isActive" class="field-select">
+          <option value="true">Active</option>
+          <option value="false">Inactive</option>
+        </select>
+      </div>
+    </div>
+    <div id="user-form-error" class="form-error hidden"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button type="submit" class="btn-primary" id="user-form-submit">Create account</button>
+    </div>
+  </form>
+</div>
+
+<!-- Reset Password Modal -->
+<div class="modal hidden" id="reset-pw-modal">
+  <div class="modal-head">
+    <h2>Reset password</h2>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <form id="reset-pw-form" onsubmit="submitResetPw(event)">
+    <div class="field"><label>New password *</label><input type="password" id="rp-password" required minlength="10" placeholder="Min 10 characters" class="field-input"></div>
+    <div id="reset-pw-error" class="form-error hidden"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button type="submit" class="btn-primary">Set new password</button>
+    </div>
+  </form>
+</div>
+
+<!-- News Modal -->
+<div class="modal hidden" id="news-modal">
+  <div class="modal-head">
+    <h2 id="news-modal-title">Add news article</h2>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <form id="news-form" onsubmit="submitNewsForm(event)">
+    <div class="field"><label>Title *</label><input id="n-title" required></div>
+    <div class="field"><label>Excerpt / summary</label><textarea id="n-excerpt" rows="3" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; resize:vertical;"></textarea></div>
+    <div class="form-grid-2">
+      <div class="field"><label>Published date</label><input type="date" id="n-publishedAt"></div>
+      <div class="field"><label>External link</label><input id="n-link" placeholder="https://…"></div>
+    </div>
+    <div class="field" style="display:flex; align-items:center; gap:8px;">
+      <input type="checkbox" id="n-isLead" style="width:auto;">
+      <label for="n-isLead" style="margin:0; font-weight:500;">Feature as lead story</label>
+    </div>
+    <div id="news-form-error" class="form-error hidden"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button type="submit" class="btn-primary" id="news-form-submit">Save article</button>
+    </div>
+  </form>
+</div>
+
+<!-- Institution Modal -->
+<div class="modal hidden" id="inst-modal">
+  <div class="modal-head">
+    <h2 id="inst-modal-title">Add institution</h2>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <form id="inst-form" onsubmit="submitInstForm(event)">
+    <div class="field"><label>Name *</label><input id="i-name" required></div>
+    <div class="form-grid-2">
+      <div class="field"><label>Category *</label>
+        <select id="i-category" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-family:inherit;">
+          <option value="university">University</option>
+          <option value="institute">Institute / Technical</option>
+          <option value="community_college">Community College</option>
+        </select>
+      </div>
+      <div class="field"><label>Type</label><input id="i-type" placeholder="Public / Private"></div>
+    </div>
+    <div class="form-grid-2">
+      <div class="field"><label>State / Region</label><input id="i-state"></div>
+      <div class="field"><label>Location (city)</label><input id="i-location"></div>
+    </div>
+    <div class="form-grid-2">
+      <div class="field"><label>Established year</label><input type="number" id="i-established" min="1900" max="2030"></div>
+      <div class="field"><label>Status</label>
+        <select id="i-status" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-family:inherit;">
+          <option value="Accredited">Accredited</option>
+          <option value="Provisional">Provisional</option>
+          <option value="Revoked">Revoked</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>Website</label><input id="i-website" placeholder="https://…"></div>
+    <div id="inst-form-error" class="form-error hidden"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button type="submit" class="btn-primary" id="inst-form-submit">Save institution</button>
+    </div>
+  </form>
+</div>
+
+<!-- Scholarship Modal -->
+<div class="modal hidden" id="scholar-modal">
+  <div class="modal-head">
+    <h2 id="scholar-modal-title">Add scholarship</h2>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <form id="scholar-form" onsubmit="submitScholarForm(event)">
+    <div class="field"><label>Title *</label><input id="s-title" required></div>
+    <div class="field"><label>Description</label><textarea id="s-description" rows="3" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; resize:vertical;"></textarea></div>
+    <div class="form-grid-2">
+      <div class="field"><label>Country *</label><input id="s-country" required></div>
+      <div class="field"><label>Fields of study *</label><input id="s-fields" required placeholder="e.g. Engineering, Medicine"></div>
+    </div>
+    <div class="form-grid-2">
+      <div class="field"><label>Level</label><input id="s-level" placeholder="Bachelor, Master, PhD"></div>
+      <div class="field"><label>Deadline</label><input type="date" id="s-deadline"></div>
+    </div>
+    <div class="form-grid-2">
+      <div class="field"><label>Status</label>
+        <select id="s-status" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-family:inherit;">
+          <option value="Open">Open</option>
+          <option value="Closed">Closed</option>
+          <option value="Upcoming">Upcoming</option>
+        </select>
+      </div>
+      <div class="field"><label>Link</label><input id="s-link" placeholder="https://…"></div>
+    </div>
+    <div id="scholar-form-error" class="form-error hidden"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button type="submit" class="btn-primary" id="scholar-form-submit">Save scholarship</button>
+    </div>
+  </form>
+</div>
+
+<!-- Leader Modal -->
+<div class="modal hidden" id="leader-modal">
+  <div class="modal-head">
+    <h2 id="leader-modal-title">Add leader</h2>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <form id="leader-form" onsubmit="submitLeaderForm(event)">
+    <div class="form-grid-2">
+      <div class="field"><label>Full name *</label><input id="l-name" required></div>
+      <div class="field"><label>Title / Position *</label><input id="l-title" required placeholder="e.g. Minister"></div>
+    </div>
+    <div class="field"><label>Directorate</label><input id="l-directorate" placeholder="e.g. Higher Education"></div>
+    <div class="field"><label>Bio</label><textarea id="l-bio" rows="3" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; resize:vertical;"></textarea></div>
+    <div class="field"><label>Profile photo</label>
+      <input type="file" id="l-photoFile" accept="image/jpeg,image/png,image/webp,image/gif" class="field-input">
+      <div id="l-photo-preview" style="margin-top:8px; display:none;">
+        <img id="l-photo-preview-img" alt="Preview" style="width:80px; height:80px; object-fit:cover; border-radius:50%; border:1px solid var(--border);">
+      </div>
+      <input type="hidden" id="l-photoUrl">
+    </div>
+    <div id="leader-form-error" class="form-error hidden"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button type="submit" class="btn-primary" id="leader-form-submit">Save leader</button>
+    </div>
+  </form>
+</div>
+
+<!-- Department Modal -->
+<div class="modal hidden" id="dept-modal">
+  <div class="modal-head">
+    <h2 id="dept-modal-title">Create department</h2>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <form id="dept-form" onsubmit="submitDeptForm(event)">
+    <div class="form-grid-2">
+      <div class="field"><label>Department Name *</label><input id="d-name" required placeholder="e.g. Higher Education Standards" class="field-input"></div>
+      <div class="field"><label>Code *</label><input id="d-code" required placeholder="e.g. HES" class="field-input"></div>
+    </div>
+    <div class="field"><label>Description</label><textarea id="d-description" rows="3" placeholder="Department responsibilities and mandate..." style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; resize:vertical;"></textarea></div>
+    <div class="field"><label>Parent Department</label>
+      <select id="d-parentId" class="field-select"></select>
+    </div>
+    <div id="dept-form-error" class="form-error hidden"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button type="submit" class="btn-primary" id="dept-form-submit">Create department</button>
+    </div>
+  </form>
+</div>
+
+<!-- Role Modal -->
+<div class="modal hidden" id="role-modal">
+  <div class="modal-head">
+    <h2 id="role-modal-title">Create role</h2>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <form id="role-form" onsubmit="submitRoleForm(event)">
+    <div class="field"><label>Role Name *</label><input id="r-name" required placeholder="e.g. Standards Officer" class="field-input"></div>
+    <div class="field"><label>Description</label><textarea id="r-description" rows="2" placeholder="Brief role description..." style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; resize:vertical;"></textarea></div>
+    <div class="field">
+      <label>Permissions</label>
+      <div id="role-permissions-checkboxes" style="max-height: 200px; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; padding: 12px; display: grid; gap: 8px;">
+        <!-- Dynamically populated checkboxes -->
+      </div>
+    </div>
+    <div id="role-form-error" class="form-error hidden"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button type="submit" class="btn-primary" id="role-form-submit">Create role</button>
+    </div>
+  </form>
+</div>
+
+<!-- Confirm delete modal -->
+<div class="modal hidden modal-sm" id="confirm-modal">
+  <div class="modal-head"><h2>Confirm delete</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+  <p id="confirm-text" style="color:var(--ink-soft); font-size:13.5px;">Are you sure you want to delete this record? This action cannot be undone.</p>
+  <div class="modal-foot">
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-danger" id="confirm-ok-btn">Delete</button>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<script>
+const API = window.MOHEST_API;
+let token = '';
+let currentUser = null;
+let allUsers = [];
+let allDepartments = [];
+let allRoles = [];
+let departmentList = [];
+let roleList = [];
+let auditOffset = 0;
+const auditLimit = 25;
+let auditTotal = 0;
+let editingUserId = null;
+let editingNewsId = null;
+let editingInstId = null;
+let editingScholarId = null;
+let editingLeaderId = null;
+let resetPwTargetId = null;
+
+// ── Bootstrap ──────────────────────────────────────────────
+(async function init() {
+  token = localStorage.getItem('accessToken');
+  const userRaw = localStorage.getItem('user');
+  if (!token || !userRaw) { window.location.href = 'login.html'; return; }
+  currentUser = JSON.parse(userRaw);
+  const dept = currentUser.department ? currentUser.department.code : '';
+  if (dept !== 'ICT') { window.location.href = 'login.html'; return; }
+
+  document.getElementById('sidebar-name').textContent =
+    `${currentUser.firstName} ${currentUser.lastName}`;
+  document.getElementById('sidebar-role').textContent =
+    currentUser.roles && currentUser.roles.length ? currentUser.roles[0] : 'ICT Staff';
+  document.getElementById('welcome-heading').textContent =
+    `Welcome back, ${currentUser.firstName}`;
+
+  await Promise.all([
+    fetchRolesAndDepartments(),
+    loadOverviewKPIs(),
+    loadOverviewActivity(),
+    loadOverviewUsers()
+  ]);
+})();
+
+function authHeaders() {
+  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+}
+
+function logout() {
+  localStorage.clear();
+  window.location.href = 'login.html';
+}
+
+// ── Fetch Roles & Departments ────────────────────────────────
+async function fetchRolesAndDepartments() {
+  try {
+    const [deptRes, rolesRes] = await Promise.all([
+      fetch(`${API}/departments`, { headers: authHeaders() }),
+      fetch(`${API}/roles`, { headers: authHeaders() })
+    ]);
+    if (!deptRes.ok) throw new Error('Could not load departments');
+    if (!rolesRes.ok) throw new Error('Could not load roles');
+    allDepartments = await deptRes.json();
+    allRoles = await rolesRes.json();
+    departmentList = allDepartments;
+    roleList = allRoles;
+    
+    const deptSelect = document.getElementById('u-departmentId');
+    deptSelect.innerHTML = '<option value="">Select Department...</option>' + 
+      allDepartments.map(d => `<option value="${d.id}">${d.name} (${d.code})</option>`).join('');
+      
+    onUserDeptChange('');
+  } catch (e) {
+    console.error('Error fetching roles and departments', e);
+  }
+}
+
+function onUserDeptChange(deptId) {
+  const roleSelect = document.getElementById('u-roleId');
+  if (!deptId) {
+    roleSelect.innerHTML = '<option value="">Select department first...</option>';
+    return;
+  }
+  const dept = allDepartments.find(d => d.id === deptId);
+  const filtered = dept && dept.code === 'HR'
+    ? allRoles.filter(r => r.name !== 'ICT Administrator')
+    : allRoles;
+  roleSelect.innerHTML = '<option value="">Select role...</option>' +
+    filtered.map(r => `<option value="${r.id}">${r.name}</option>`).join('');
+}
+
+// ── Navigation ──────────────────────────────────────────────
+function showSection(id, el) {
+  document.querySelectorAll('.content').forEach(s => s.classList.add('hidden'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + id).classList.remove('hidden');
+  if (el) el.classList.add('active');
+
+  const titles = {
+    overview: 'Dashboard', users: 'User Management', audit: 'Audit Logs',
+    news: 'News Articles', institutions: 'Institutions',
+    scholarships: 'Scholarships', leaders: 'Leadership',
+    departments: 'Departments', roles: 'Roles & Permissions',
+  };
+  document.getElementById('topbar-title').textContent = titles[id] || id;
+
+  if (id === 'users') loadUsers();
+  if (id === 'departments') loadDepartments();
+  if (id === 'roles') loadRoles();
+  if (id === 'audit') loadAuditLogs();
+  if (id === 'news') loadNews();
+  if (id === 'institutions') loadInstitutions();
+  if (id === 'scholarships') loadScholarships();
+  if (id === 'leaders') loadLeaders();
+}
+
+// ── KPIs / Overview ─────────────────────────────────────────
+async function loadOverviewKPIs() {
+  try {
+    const [usersRes, logsRes, newsRes, instRes] = await Promise.all([
+      fetch(`${API}/users`, { headers: authHeaders() }),
+      fetch(`${API}/audit-logs?limit=1`, { headers: authHeaders() }),
+      fetch(`${API}/public-site/news-articles`, { headers: authHeaders() }),
+      fetch(`${API}/public-site/institutions`, { headers: authHeaders() }),
+    ]);
+    const users = await usersRes.json();
+    const logs  = await logsRes.json();
+    const news  = await newsRes.json();
+    const inst  = await instRes.json();
+
+    document.getElementById('kpi-users').textContent = Array.isArray(users) ? users.length : '—';
+    document.getElementById('kpi-users-sub').textContent = 'Staff accounts';
+    document.getElementById('kpi-logs').textContent = logs.total ?? '—';
+    document.getElementById('kpi-logs-sub').textContent = 'System events logged';
+    document.getElementById('kpi-news').textContent = Array.isArray(news) ? news.length : '—';
+    document.getElementById('kpi-news-sub').textContent = 'Articles on public site';
+    document.getElementById('kpi-inst').textContent = Array.isArray(inst) ? inst.length : '—';
+    document.getElementById('kpi-inst-sub').textContent = 'Accredited institutions';
+  } catch(e) { console.error('KPI load error', e); }
+}
+
+async function loadOverviewActivity() {
+  try {
+    const res = await fetch(`${API}/audit-logs?limit=5`, { headers: authHeaders() });
+    const data = await res.json();
+    const feed = document.getElementById('overview-audit-feed');
+    if (!data.logs || !data.logs.length) {
+      feed.innerHTML = '<div class="empty-state">No audit events yet.</div>'; return;
+    }
+    feed.innerHTML = data.logs.map(l => `
+      <div class="activity-item">
+        <div class="activity-dot"></div>
+        <div>
+          <div>${l.action} on ${l.entityType || '—'}</div>
+          <div class="t">${fmtDate(l.createdAt)} · ${l.user ? l.user.firstName+' '+l.user.lastName : 'System'}</div>
+        </div>
+      </div>`).join('');
+  } catch(e) {}
+}
+
+async function loadOverviewUsers() {
+  try {
+    const res = await fetch(`${API}/users`, { headers: authHeaders() });
+    const users = await res.json();
+    const feed = document.getElementById('overview-users-feed');
+    if (!users.length) { feed.innerHTML = '<div class="empty-state">No users yet.</div>'; return; }
+    feed.innerHTML = users.slice(0,4).map(u => `
+      <div class="activity-item">
+        <div class="mini-avatar">${u.firstName[0]}${u.lastName[0]}</div>
+        <div>
+          <div>${u.firstName} ${u.lastName}</div>
+          <div class="t">${u.email}</div>
+        </div>
+        <span class="badge-e ${u.isActive ? 'success' : 'danger'}" style="margin-left:auto;">${u.isActive ? 'Active' : 'Inactive'}</span>
+      </div>`).join('');
+  } catch(e) {}
+}
+
+// ── Users ────────────────────────────────────────────────────
+async function loadUsers() {
+  try {
+    const res = await fetch(`${API}/users`, { headers: authHeaders() });
+    allUsers = await res.json();
+    renderUsers(allUsers);
+  } catch(e) {
+    document.getElementById('users-tbody').innerHTML = `<tr><td colspan="7" class="loading-cell">Error loading users.</td></tr>`;
+  }
+}
+
+function renderUsers(users) {
+  const tbody = document.getElementById('users-tbody');
+  if (!users.length) { tbody.innerHTML = `<tr><td colspan="7" class="loading-cell">No users found.</td></tr>`; return; }
+  tbody.innerHTML = users.map(u => {
+    const roleNames = (u.roles && u.roles.length) ? u.roles.map(ur => ur.role.name).join(', ') : '—';
+    return `
+      <tr>
+        <td><span class="mini-avatar-inline">${u.firstName[0]}${u.lastName[0]}</span>${u.firstName} ${u.lastName}</td>
+        <td class="mono" style="font-size:12px;">${u.email}</td>
+        <td>${u.department ? u.department.name || u.department.code : '—'}</td>
+        <td>${roleNames}</td>
+        <td><span class="badge-e ${u.isActive ? 'success' : 'danger'}">${u.isActive ? 'Active' : 'Inactive'}</span></td>
+        <td class="mono" style="font-size:12px;">${fmtDate(u.createdAt)}</td>
+        <td>
+          <button class="action-btn" onclick="editUser('${u.id}')" title="Edit User">✏️</button>
+          <button class="action-btn" onclick="openResetPwModal('${u.id}', '${u.firstName} ${u.lastName}')" title="Reset Password">🔑</button>
+          <button class="action-btn danger" onclick="confirmDelete('user','${u.id}','Delete user ${u.firstName} ${u.lastName}?')" title="Delete User">🗑</button>
+        </td>
+      </tr>`;
+  }).join('');
+}
+
+function filterUsers(q) {
+  const filtered = allUsers.filter(u =>
+    `${u.firstName} ${u.lastName} ${u.email}`.toLowerCase().includes(q.toLowerCase())
+  );
+  renderUsers(filtered);
+}
+
+function editUser(id) {
+  const user = allUsers.find(u => u.id === id);
+  if (user) openUserModal(user);
+}
+
+function openUserModal(user = null) {
+  editingUserId = user ? user.id : null;
+  document.getElementById('user-modal-title').textContent = user ? 'Edit staff account' : 'Create staff account';
+  document.getElementById('u-firstName').value = user ? user.firstName : '';
+  document.getElementById('u-lastName').value  = user ? user.lastName : '';
+  document.getElementById('u-email').value     = user ? user.email : '';
+  
+  if (user) {
+    document.getElementById('u-departmentId').value = user.departmentId || '';
+    onUserDeptChange(user.departmentId || '');
+    document.getElementById('u-roleId').value = (user.roles && user.roles.length) ? user.roles[0].role.id : '';
+    document.getElementById('u-password-container').style.display = 'none';
+    document.getElementById('u-password').required = false;
+    document.getElementById('u-status-container').style.display = 'block';
+    document.getElementById('u-isActive').value = user.isActive ? 'true' : 'false';
+  } else {
+    document.getElementById('u-departmentId').value = '';
+    onUserDeptChange('');
+    document.getElementById('u-roleId').value = '';
+    document.getElementById('u-password-container').style.display = 'block';
+    document.getElementById('u-password').required = true;
+    document.getElementById('u-status-container').style.display = 'none';
+    document.getElementById('u-isActive').value = 'true';
+  }
+  document.getElementById('u-password').value  = '';
+  document.getElementById('user-form-error').classList.add('hidden');
+  openModal('user-modal');
+}
+
+async function submitUserForm(e) {
+  e.preventDefault();
+  const btn = document.getElementById('user-form-submit');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  
+  const payload = {
+    firstName: document.getElementById('u-firstName').value,
+    lastName:  document.getElementById('u-lastName').value,
+    email:     document.getElementById('u-email').value,
+    departmentId: document.getElementById('u-departmentId').value || null,
+    roleIds: [document.getElementById('u-roleId').value]
+  };
+  
+  if (!editingUserId) {
+    payload.temporaryPassword = document.getElementById('u-password').value;
+  } else {
+    payload.isActive = document.getElementById('u-isActive').value === 'true';
+  }
+
+  try {
+    const url = editingUserId ? `${API}/users/${editingUserId}` : `${API}/users`;
+    const method = editingUserId ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(payload) });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.message || 'Error'); }
+    showToast('User saved successfully.');
+    closeModal(); loadUsers(); loadOverviewKPIs();
+  } catch(err) {
+    showFormError('user-form-error', err.message);
+  } finally { btn.disabled = false; btn.textContent = editingUserId ? 'Save changes' : 'Create account'; }
+}
+
+function openResetPwModal(userId, name) {
+  resetPwTargetId = userId;
+  document.querySelector('#reset-pw-modal .modal-head h2').textContent = `Reset password for ${name}`;
+  document.getElementById('rp-password').value = '';
+  document.getElementById('reset-pw-error').classList.add('hidden');
+  openModal('reset-pw-modal');
+}
+
+async function submitResetPw(e) {
+  e.preventDefault();
+  const btn = e.target.querySelector('[type=submit]');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  try {
+    const res = await fetch(`${API}/users/${resetPwTargetId}/reset-password`, {
+      method: 'PUT', headers: authHeaders(),
+      body: JSON.stringify({ temporaryPassword: document.getElementById('rp-password').value }),
+    });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.message || 'Error'); }
+    showToast('Password reset successfully.');
+    closeModal();
+  } catch(err) {
+    showFormError('reset-pw-error', err.message);
+  } finally { btn.disabled = false; btn.textContent = 'Set new password'; }
+}
+
+// ── Audit Logs ───────────────────────────────────────────────
+async function loadAuditLogs() {
+  try {
+    const res = await fetch(`${API}/audit-logs?limit=${auditLimit}&offset=${auditOffset}`, { headers: authHeaders() });
+    const data = await res.json();
+    auditTotal = data.total;
+    const tbody = document.getElementById('audit-tbody');
+    if (!data.logs.length) { tbody.innerHTML = `<tr><td colspan="5" class="loading-cell">No log entries found.</td></tr>`; return; }
+    tbody.innerHTML = data.logs.map(l => `
+      <tr>
+        <td class="mono" style="font-size:12px;">${fmtDateTime(l.createdAt)}</td>
+        <td>${l.user ? l.user.firstName+' '+l.user.lastName : '<span style="color:var(--ink-faint)">System</span>'}</td>
+        <td><span class="audit-action">${l.action}</span></td>
+        <td>${l.entityType || '—'}</td>
+        <td class="mono" style="font-size:11px; color:var(--ink-faint);">${(l.entityId||'').slice(0,8)}…</td>
+      </tr>`).join('');
+    const page = Math.floor(auditOffset / auditLimit) + 1;
+    const pages = Math.ceil(auditTotal / auditLimit);
+    document.getElementById('audit-page-info').textContent = `Page ${page} of ${pages || 1} (${auditTotal} total)`;
+    document.getElementById('audit-prev').disabled = auditOffset === 0;
+    document.getElementById('audit-next').disabled = auditOffset + auditLimit >= auditTotal;
+  } catch(e) {
+    document.getElementById('audit-tbody').innerHTML = `<tr><td colspan="5" class="loading-cell">Error loading logs.</td></tr>`;
+  }
+}
+
+function auditPage(dir) {
+  auditOffset = Math.max(0, auditOffset + dir * auditLimit);
+  loadAuditLogs();
+}
+
+// ── News ─────────────────────────────────────────────────────
+let newsList = [];
+async function loadNews() {
+  const res = await fetch(`${API}/public-site/news-articles`, { headers: authHeaders() });
+  newsList = await res.json();
+  const tbody = document.getElementById('news-tbody');
+  if (!newsList.length) { tbody.innerHTML = `<tr><td colspan="5" class="loading-cell">No articles yet.</td></tr>`; return; }
+  tbody.innerHTML = newsList.map(n => `
+    <tr>
+      <td style="max-width:320px;">${n.title}</td>
+      <td class="mono" style="font-size:12px;">${n.publishedAt ? fmtDate(n.publishedAt) : '—'}</td>
+      <td>${n.isLead ? '<span class="badge-e success">Yes</span>' : '<span class="badge-e" style="background:var(--bg)">No</span>'}</td>
+      <td>${n.link ? `<a href="${n.link}" target="_blank" style="color:var(--accent);">Open ↗</a>` : '—'}</td>
+      <td>
+        <button class="action-btn" onclick="openNewsModal('${n.id}')">✏️</button>
+        <button class="action-btn danger" onclick="confirmDelete('news','${n.id}','Delete article &quot;${n.title.replace(/"/g,'')}&quot;?')">🗑</button>
+      </td>
+    </tr>`).join('');
+}
+
+function openNewsModal(id = null) {
+  editingNewsId = id;
+  const article = id ? newsList.find(n => n.id === id) : null;
+  document.getElementById('news-modal-title').textContent = article ? 'Edit article' : 'Add news article';
+  document.getElementById('n-title').value       = article ? article.title : '';
+  document.getElementById('n-excerpt').value     = article ? (article.excerpt||'') : '';
+  document.getElementById('n-publishedAt').value = article && article.publishedAt ? article.publishedAt.slice(0,10) : '';
+  document.getElementById('n-link').value        = article ? (article.link||'') : '';
+  document.getElementById('n-isLead').checked    = article ? !!article.isLead : false;
+  document.getElementById('news-form-error').classList.add('hidden');
+  openModal('news-modal');
+}
+
+async function submitNewsForm(e) {
+  e.preventDefault();
+  const btn = document.getElementById('news-form-submit');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const payload = {
+    title: document.getElementById('n-title').value,
+    excerpt: document.getElementById('n-excerpt').value,
+    publishedAt: document.getElementById('n-publishedAt').value || null,
+    link: document.getElementById('n-link').value || null,
+    isLead: document.getElementById('n-isLead').checked,
+  };
+  try {
+    const url = editingNewsId ? `${API}/public-site/news-articles/${editingNewsId}` : `${API}/public-site/news-articles`;
+    const method = editingNewsId ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(payload) });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.message || 'Error'); }
+    showToast('Article saved.'); closeModal(); loadNews(); loadOverviewKPIs();
+  } catch(err) { showFormError('news-form-error', err.message); }
+  finally { btn.disabled = false; btn.textContent = 'Save article'; }
+}
+
+// ── Institutions ─────────────────────────────────────────────
+let instList = [];
+async function loadInstitutions() {
+  const res = await fetch(`${API}/public-site/institutions`, { headers: authHeaders() });
+  instList = await res.json();
+  const tbody = document.getElementById('inst-tbody');
+  if (!instList.length) { tbody.innerHTML = `<tr><td colspan="5" class="loading-cell">No institutions yet.</td></tr>`; return; }
+  tbody.innerHTML = instList.map(i => `
+    <tr>
+      <td style="font-weight:500;">${i.name}</td>
+      <td>${({'university':'University','institute':'Institute','community_college':'Community College'}[i.category] || i.category || '—')}</td>
+      <td>${i.state||'—'}</td>
+      <td><span class="badge-e ${i.status==='Accredited'?'success':i.status==='Provisional'?'warn':'danger'}">${i.status||'—'}</span></td>
+      <td>
+        <button class="action-btn" onclick="openInstModal('${i.id}')">✏️</button>
+        <button class="action-btn danger" onclick="confirmDelete('institution','${i.id}','Delete ${i.name}?')">🗑</button>
+      </td>
+    </tr>`).join('');
+}
+
+function openInstModal(id = null) {
+  editingInstId = id;
+  const inst = id ? instList.find(i => i.id === id) : null;
+  document.getElementById('inst-modal-title').textContent = inst ? 'Edit institution' : 'Add institution';
+  document.getElementById('i-name').value        = inst ? inst.name : '';
+  document.getElementById('i-category').value    = inst ? (inst.category||'university') : 'university';
+  document.getElementById('i-type').value        = inst ? (inst.type||'') : '';
+  document.getElementById('i-state').value       = inst ? (inst.state||'') : '';
+  document.getElementById('i-location').value    = inst ? (inst.location||'') : '';
+  document.getElementById('i-established').value = inst ? (inst.established||'') : '';
+  document.getElementById('i-status').value      = inst ? (inst.status||'Accredited') : 'Accredited';
+  document.getElementById('i-website').value     = inst ? (inst.website||'') : '';
+  document.getElementById('inst-form-error').classList.add('hidden');
+  openModal('inst-modal');
+}
+
+async function submitInstForm(e) {
+  e.preventDefault();
+  const btn = document.getElementById('inst-form-submit');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const payload = {
+    name: document.getElementById('i-name').value,
+    category: document.getElementById('i-category').value,
+    type: document.getElementById('i-type').value || null,
+    state: document.getElementById('i-state').value,
+    location: document.getElementById('i-location').value,
+    established: document.getElementById('i-established').value || null,
+    status: document.getElementById('i-status').value,
+    website: document.getElementById('i-website').value || null,
+  };
+  try {
+    const url = editingInstId ? `${API}/public-site/institutions/${editingInstId}` : `${API}/public-site/institutions`;
+    const method = editingInstId ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(payload) });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.message || 'Error'); }
+    showToast('Institution saved.'); closeModal(); loadInstitutions(); loadOverviewKPIs();
+  } catch(err) { showFormError('inst-form-error', err.message); }
+  finally { btn.disabled = false; btn.textContent = 'Save institution'; }
+}
+
+// ── Scholarships ─────────────────────────────────────────────
+let scholarList = [];
+async function loadScholarships() {
+  const res = await fetch(`${API}/public-site/scholarships`, { headers: authHeaders() });
+  scholarList = await res.json();
+  const tbody = document.getElementById('scholar-tbody');
+  if (!scholarList.length) { tbody.innerHTML = `<tr><td colspan="6" class="loading-cell">No scholarships yet.</td></tr>`; return; }
+  tbody.innerHTML = scholarList.map(s => `
+    <tr>
+      <td style="font-weight:500; max-width:260px;">${s.title}</td>
+      <td>${s.country||'—'}</td>
+      <td>${s.level||'—'}</td>
+      <td class="mono" style="font-size:12px;">${s.deadline ? fmtDate(s.deadline) : '—'}</td>
+      <td><span class="badge-e ${s.status==='Open'?'success':s.status==='Upcoming'?'warn':'danger'}">${s.status||'—'}</span></td>
+      <td>
+        <button class="action-btn" onclick="openScholarModal('${s.id}')">✏️</button>
+        <button class="action-btn danger" onclick="confirmDelete('scholarship','${s.id}','Delete this scholarship?')">🗑</button>
+      </td>
+    </tr>`).join('');
+}
+
+function openScholarModal(id = null) {
+  editingScholarId = id;
+  const s = id ? scholarList.find(x => x.id === id) : null;
+  document.getElementById('scholar-modal-title').textContent = s ? 'Edit scholarship' : 'Add scholarship';
+  document.getElementById('s-title').value       = s ? s.title : '';
+  document.getElementById('s-description').value = s ? (s.description||'') : '';
+  document.getElementById('s-country').value     = s ? s.country : '';
+  document.getElementById('s-fields').value      = s ? s.fields : '';
+  document.getElementById('s-level').value       = s ? (s.level||'') : '';
+  document.getElementById('s-deadline').value    = s && s.deadline ? s.deadline.slice(0,10) : '';
+  document.getElementById('s-status').value      = s ? (s.status||'Open') : 'Open';
+  document.getElementById('s-link').value        = s ? (s.link||'') : '';
+  document.getElementById('scholar-form-error').classList.add('hidden');
+  openModal('scholar-modal');
+}
+
+async function submitScholarForm(e) {
+  e.preventDefault();
+  const btn = document.getElementById('scholar-form-submit');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const payload = {
+    title: document.getElementById('s-title').value,
+    description: document.getElementById('s-description').value || null,
+    country: document.getElementById('s-country').value,
+    fields: document.getElementById('s-fields').value,
+    level: document.getElementById('s-level').value || null,
+    deadline: document.getElementById('s-deadline').value || null,
+    status: document.getElementById('s-status').value,
+    link: document.getElementById('s-link').value || null,
+  };
+  try {
+    const url = editingScholarId ? `${API}/public-site/scholarships/${editingScholarId}` : `${API}/public-site/scholarships`;
+    const method = editingScholarId ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(payload) });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.message || 'Error'); }
+    showToast('Scholarship saved.'); closeModal(); loadScholarships();
+  } catch(err) { showFormError('scholar-form-error', err.message); }
+  finally { btn.disabled = false; btn.textContent = 'Save scholarship'; }
+}
+
+// ── Leaders ───────────────────────────────────────────────────
+let leaderList = [];
+async function loadLeaders() {
+  const res = await fetch(`${API}/public-site/leaders`, { headers: authHeaders() });
+  leaderList = await res.json();
+  const grid = document.getElementById('leaders-grid');
+  if (!leaderList.length) { grid.innerHTML = '<div class="empty-state">No leaders yet. Add one above.</div>'; return; }
+  grid.innerHTML = leaderList.map(l => `
+    <div class="leader-card">
+      <div class="leader-photo">${l.photoUrl ? `<img src="${resolveAssetUrl(l.photoUrl)}" alt="${l.name}" onerror="this.style.display='none'">` : l.name[0]}</div>
+      <div class="leader-info">
+        <div style="font-weight:600;">${l.name}</div>
+        <div style="font-size:12.5px; color:var(--ink-soft);">${l.title}</div>
+        ${l.directorate ? `<div style="font-size:12px; color:var(--ink-faint); margin-top:2px;">${l.directorate}</div>` : ''}
+      </div>
+      <div class="leader-actions">
+        <button class="action-btn" onclick="openLeaderModal('${l.id}')">✏️</button>
+        <button class="action-btn danger" onclick="confirmDelete('leader','${l.id}','Delete ${l.name}?')">🗑</button>
+      </div>
+    </div>`).join('');
+}
+
+function openLeaderModal(id = null) {
+  editingLeaderId = id;
+  const l = id ? leaderList.find(x => x.id === id) : null;
+  document.getElementById('leader-modal-title').textContent = l ? 'Edit leader' : 'Add leader';
+  document.getElementById('l-name').value        = l ? l.name : '';
+  document.getElementById('l-title').value       = l ? l.title : '';
+  document.getElementById('l-directorate').value = l ? (l.directorate||'') : '';
+  document.getElementById('l-bio').value         = l ? (l.bio||'') : '';
+  document.getElementById('l-photoUrl').value    = l ? (l.photoUrl||'') : '';
+  document.getElementById('l-photoFile').value   = '';
+  const preview = document.getElementById('l-photo-preview');
+  const previewImg = document.getElementById('l-photo-preview-img');
+  if (l && l.photoUrl) {
+    preview.style.display = 'block';
+    previewImg.src = resolveAssetUrl(l.photoUrl);
+  } else {
+    preview.style.display = 'none';
+    previewImg.removeAttribute('src');
+  }
+  document.getElementById('leader-form-error').classList.add('hidden');
+  openModal('leader-modal');
+}
+
+document.getElementById('l-photoFile').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  const preview = document.getElementById('l-photo-preview');
+  const previewImg = document.getElementById('l-photo-preview-img');
+  if (!file) {
+    preview.style.display = 'none';
+    return;
+  }
+  previewImg.src = URL.createObjectURL(file);
+  preview.style.display = 'block';
+});
+
+async function submitLeaderForm(e) {
+  e.preventDefault();
+  const btn = document.getElementById('leader-form-submit');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  let photoUrl = document.getElementById('l-photoUrl').value || null;
+  const photoFile = document.getElementById('l-photoFile').files[0];
+  try {
+    if (photoFile) {
+      const uploaded = await uploadImage(photoFile, 'leader-photo', token);
+      photoUrl = uploaded.url;
+    }
+    const payload = {
+      name: document.getElementById('l-name').value,
+      title: document.getElementById('l-title').value,
+      directorate: document.getElementById('l-directorate').value || null,
+      bio: document.getElementById('l-bio').value || null,
+      photoUrl,
+    };
+    const url = editingLeaderId ? `${API}/public-site/leaders/${editingLeaderId}` : `${API}/public-site/leaders`;
+    const method = editingLeaderId ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(payload) });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.message || 'Error'); }
+    showToast('Leader saved.'); closeModal(); loadLeaders();
+  } catch(err) { showFormError('leader-form-error', err.message); }
+  finally { btn.disabled = false; btn.textContent = 'Save leader'; }
+}
+
+// ── Confirm / Delete ─────────────────────────────────────────
+function confirmDelete(type, id, msg) {
+  document.getElementById('confirm-text').textContent = msg;
+  document.getElementById('confirm-ok-btn').onclick = () => doDelete(type, id);
+  openModal('confirm-modal');
+}
+
+async function doDelete(type, id) {
+  const endpoints = {
+    user: `${API}/users/${id}`,
+    news: `${API}/public-site/news-articles/${id}`,
+    institution: `${API}/public-site/institutions/${id}`,
+    scholarship: `${API}/public-site/scholarships/${id}`,
+    leader: `${API}/public-site/leaders/${id}`,
+    department: `${API}/departments/${id}`,
+    role: `${API}/roles/${id}`,
+  };
+  try {
+    const res = await fetch(endpoints[type], { method: 'DELETE', headers: authHeaders() });
+    if (!res.ok) throw new Error('Delete failed');
+    showToast('Deleted successfully.');
+    closeModal();
+    if (type==='user') loadUsers();
+    if (type==='department') { loadDepartments(); fetchRolesAndDepartments(); }
+    if (type==='role') { loadRoles(); fetchRolesAndDepartments(); }
+    if (type==='news') loadNews();
+    if (type==='institution') loadInstitutions();
+    if (type==='scholarship') loadScholarships();
+    if (type==='leader') loadLeaders();
+    loadOverviewKPIs();
+  } catch(err) { showToast('Error: ' + err.message, true); }
+}
+
+// ── Modal helpers ─────────────────────────────────────────────
+function openModal(id) {
+  document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  document.getElementById('modal-backdrop').classList.remove('hidden');
+}
+
+function closeModal() {
+  document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
+  document.getElementById('modal-backdrop').classList.add('hidden');
+}
+
+// ── Toast ─────────────────────────────────────────────────────
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '');
+  setTimeout(() => t.classList.add('hidden'), 3500);
+}
+
+function showFormError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.remove('hidden');
+}
+
+// ── Departments ──────────────────────────────────────────────
+async function loadDepartments() {
+  const tbody = document.getElementById('dept-tbody');
+  tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">Loading departments…</td></tr>';
+  try {
+    const res = await fetch(`${API}/departments`, { headers: authHeaders() });
+    departmentList = await res.json();
+    if (!departmentList || !departmentList.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">No departments found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = departmentList.map(d => {
+      const parentName = d.parentId ? (departmentList.find(x => x.id === d.parentId)?.name || '—') : '—';
+      const isCore = ['ICT', 'HR'].includes(d.code);
+      return `
+        <tr>
+          <td><strong>${d.name}</strong></td>
+          <td class="mono" style="font-size:12px;">${d.code}</td>
+          <td style="font-size:12.5px; color:var(--ink-soft);">${d.description || '—'}</td>
+          <td>${parentName}</td>
+          <td>
+            ${isCore ? '—' : `<button class="action-btn danger" onclick="confirmDelete('department','${d.id}','Delete department ${d.name}?')">🗑</button>`}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="5" class="loading-cell" style="color:red;">Error loading departments: ${err.message}</td></tr>`;
+  }
+}
+
+function openDeptModal() {
+  document.getElementById('d-name').value = '';
+  document.getElementById('d-code').value = '';
+  document.getElementById('d-description').value = '';
+  document.getElementById('dept-form-error').classList.add('hidden');
+  
+  const parentSelect = document.getElementById('d-parentId');
+  parentSelect.innerHTML = '<option value="">None (Top-level)</option>' +
+    departmentList.map(d => `<option value="${d.id}">${d.name} (${d.code})</option>`).join('');
+
+  openModal('dept-modal');
+}
+
+async function submitDeptForm(e) {
+  e.preventDefault();
+  const btn = document.getElementById('dept-form-submit');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  const payload = {
+    name: document.getElementById('d-name').value,
+    code: document.getElementById('d-code').value.toUpperCase(),
+    description: document.getElementById('d-description').value || null,
+    parentId: document.getElementById('d-parentId').value || null
+  };
+
+  try {
+    const res = await fetch(`${API}/departments`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.message || 'Error'); }
+    showToast('Department created successfully.');
+    closeModal();
+    loadDepartments();
+    fetchRolesAndDepartments(); // update user dropdown
+  } catch(err) {
+    showFormError('dept-form-error', err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create department';
+  }
+}
+
+// ── Roles & Permissions ───────────────────────────────────────
+async function loadRoles() {
+  const tbody = document.getElementById('roles-tbody');
+  tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">Loading roles…</td></tr>';
+  try {
+    const res = await fetch(`${API}/roles`, { headers: authHeaders() });
+    roleList = await res.json();
+    if (!roleList || !roleList.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">No roles found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = roleList.map(r => {
+      const perms = r.permissions.map(p => `<span class="mono" style="font-size:11px; background:var(--bg-inset); padding:2px 6px; border-radius:4px; margin-right:4px; display:inline-block; margin-bottom:4px;">${p.permission.key}</span>`).join('');
+      return `
+        <tr>
+          <td><strong>${r.name}</strong></td>
+          <td style="font-size:12.5px; color:var(--ink-soft);">${r.description || '—'}</td>
+          <td style="max-width:350px; white-space:normal; line-height:1.6;">${perms || '<span style="color:var(--ink-faint);">None</span>'}</td>
+          <td><span class="pill ${r.isSystem ? 'pill-green' : 'pill-gold'}">${r.isSystem ? 'System' : 'Custom'}</span></td>
+          <td>
+            ${r.isSystem ? '—' : `<button class="action-btn danger" onclick="confirmDelete('role','${r.id}','Delete custom role ${r.name}?')">🗑</button>`}
+          </td>
+        </tr>
+      `;
+    }).join('');
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="5" class="loading-cell" style="color:red;">Error loading roles: ${err.message}</td></tr>`;
+  }
+}
+
+async function openRoleModal() {
+  document.getElementById('r-name').value = '';
+  document.getElementById('r-description').value = '';
+  document.getElementById('role-form-error').classList.add('hidden');
+  
+  const container = document.getElementById('role-permissions-checkboxes');
+  container.innerHTML = '<div style="color:var(--ink-soft);">Loading permissions…</div>';
+  openModal('role-modal');
+
+  try {
+    const res = await fetch(`${API}/roles/permissions`, { headers: authHeaders() });
+    const permissions = await res.json();
+    if (!permissions || !permissions.length) {
+      container.innerHTML = '<div style="color:var(--ink-soft);">No permissions found.</div>';
+      return;
+    }
+    // Group by module for nicer UI
+    const grouped = {};
+    permissions.forEach(p => {
+      if (!grouped[p.module]) grouped[p.module] = [];
+      grouped[p.module].push(p);
+    });
+
+    container.innerHTML = Object.entries(grouped).map(([mod, perms]) => `
+      <div style="margin-bottom:8px;">
+        <div style="font-weight:600; font-size:12px; color:var(--ink-soft); margin-bottom:4px; text-transform:uppercase; letter-spacing:0.5px;">${mod}</div>
+        <div style="display:grid; gap:6px; padding-left:4px;">
+          ${perms.map(p => `
+            <label style="display:flex; align-items:center; gap:8px; font-weight:normal; margin:0; cursor:pointer;">
+              <input type="checkbox" name="permissions" value="${p.id}" style="width:auto;">
+              <div>
+                <span class="mono" style="font-size:12px; font-weight:500;">${p.key}</span>
+                <span style="font-size:11px; color:var(--ink-soft); font-weight:400; margin-left:4px;">— ${p.description || ''}</span>
+              </div>
+            </label>
+          `).join('')}
+        </div>
+      </div>
+    `).join('');
+  } catch (err) {
+    container.innerHTML = `<div style="color:red;">Error loading permissions: ${err.message}</div>`;
+  }
+}
+
+async function submitRoleForm(e) {
+  e.preventDefault();
+  const btn = document.getElementById('role-form-submit');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  
+  const selectedCheckboxes = document.querySelectorAll('input[name="permissions"]:checked');
+  const permissionIds = Array.from(selectedCheckboxes).map(cb => cb.value);
+
+  const payload = {
+    name: document.getElementById('r-name').value,
+    description: document.getElementById('r-description').value || null,
+    permissionIds
+  };
+
+  try {
+    const res = await fetch(`${API}/roles`, {
+      method: 'POST',
+      headers: authHeaders(),
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.message || 'Error'); }
+    showToast('Role created successfully.');
+    closeModal();
+    loadRoles();
+    fetchRolesAndDepartments(); // update user dropdown
+  } catch(err) {
+    showFormError('role-form-error', err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Create role';
+  }
+}
+
+// ── Utilities ─────────────────────────────────────────────────
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+function fmtDateTime(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+</script>
+</body>
+</html>

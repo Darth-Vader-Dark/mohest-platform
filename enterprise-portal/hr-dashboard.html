@@ -1,0 +1,938 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HR Dashboard — MoHEST Staff Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="assets/enterprise.css">
+<link rel="stylesheet" href="assets/dashboard.css">
+<script src="assets/api.js"></script>
+<!-- PDF & QR generation (CDN) -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+<div class="shell" id="app">
+
+  <!-- ═══════════ SIDEBAR ═══════════ -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">M</div>
+      <div class="brand-text">MoHEST Portal</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="label">Overview</div>
+      <div class="nav-item active" data-section="overview" onclick="showSection('overview',this)"><span class="ic">⊟</span> Dashboard</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="label">HR · Workforce</div>
+      <div class="nav-item" data-section="employees" onclick="showSection('employees',this)"><span class="ic">👥</span> Employees</div>
+      <div class="nav-item" data-section="id-cards" onclick="showSection('id-cards',this)"><span class="ic">🪪</span> ID Card Generator</div>
+    </div>
+
+    <div class="nav-group">
+      <div class="label">Documents</div>
+      <div class="nav-item" data-section="leave" onclick="showSection('leave',this)"><span class="ic">📄</span> Leave Letters</div>
+      <div class="nav-item" data-section="appointment" onclick="showSection('appointment',this)"><span class="ic">📝</span> Appointment Letters</div>
+    </div>
+
+    <div class="sidebar-foot">
+      <div class="avatar" id="sidebar-avatar"></div>
+      <div>
+        <div class="who" id="sidebar-name">—</div>
+        <div class="role" id="sidebar-role">HR Officer</div>
+      </div>
+      <div style="margin-left:auto; cursor:pointer; color:var(--ink-faint); font-size:16px;" onclick="logout()" title="Sign out">⏻</div>
+    </div>
+  </aside>
+
+  <!-- ═══════════ MAIN ═══════════ -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-title" id="topbar-title">Dashboard</div>
+      <div class="topbar-right">
+        <div class="icon-btn-e" title="Notifications">🔔</div>
+      </div>
+    </div>
+
+    <!-- ─── OVERVIEW ─── -->
+    <div class="content" id="section-overview">
+      <div class="page-title">
+        <div>
+          <h1 id="welcome-heading">Welcome back</h1>
+          <div class="sub">Human Resources Directorate — Workforce Management</div>
+        </div>
+      </div>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="label">Total employees</div>
+          <div class="value mono" id="kpi-total">—</div>
+          <div class="delta up" id="kpi-total-sub">Loading…</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">Active staff</div>
+          <div class="value mono" id="kpi-active">—</div>
+          <div class="delta up">On payroll</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">Departments</div>
+          <div class="value mono" id="kpi-depts">—</div>
+          <div class="delta up">Directorates</div>
+        </div>
+        <div class="kpi-card">
+          <div class="label">New hires (30d)</div>
+          <div class="value mono" id="kpi-new-hires">—</div>
+          <div class="delta up">This month</div>
+        </div>
+      </div>
+
+      <div class="panel-grid">
+        <div class="panel">
+          <div class="panel-head"><h3>Recent employees</h3><span class="link" onclick="showSection('employees',document.querySelector('[data-section=employees]'))">View all →</span></div>
+          <div id="overview-emp-feed"><div class="loading-row">Loading…</div></div>
+        </div>
+        <div class="panel">
+          <div class="panel-head"><h3>Quick document generation</h3></div>
+          <div style="display:flex; flex-direction:column; gap:10px; margin-top:4px;">
+            <button class="quick-doc-btn" onclick="showSection('leave',document.querySelector('[data-section=leave]'))">📄 Generate Leave Letter</button>
+            <button class="quick-doc-btn" onclick="showSection('appointment',document.querySelector('[data-section=appointment]'))">📝 Generate Appointment Letter</button>
+            <button class="quick-doc-btn" onclick="showSection('id-cards',document.querySelector('[data-section=id-cards]'))">🪪 Generate Employee ID Card</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── EMPLOYEES ─── -->
+    <div class="content hidden" id="section-employees">
+      <div class="page-title">
+        <div>
+          <h1>Employee Records</h1>
+          <div class="sub">Full workforce directory — create, update, and manage employees.</div>
+        </div>
+        <button class="btn-primary" onclick="openEmpModal()">+ New employee</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3>All employees</h3>
+          <input type="text" id="emp-search" placeholder="Search by name or ID…" class="search-inline" oninput="searchEmployees(this.value)">
+        </div>
+        <table class="table-e">
+          <thead><tr><th>Emp. No.</th><th>Name</th><th>Department</th><th>Position</th><th>Type</th><th>Status</th><th>Hire Date</th><th>Actions</th></tr></thead>
+          <tbody id="emp-tbody"><tr><td colspan="8" class="loading-cell">Loading employees…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── ID CARDS ─── -->
+    <div class="content hidden" id="section-id-cards">
+      <div class="page-title">
+        <div>
+          <h1>Employee ID Card Generator</h1>
+          <div class="sub">Generate official MoHEST employee ID cards with QR codes.</div>
+        </div>
+      </div>
+
+      <div class="panel-grid" style="grid-template-columns:1fr 1fr;">
+        <div class="panel">
+          <div class="panel-head"><h3>Select employee</h3></div>
+          <div class="field" style="margin-bottom:12px;">
+            <label>Search employee</label>
+            <input type="text" id="id-card-search" placeholder="Type to search…" oninput="filterIdCardList(this.value)" class="field-input">
+          </div>
+          <div id="id-card-list" style="max-height:320px; overflow-y:auto; border:1px solid var(--border); border-radius:8px;">
+            <div class="loading-row">Loading employees…</div>
+          </div>
+          <button class="btn-primary" style="margin-top:16px; width:100%;" onclick="generateIdCard()">🖨 Generate ID Card PDF</button>
+        </div>
+
+        <div class="panel" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:380px;">
+          <div id="id-card-preview" class="id-card-preview" style="display:none;">
+            <div class="id-card" id="id-card-render">
+              <div class="id-card-header">
+                <div class="id-card-logo">M</div>
+                <div class="id-card-header-text">
+                  <div class="id-card-ministry">Ministry of Higher Education</div>
+                  <div class="id-card-country">Science &amp; Technology · Republic of South Sudan</div>
+                  <div class="id-card-subtitle">Official Staff Identification Card</div>
+                </div>
+              </div>
+              <div class="id-card-body">
+                <div class="id-card-photo" id="id-card-photo-el">?</div>
+                <div class="id-card-details">
+                  <div class="id-card-name" id="id-preview-name">—</div>
+                  <div class="id-card-pos" id="id-preview-pos">—</div>
+                  <div class="id-card-dept" id="id-preview-dept">—</div>
+                  <div class="id-card-num" id="id-preview-num">EMP NO: —</div>
+                </div>
+                <div id="id-card-qr" class="id-card-qr"></div>
+              </div>
+              <div class="id-card-footer">Valid · MoHEST Staff Portal · <span id="id-preview-year"></span></div>
+            </div>
+          </div>
+          <div id="id-card-placeholder" style="text-align:center; color:var(--ink-faint);">
+            <div style="font-size:48px; margin-bottom:12px;">🪪</div>
+            <div>Select an employee to preview their ID card</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── LEAVE LETTERS ─── -->
+    <div class="content hidden" id="section-leave">
+      <div class="page-title">
+        <div>
+          <h1>Leave Letter Generator</h1>
+          <div class="sub">Generate official leave approval letters for employees.</div>
+        </div>
+      </div>
+
+      <div class="panel-grid" style="grid-template-columns:1fr 1.2fr;">
+        <div class="panel">
+          <div class="panel-head"><h3>Letter details</h3></div>
+          <div class="field"><label>Employee</label>
+            <select id="leave-emp-select" class="field-select">
+              <option value="">— Select employee —</option>
+            </select>
+          </div>
+          <div class="form-grid-2">
+            <div class="field"><label>Leave type</label>
+              <select id="leave-type" class="field-select">
+                <option value="Annual Leave">Annual Leave</option>
+                <option value="Sick Leave">Sick Leave</option>
+                <option value="Maternity Leave">Maternity Leave</option>
+                <option value="Paternity Leave">Paternity Leave</option>
+                <option value="Emergency Leave">Emergency Leave</option>
+                <option value="Study Leave">Study Leave</option>
+              </select>
+            </div>
+            <div class="field"><label>Number of days</label><input type="number" id="leave-days" min="1" value="14" class="field-input"></div>
+          </div>
+          <div class="form-grid-2">
+            <div class="field"><label>Start date</label><input type="date" id="leave-start" class="field-input"></div>
+            <div class="field"><label>End date</label><input type="date" id="leave-end" class="field-input"></div>
+          </div>
+          <div class="field"><label>Reason / Notes</label>
+            <textarea id="leave-reason" rows="3" class="field-textarea">As requested and approved in accordance with the Ministry's Leave Policy.</textarea>
+          </div>
+          <div class="field"><label>Authorised by (name)</label><input id="leave-auth" value="Director, Human Resources" class="field-input"></div>
+          <button class="btn-primary" style="width:100%; margin-top:8px;" onclick="generateLeavePdf()">📄 Generate Leave Letter PDF</button>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Preview</h3></div>
+          <div class="letter-preview" id="leave-preview">
+            <div class="letter-head">
+              <div style="font-size:15px; font-weight:700; text-align:center;">MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY</div>
+              <div style="text-align:center; font-size:12px; color:#666; margin-top:2px;">Republic of South Sudan</div>
+              <hr style="margin:12px 0; border-color:#ccc;">
+              <div style="font-size:17px; font-weight:600; text-align:center; text-transform:uppercase; margin-bottom:14px;">Leave Approval Letter</div>
+            </div>
+            <div id="leave-preview-body" style="font-size:13px; color:#333; line-height:1.7;">
+              Fill the form and click <em>Generate</em> to see a preview.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ─── APPOINTMENT LETTERS ─── -->
+    <div class="content hidden" id="section-appointment">
+      <div class="page-title">
+        <div>
+          <h1>Appointment Letter Generator</h1>
+          <div class="sub">Generate official appointment letters for new or promoted staff.</div>
+        </div>
+      </div>
+
+      <div class="panel-grid" style="grid-template-columns:1fr 1.2fr;">
+        <div class="panel">
+          <div class="panel-head"><h3>Letter details</h3></div>
+          <div class="field"><label>Employee</label>
+            <select id="appt-emp-select" class="field-select">
+              <option value="">— Select employee —</option>
+            </select>
+          </div>
+          <div class="field"><label>Appointed position / title *</label><input id="appt-position" required class="field-input" placeholder="e.g. Senior HR Officer"></div>
+          <div class="form-grid-2">
+            <div class="field"><label>Department</label><input id="appt-dept" class="field-input" placeholder="Human Resources"></div>
+            <div class="field"><label>Effective date</label><input type="date" id="appt-date" class="field-input"></div>
+          </div>
+          <div class="form-grid-2">
+            <div class="field"><label>Employment type</label>
+              <select id="appt-type" class="field-select">
+                <option>Permanent</option>
+                <option>Contract</option>
+                <option>Temporary</option>
+                <option>Probation</option>
+              </select>
+            </div>
+            <div class="field"><label>Salary grade (optional)</label><input id="appt-grade" class="field-input" placeholder="e.g. Grade 5"></div>
+          </div>
+          <div class="field"><label>Reporting to</label><input id="appt-reports-to" class="field-input" placeholder="e.g. Director, HR"></div>
+          <div class="field"><label>Authorised by (name)</label><input id="appt-auth" value="Minister, MoHEST" class="field-input"></div>
+          <button class="btn-primary" style="width:100%; margin-top:8px;" onclick="generateApptPdf()">📝 Generate Appointment Letter PDF</button>
+        </div>
+
+        <div class="panel">
+          <div class="panel-head"><h3>Preview</h3></div>
+          <div class="letter-preview" id="appt-preview">
+            <div class="letter-head">
+              <div style="font-size:15px; font-weight:700; text-align:center;">MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY</div>
+              <div style="text-align:center; font-size:12px; color:#666; margin-top:2px;">Republic of South Sudan</div>
+              <hr style="margin:12px 0; border-color:#ccc;">
+              <div style="font-size:17px; font-weight:600; text-align:center; text-transform:uppercase; margin-bottom:14px;">Letter of Appointment</div>
+            </div>
+            <div id="appt-preview-body" style="font-size:13px; color:#333; line-height:1.7;">
+              Fill the form and click <em>Generate</em> to see a preview.
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- .main -->
+</div><!-- .shell -->
+
+<!-- ═══════════ MODALS ═══════════ -->
+<div class="modal-backdrop hidden" id="modal-backdrop" onclick="closeModal()"></div>
+
+<!-- Employee Modal -->
+<div class="modal hidden" id="emp-modal" style="max-width:620px;">
+  <div class="modal-head">
+    <h2 id="emp-modal-title">Add employee</h2>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <form id="emp-form" onsubmit="submitEmpForm(event)">
+    <div class="form-grid-2">
+      <div class="field"><label>First name *</label><input id="e-firstName" required class="field-input"></div>
+      <div class="field"><label>Last name *</label><input id="e-lastName" required class="field-input"></div>
+    </div>
+    <div class="form-grid-2">
+      <div class="field"><label>Employee number *</label><input id="e-empNo" required class="field-input" placeholder="EMP-0001"></div>
+      <div class="field"><label>Position *</label><input id="e-position" required class="field-input"></div>
+    </div>
+    <div class="form-grid-2">
+      <div class="field"><label>Department *</label>
+        <select id="e-deptId" class="field-select" required></select>
+      </div>
+      <div class="field"><label>Employment type *</label>
+        <select id="e-empType" class="field-select">
+          <option value="Permanent">Permanent</option>
+          <option value="Contract">Contract</option>
+          <option value="Temporary">Temporary</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-grid-2">
+      <div class="field"><label>Date of birth</label><input type="date" id="e-dob" class="field-input"></div>
+      <div class="field"><label>Gender</label>
+        <select id="e-gender" class="field-select">
+          <option value="">— Select —</option>
+          <option value="Male">Male</option>
+          <option value="Female">Female</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-grid-2">
+      <div class="field"><label>Phone</label><input id="e-phone" class="field-input" placeholder="+211 …"></div>
+      <div class="field"><label>Personal email</label><input type="email" id="e-email" class="field-input"></div>
+    </div>
+    <div class="form-grid-2">
+      <div class="field"><label>National ID</label><input id="e-natId" class="field-input"></div>
+      <div class="field"><label>Hire date *</label><input type="date" id="e-hireDate" required class="field-input"></div>
+    </div>
+    <div class="field"><label>Profile photo</label>
+      <input type="file" id="e-photoFile" accept="image/jpeg,image/png,image/webp,image/gif" class="field-input">
+      <div id="e-photo-preview" style="margin-top:8px; display:none;">
+        <img id="e-photo-preview-img" alt="Preview" style="width:64px; height:64px; object-fit:cover; border-radius:50%; border:1px solid var(--border);">
+      </div>
+      <input type="hidden" id="e-photoUrl">
+    </div>
+    <div class="field"><label>Status</label>
+      <select id="e-status" class="field-select">
+        <option value="Active">Active</option>
+        <option value="Inactive">Inactive</option>
+        <option value="OnLeave">On Leave</option>
+        <option value="Terminated">Terminated</option>
+      </select>
+    </div>
+    <div id="emp-form-error" class="form-error hidden"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button type="submit" class="btn-primary" id="emp-form-submit">Save employee</button>
+    </div>
+  </form>
+</div>
+
+<!-- Confirm delete -->
+<div class="modal hidden modal-sm" id="confirm-modal">
+  <div class="modal-head"><h2>Confirm delete</h2><button class="modal-close" onclick="closeModal()">✕</button></div>
+  <p id="confirm-text" style="color:var(--ink-soft); font-size:13.5px;"></p>
+  <div class="modal-foot">
+    <button class="btn-secondary" onclick="closeModal()">Cancel</button>
+    <button class="btn-danger" id="confirm-ok-btn">Delete</button>
+  </div>
+</div>
+
+<div class="toast hidden" id="toast"></div>
+
+<script>
+const API = window.MOHEST_API;
+let token = '';
+let currentUser = null;
+let allEmployees = [];
+let allDepartments = [];
+let idCardEmployee = null;
+let editingEmpId = null;
+
+// ── Bootstrap ──────────────────────────────────────────────
+(async function init() {
+  token = localStorage.getItem('accessToken');
+  const userRaw = localStorage.getItem('user');
+  if (!token || !userRaw) { window.location.href = 'login.html'; return; }
+  currentUser = JSON.parse(userRaw);
+  const dept = currentUser.department ? currentUser.department.code : '';
+  if (dept !== 'HR' && dept !== 'ICT') { window.location.href = 'login.html'; return; }
+
+  document.getElementById('sidebar-name').textContent = `${currentUser.firstName} ${currentUser.lastName}`;
+  document.getElementById('sidebar-role').textContent =
+    currentUser.roles && currentUser.roles.length ? currentUser.roles[0] : 'HR Staff';
+  document.getElementById('welcome-heading').textContent = `Welcome back, ${currentUser.firstName}`;
+  document.getElementById('id-preview-year').textContent = new Date().getFullYear();
+
+  await Promise.all([
+    loadDepartments(),
+    loadEmployees()
+  ]);
+  
+  renderOverview();
+  populateEmpSelects();
+})();
+
+function authHeaders() {
+  return { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` };
+}
+
+async function loadDepartments() {
+  const select = document.getElementById('e-deptId');
+  try {
+    const res = await fetch(`${API}/hr/departments`, { headers: { 'Authorization': `Bearer ${token}` } });
+    if (!res.ok) throw new Error('Could not load departments');
+    allDepartments = await res.json();
+    select.innerHTML = '<option value="">Select Department...</option>' + 
+      allDepartments.map(d => `<option value="${d.id}">${d.name} (${d.code})</option>`).join('');
+  } catch (e) {
+    console.error('Failed to load departments', e);
+    select.innerHTML = '<option value="">Failed to load departments</option>';
+    showToast('Could not load departments. Check your permissions or API connection.', true);
+  }
+}
+function logout() { localStorage.clear(); window.location.href = 'login.html'; }
+
+// ── Navigation ──────────────────────────────────────────────
+function showSection(id, el) {
+  document.querySelectorAll('.content').forEach(s => s.classList.add('hidden'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-' + id).classList.remove('hidden');
+  if (el) el.classList.add('active');
+  const titles = { overview:'Dashboard', employees:'Employee Records', 'id-cards':'ID Card Generator', leave:'Leave Letters', appointment:'Appointment Letters' };
+  document.getElementById('topbar-title').textContent = titles[id] || id;
+}
+
+// ── Employees ───────────────────────────────────────────────
+async function loadEmployees() {
+  try {
+    const res = await fetch(`${API}/hr/employees`, { headers: authHeaders() });
+    allEmployees = await res.json();
+  } catch(e) { allEmployees = []; }
+}
+
+function renderOverview() {
+  const total = allEmployees.length;
+  const active = allEmployees.filter(e => e.status === 'Active').length;
+  const depts = new Set(allEmployees.map(e => e.departmentId)).size;
+  const now = new Date();
+  const thirtyDaysAgo = new Date(now - 30*24*60*60*1000);
+  const newHires = allEmployees.filter(e => e.hireDate && new Date(e.hireDate) > thirtyDaysAgo).length;
+
+  document.getElementById('kpi-total').textContent = total;
+  document.getElementById('kpi-active').textContent = active;
+  document.getElementById('kpi-depts').textContent = depts;
+  document.getElementById('kpi-new-hires').textContent = newHires;
+
+  const feed = document.getElementById('overview-emp-feed');
+  if (!allEmployees.length) { feed.innerHTML = '<div class="empty-state">No employees yet. Add one in the Employees section.</div>'; return; }
+  feed.innerHTML = allEmployees.slice(0,5).map(e => `
+    <div class="activity-item">
+      <div class="mini-avatar">${e.firstName[0]}${e.lastName[0]}</div>
+      <div>
+        <div style="font-weight:500;">${e.firstName} ${e.lastName}</div>
+        <div class="t">${e.position} · ${e.employeeNumber}</div>
+      </div>
+      <span class="badge-e ${e.status==='Active'?'success':e.status==='OnLeave'?'warn':'danger'}" style="margin-left:auto;">${e.status}</span>
+    </div>`).join('');
+}
+
+function renderEmployeesTable(emps) {
+  const tbody = document.getElementById('emp-tbody');
+  if (!emps.length) { tbody.innerHTML = `<tr><td colspan="8" class="loading-cell">No employees found.</td></tr>`; return; }
+  tbody.innerHTML = emps.map(e => `
+    <tr>
+      <td class="mono" style="font-size:12px;">${e.employeeNumber}</td>
+      <td style="font-weight:500;"><span class="mini-avatar-inline">${e.firstName[0]}${e.lastName[0]}</span>${e.firstName} ${e.lastName}</td>
+      <td>${e.department ? e.department.name : '—'}</td>
+      <td>${e.position}</td>
+      <td>${e.employmentType}</td>
+      <td><span class="badge-e ${e.status==='Active'?'success':e.status==='OnLeave'?'warn':'danger'}">${e.status}</span></td>
+      <td class="mono" style="font-size:12px;">${fmtDate(e.hireDate)}</td>
+      <td>
+        <button class="action-btn" onclick="openEmpModal('${e.id}')">✏️</button>
+        <button class="action-btn" title="Generate ID Card" onclick="selectForIdCard('${e.id}'); showSection('id-cards',document.querySelector('[data-section=id-cards]'))">🪪</button>
+        <button class="action-btn danger" onclick="confirmDelete('${e.id}','${e.firstName} ${e.lastName}')">🗑</button>
+      </td>
+    </tr>`).join('');
+}
+
+async function searchEmployees(q) {
+  if (!q) { renderEmployeesTable(allEmployees); return; }
+  try {
+    const res = await fetch(`${API}/hr/employees?search=${encodeURIComponent(q)}`, { headers: authHeaders() });
+    const emps = await res.json();
+    renderEmployeesTable(emps);
+  } catch(e) {}
+}
+
+function openEmpModal(id = null) {
+  editingEmpId = id;
+  const emp = id ? allEmployees.find(e => e.id === id) : null;
+  document.getElementById('emp-modal-title').textContent = emp ? 'Edit employee' : 'Add employee';
+  document.getElementById('e-firstName').value   = emp ? emp.firstName : '';
+  document.getElementById('e-lastName').value    = emp ? emp.lastName : '';
+  document.getElementById('e-empNo').value       = emp ? emp.employeeNumber : '';
+  document.getElementById('e-position').value    = emp ? emp.position : '';
+  document.getElementById('e-deptId').value      = emp ? (emp.departmentId||'') : '';
+  document.getElementById('e-empType').value     = emp ? emp.employmentType : 'Permanent';
+  document.getElementById('e-dob').value         = emp && emp.dateOfBirth ? emp.dateOfBirth.slice(0,10) : '';
+  document.getElementById('e-gender').value      = emp ? (emp.gender||'') : '';
+  document.getElementById('e-phone').value       = emp ? (emp.phone||'') : '';
+  document.getElementById('e-email').value       = emp ? (emp.personalEmail||'') : '';
+  document.getElementById('e-natId').value       = emp ? (emp.nationalId||'') : '';
+  document.getElementById('e-hireDate').value    = emp && emp.hireDate ? emp.hireDate.slice(0,10) : '';
+  document.getElementById('e-status').value      = emp ? emp.status : 'Active';
+  document.getElementById('e-photoUrl').value    = emp ? (emp.photoUrl || '') : '';
+  document.getElementById('e-photoFile').value   = '';
+  const preview = document.getElementById('e-photo-preview');
+  const previewImg = document.getElementById('e-photo-preview-img');
+  if (emp && emp.photoUrl) {
+    preview.style.display = 'block';
+    previewImg.src = resolveAssetUrl(emp.photoUrl);
+  } else {
+    preview.style.display = 'none';
+    previewImg.removeAttribute('src');
+  }
+  document.getElementById('emp-form-error').classList.add('hidden');
+  openModal('emp-modal');
+}
+
+async function submitEmpForm(e) {
+  e.preventDefault();
+  const btn = document.getElementById('emp-form-submit');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const deptId = document.getElementById('e-deptId').value.trim();
+  if (!deptId) {
+    showFormError('emp-form-error', 'Please select a department.');
+    btn.disabled = false; btn.textContent = 'Save employee';
+    return;
+  }
+  let photoUrl = document.getElementById('e-photoUrl').value || null;
+  const photoFile = document.getElementById('e-photoFile').files[0];
+  try {
+    if (photoFile) {
+      const uploaded = await uploadImage(photoFile, 'employee-photo', token);
+      photoUrl = uploaded.url;
+    }
+    const payload = {
+      firstName: document.getElementById('e-firstName').value,
+      lastName:  document.getElementById('e-lastName').value,
+      employeeNumber: document.getElementById('e-empNo').value,
+      position:  document.getElementById('e-position').value,
+      departmentId: deptId,
+      employmentType: document.getElementById('e-empType').value,
+      dateOfBirth: document.getElementById('e-dob').value || null,
+      gender: document.getElementById('e-gender').value || null,
+      phone: document.getElementById('e-phone').value || null,
+      personalEmail: document.getElementById('e-email').value || null,
+      nationalId: document.getElementById('e-natId').value || null,
+      hireDate: document.getElementById('e-hireDate').value,
+      status: document.getElementById('e-status').value,
+      photoUrl,
+    };
+    const url = editingEmpId ? `${API}/hr/employees/${editingEmpId}` : `${API}/hr/employees`;
+    const method = editingEmpId ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(payload) });
+    if (!res.ok) {
+      const d = await res.json().catch(() => ({}));
+      const msg = Array.isArray(d.message) ? d.message.join(', ') : (d.message || 'Save failed');
+      throw new Error(msg);
+    }
+    showToast('Employee saved successfully.');
+    closeModal();
+    await loadEmployees();
+    renderEmployeesTable(allEmployees);
+    renderOverview();
+    populateEmpSelects();
+  } catch(err) { showFormError('emp-form-error', err.message); }
+  finally { btn.disabled = false; btn.textContent = 'Save employee'; }
+}
+
+document.getElementById('e-photoFile').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  const preview = document.getElementById('e-photo-preview');
+  const previewImg = document.getElementById('e-photo-preview-img');
+  if (!file) { preview.style.display = 'none'; return; }
+  previewImg.src = URL.createObjectURL(file);
+  preview.style.display = 'block';
+});
+
+function confirmDelete(id, name) {
+  document.getElementById('confirm-text').textContent = `Delete employee record for ${name}? This action cannot be undone.`;
+  document.getElementById('confirm-ok-btn').onclick = async () => {
+    try {
+      const res = await fetch(`${API}/hr/employees/${id}`, { method:'DELETE', headers: authHeaders() });
+      if (!res.ok) throw new Error('Delete failed');
+      showToast('Employee deleted.'); closeModal();
+      await loadEmployees(); renderEmployeesTable(allEmployees); renderOverview(); populateEmpSelects();
+    } catch(e) { showToast('Error: '+e.message, true); }
+  };
+  openModal('confirm-modal');
+}
+
+// ── Populate selects ─────────────────────────────────────────
+function populateEmpSelects() {
+  const empOpts = allEmployees.map(e =>
+    `<option value="${e.id}">${e.firstName} ${e.lastName} (${e.employeeNumber})</option>`
+  ).join('');
+  document.getElementById('leave-emp-select').innerHTML = '<option value="">— Select employee —</option>' + empOpts;
+  document.getElementById('appt-emp-select').innerHTML  = '<option value="">— Select employee —</option>' + empOpts;
+
+  // ID card list
+  renderIdCardList(allEmployees);
+}
+
+// ── ID Card ──────────────────────────────────────────────────
+function renderIdCardList(emps) {
+  const list = document.getElementById('id-card-list');
+  if (!emps.length) { list.innerHTML = '<div class="loading-row">No employees found.</div>'; return; }
+  list.innerHTML = emps.map(e => `
+    <div class="id-card-list-item ${idCardEmployee && idCardEmployee.id === e.id ? 'selected' : ''}"
+         onclick="selectForIdCard('${e.id}')">
+      <span class="mini-avatar-inline">${e.firstName[0]}${e.lastName[0]}</span>
+      <div>
+        <div style="font-weight:500;">${e.firstName} ${e.lastName}</div>
+        <div style="font-size:12px; color:var(--ink-faint);">${e.position} · ${e.employeeNumber}</div>
+      </div>
+    </div>`).join('');
+}
+
+function filterIdCardList(q) {
+  const filtered = allEmployees.filter(e =>
+    `${e.firstName} ${e.lastName} ${e.employeeNumber}`.toLowerCase().includes(q.toLowerCase())
+  );
+  renderIdCardList(filtered);
+}
+
+function selectForIdCard(id) {
+  idCardEmployee = allEmployees.find(e => e.id === id);
+  if (!idCardEmployee) return;
+  renderIdCardList(allEmployees);
+  renderIdCardPreview(idCardEmployee);
+}
+
+function renderIdCardPreview(emp) {
+  document.getElementById('id-card-placeholder').style.display = 'none';
+  document.getElementById('id-card-preview').style.display = 'block';
+  document.getElementById('id-preview-name').textContent = `${emp.firstName} ${emp.lastName}`;
+  document.getElementById('id-preview-pos').textContent = emp.position;
+  document.getElementById('id-preview-dept').textContent = emp.department ? emp.department.name : 'MoHEST';
+  document.getElementById('id-preview-num').textContent = `EMP NO: ${emp.employeeNumber}`;
+  document.getElementById('id-preview-year').textContent = new Date().getFullYear();
+
+  const photoEl = document.getElementById('id-card-photo-el');
+  photoEl.innerHTML = '';
+  if (emp.photoUrl) {
+    const img = document.createElement('img');
+    img.src = resolveAssetUrl(emp.photoUrl);
+    img.alt = emp.firstName;
+    img.crossOrigin = 'anonymous';
+    img.onerror = () => { photoEl.textContent = emp.firstName[0]; };
+    photoEl.appendChild(img);
+  } else {
+    photoEl.textContent = emp.firstName[0];
+  }
+
+  const qrEl = document.getElementById('id-card-qr');
+  qrEl.innerHTML = '';
+  new QRCode(qrEl, {
+    text: `MoHEST-EMP|${emp.employeeNumber}|${emp.firstName} ${emp.lastName}`,
+    width: 64,
+    height: 64,
+    colorDark: '#0F2B40',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M,
+  });
+}
+
+async function generateIdCard() {
+  if (!idCardEmployee) { showToast('Please select an employee first.', true); return; }
+  const cardEl = document.getElementById('id-card-render');
+  if (!cardEl) return;
+
+  const btn = document.querySelector('#section-id-cards .btn-primary');
+  const prevLabel = btn ? btn.textContent : '';
+  if (btn) { btn.disabled = true; btn.textContent = 'Generating…'; }
+
+  try {
+    // Wait for photo to finish loading before capture
+    const photoImg = cardEl.querySelector('.id-card-photo img');
+    if (photoImg && !photoImg.complete) {
+      await new Promise((resolve, reject) => {
+        photoImg.onload = resolve;
+        photoImg.onerror = resolve;
+        setTimeout(resolve, 1500);
+      });
+    }
+    // Brief pause so QR canvas paints fully
+    await new Promise(r => setTimeout(r, 200));
+
+    const canvas = await html2canvas(cardEl, {
+      scale: 4,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#ffffff',
+      logging: false,
+    });
+
+    const imgData = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [85.6, 54] });
+    doc.addImage(imgData, 'PNG', 0, 0, 85.6, 54);
+    doc.save(`ID_Card_${idCardEmployee.employeeNumber}_${idCardEmployee.lastName}.pdf`);
+    showToast('ID card PDF generated and downloaded.');
+  } catch (err) {
+    showToast('Failed to generate PDF: ' + err.message, true);
+  } finally {
+    if (btn) { btn.disabled = false; btn.textContent = prevLabel || '🖨 Generate ID Card PDF'; }
+  }
+}
+
+// ── Leave Letter ─────────────────────────────────────────────
+function generateLeavePdf() {
+  const empId = document.getElementById('leave-emp-select').value;
+  if (!empId) { showToast('Please select an employee.', true); return; }
+  const emp = allEmployees.find(e => e.id === empId);
+  const leaveType = document.getElementById('leave-type').value;
+  const days = document.getElementById('leave-days').value;
+  const start = document.getElementById('leave-start').value;
+  const end = document.getElementById('leave-end').value;
+  const reason = document.getElementById('leave-reason').value;
+  const auth = document.getElementById('leave-auth').value;
+  const today = fmtDate(new Date().toISOString());
+  const dept = emp.department ? emp.department.name : 'MoHEST';
+
+  // Update preview
+  const body = `
+    <div><strong>Date:</strong> ${today}</div><br>
+    <div><strong>To:</strong> ${emp.firstName} ${emp.lastName}</div>
+    <div><strong>Position:</strong> ${emp.position}</div>
+    <div><strong>Department:</strong> ${dept}</div>
+    <div><strong>Employee No.:</strong> ${emp.employeeNumber}</div><br>
+    <div><strong>Subject: Approval of ${leaveType}</strong></div><br>
+    <div>Dear ${emp.firstName} ${emp.lastName},</div><br>
+    <div>This is to inform you that your application for <strong>${leaveType}</strong> has been duly reviewed and approved. You are hereby granted <strong>${days} day(s)</strong> of leave from <strong>${start ? fmtDate(start) : '___'}</strong> to <strong>${end ? fmtDate(end) : '___'}</strong>.</div><br>
+    <div>${reason}</div><br>
+    <div>You are expected to resume duties on the next working day following the expiry of your approved leave period. Please ensure proper handover of your responsibilities before proceeding on leave.</div><br>
+    <div>Yours sincerely,</div><br><br>
+    <div>____________________________</div>
+    <div><strong>${auth}</strong></div>
+    <div>Ministry of Higher Education, Science & Technology</div>
+    <div>Republic of South Sudan</div>
+  `;
+  document.getElementById('leave-preview-body').innerHTML = body;
+
+  // Generate PDF
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const m = 20; let y = m;
+
+  doc.setFillColor(15, 43, 64); doc.rect(0, 0, 210, 22, 'F');
+  doc.setTextColor(231, 183, 94); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+  doc.text('MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY', 105, 10, { align: 'center' });
+  doc.setTextColor(180, 200, 210); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+  doc.text('Republic of South Sudan', 105, 16, { align: 'center' });
+
+  y = 34;
+  doc.setTextColor(17, 19, 24); doc.setFontSize(14); doc.setFont('helvetica', 'bold');
+  doc.text('LEAVE APPROVAL LETTER', 105, y, { align: 'center' }); y += 12;
+  doc.setDrawColor(200); doc.line(m, y, 210-m, y); y += 8;
+
+  const addLine = (label, val) => {
+    doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(17,19,24);
+    doc.text(label, m, y); doc.setFont('helvetica', 'normal'); doc.text(val, m+30, y); y += 7;
+  };
+  addLine('Date:', today);
+  y += 4;
+  addLine('To:', `${emp.firstName} ${emp.lastName}`);
+  addLine('Position:', emp.position);
+  addLine('Department:', dept);
+  addLine('Employee No.:', emp.employeeNumber);
+  y += 6;
+  doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+  doc.text(`Subject: Approval of ${leaveType}`, m, y); y += 10;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+  doc.text(`Dear ${emp.firstName} ${emp.lastName},`, m, y); y += 8;
+  const body1 = `This is to inform you that your application for ${leaveType} has been duly reviewed and approved. You are hereby granted ${days} day(s) of leave from ${start ? fmtDate(start) : '___'} to ${end ? fmtDate(end) : '___'}.`;
+  const wrapped1 = doc.splitTextToSize(body1, 170);
+  doc.text(wrapped1, m, y); y += wrapped1.length * 6 + 4;
+  const wrapped2 = doc.splitTextToSize(reason, 170);
+  doc.text(wrapped2, m, y); y += wrapped2.length * 6 + 4;
+  const body3 = 'You are expected to resume duties on the next working day following the expiry of your approved leave period. Please ensure proper handover of your responsibilities before proceeding on leave.';
+  const wrapped3 = doc.splitTextToSize(body3, 170);
+  doc.text(wrapped3, m, y); y += wrapped3.length * 6 + 16;
+  doc.text('Yours sincerely,', m, y); y += 16;
+  doc.setFont('helvetica', 'bold'); doc.text('____________________________', m, y); y += 6;
+  doc.text(auth, m, y); y += 6;
+  doc.setFont('helvetica', 'normal'); doc.text('Ministry of Higher Education, Science & Technology', m, y); y += 6;
+  doc.text('Republic of South Sudan', m, y);
+
+  doc.save(`Leave_Letter_${emp.lastName}_${emp.employeeNumber}.pdf`);
+  showToast('Leave letter PDF generated.');
+}
+
+// ── Appointment Letter ────────────────────────────────────────
+function generateApptPdf() {
+  const empId = document.getElementById('appt-emp-select').value;
+  if (!empId) { showToast('Please select an employee.', true); return; }
+  const emp = allEmployees.find(e => e.id === empId);
+  const position = document.getElementById('appt-position').value;
+  const apptDept = document.getElementById('appt-dept').value || (emp.department ? emp.department.name : 'MoHEST');
+  const effectiveDate = document.getElementById('appt-date').value;
+  const empType = document.getElementById('appt-type').value;
+  const grade = document.getElementById('appt-grade').value;
+  const reportsTo = document.getElementById('appt-reports-to').value;
+  const auth = document.getElementById('appt-auth').value;
+  const today = fmtDate(new Date().toISOString());
+
+  // Preview
+  const previewBody = `
+    <div><strong>Date:</strong> ${today}</div><br>
+    <div><strong>To:</strong> ${emp.firstName} ${emp.lastName}</div>
+    <div><strong>Current Position:</strong> ${emp.position}</div>
+    <div><strong>Department:</strong> ${emp.department ? emp.department.name : 'MoHEST'}</div><br>
+    <div><strong>Subject: Letter of Appointment</strong></div><br>
+    <div>Dear ${emp.firstName} ${emp.lastName},</div><br>
+    <div>Following due consideration by the Ministry, I am pleased to inform you of your appointment to the position of <strong>${position}</strong> within the <strong>${apptDept}</strong> department, effective <strong>${effectiveDate ? fmtDate(effectiveDate) : '___'}</strong>.</div><br>
+    <div>Your employment type is classified as <strong>${empType}</strong>${grade ? ` on salary grade <strong>${grade}</strong>` : ''}. You will report directly to <strong>${reportsTo || 'your department head'}</strong>.</div><br>
+    <div>You are required to comply with all Ministry policies, procedures, and the code of conduct for public servants of the Republic of South Sudan.</div><br>
+    <div>Congratulations on your appointment. We look forward to your continued contributions to the Ministry.</div><br>
+    <div>Yours faithfully,</div><br><br>
+    <div>____________________________</div>
+    <div><strong>${auth}</strong></div>
+    <div>Ministry of Higher Education, Science & Technology</div>
+    <div>Republic of South Sudan</div>
+  `;
+  document.getElementById('appt-preview-body').innerHTML = previewBody;
+
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const m = 20; let y = m;
+
+  doc.setFillColor(15, 43, 64); doc.rect(0, 0, 210, 22, 'F');
+  doc.setTextColor(231, 183, 94); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+  doc.text('MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY', 105, 10, { align: 'center' });
+  doc.setTextColor(180, 200, 210); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
+  doc.text('Republic of South Sudan', 105, 16, { align: 'center' });
+
+  y = 34;
+  doc.setTextColor(17, 19, 24); doc.setFontSize(14); doc.setFont('helvetica', 'bold');
+  doc.text('LETTER OF APPOINTMENT', 105, y, { align: 'center' }); y += 12;
+  doc.setDrawColor(200); doc.line(m, y, 210-m, y); y += 8;
+
+  const addLine = (label, val) => {
+    doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(17,19,24);
+    doc.text(label, m, y); doc.setFont('helvetica', 'normal'); doc.text(val, m+36, y); y += 7;
+  };
+  addLine('Date:', today);
+  addLine('To:', `${emp.firstName} ${emp.lastName}`);
+  addLine('Current Position:', emp.position);
+  addLine('Department:', emp.department ? emp.department.name : 'MoHEST');
+  y += 6;
+  doc.setFontSize(11); doc.setFont('helvetica', 'bold');
+  doc.text('Subject: Letter of Appointment', m, y); y += 10;
+  doc.setFont('helvetica', 'normal'); doc.setFontSize(10);
+  doc.text(`Dear ${emp.firstName} ${emp.lastName},`, m, y); y += 8;
+
+  const p1 = `Following due consideration by the Ministry, I am pleased to inform you of your appointment to the position of ${position} within the ${apptDept} department, effective ${effectiveDate ? fmtDate(effectiveDate) : '___'}.`;
+  const w1 = doc.splitTextToSize(p1, 170); doc.text(w1, m, y); y += w1.length * 6 + 4;
+
+  const p2 = `Your employment type is classified as ${empType}${grade ? ` on salary grade ${grade}` : ''}. You will report directly to ${reportsTo || 'your department head'}.`;
+  const w2 = doc.splitTextToSize(p2, 170); doc.text(w2, m, y); y += w2.length * 6 + 4;
+
+  const p3 = 'You are required to comply with all Ministry policies, procedures, and the code of conduct for public servants of the Republic of South Sudan.';
+  const w3 = doc.splitTextToSize(p3, 170); doc.text(w3, m, y); y += w3.length * 6 + 4;
+
+  const p4 = 'Congratulations on your appointment. We look forward to your continued contributions to the Ministry.';
+  const w4 = doc.splitTextToSize(p4, 170); doc.text(w4, m, y); y += w4.length * 6 + 14;
+
+  doc.text('Yours faithfully,', m, y); y += 16;
+  doc.setFont('helvetica', 'bold'); doc.text('____________________________', m, y); y += 6;
+  doc.text(auth, m, y); y += 6;
+  doc.setFont('helvetica', 'normal'); doc.text('Ministry of Higher Education, Science & Technology', m, y); y += 6;
+  doc.text('Republic of South Sudan', m, y);
+
+  doc.save(`Appointment_Letter_${emp.lastName}_${emp.employeeNumber}.pdf`);
+  showToast('Appointment letter PDF generated.');
+}
+
+// ── Modals ─────────────────────────────────────────────────────
+function openModal(id) {
+  document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
+  document.getElementById(id).classList.remove('hidden');
+  document.getElementById('modal-backdrop').classList.remove('hidden');
+}
+function closeModal() {
+  document.querySelectorAll('.modal').forEach(m => m.classList.add('hidden'));
+  document.getElementById('modal-backdrop').classList.add('hidden');
+}
+
+// ── Toast / Errors ─────────────────────────────────────────────
+function showToast(msg, isError = false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast' + (isError ? ' error' : '');
+  setTimeout(() => t.classList.add('hidden'), 3500);
+}
+function showFormError(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg; el.classList.remove('hidden');
+}
+
+// ── Utils ──────────────────────────────────────────────────────
+function fmtDate(d) {
+  if (!d) return '—';
+  return new Date(d).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric' });
+}
+
+// On employee section show, render table
+document.querySelector('[data-section=employees]').addEventListener('click', () => {
+  setTimeout(() => renderEmployeesTable(allEmployees), 0);
+});
+</script>
+</body>
+</html>
