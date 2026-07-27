@@ -153,14 +153,33 @@
           <button class="btn-primary" style="margin-top:16px; width:100%;" onclick="generateIdCard()">🖨 Generate ID Card PDF</button>
         </div>
 
-        <div class="panel" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:380px;">
-          <div id="id-card-preview" class="id-card-preview" style="display:none;">
-            <div class="id-card" id="id-card-render">
+        <div class="panel" style="display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:480px; padding: 24px;">
+          <div id="id-card-preview" style="display:none; width:100%; flex-direction:column; gap:16px; align-items:center;">
+            <!-- Front Card -->
+            <div style="font-weight:600; font-size:12px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.05em;">Front Side</div>
+            <div class="id-card" id="id-card-render-front">
               <div class="id-card-header">
-                <div class="id-card-logo"><img src="logo.jpg" alt="MoHEST logo" class="brand-logo"></div>
+                <div class="id-card-flag-wrap">
+                  <svg class="id-card-flag-svg" viewBox="0 0 800 400" style="width:36px; height:18px; border:1px solid rgba(255,255,255,0.3); border-radius:2px; display:block;">
+                    <g transform="translate(0,-81.146301)">
+                      <g transform="matrix(40,0,0,40,0,81.146301)">
+                        <g>
+                          <rect style="fill:#078930" y="0" x="0" width="20" height="10" />
+                          <rect style="fill:#ffffff" y="0" x="0" width="20" height="7" />
+                          <rect y="0" x="0" width="20" height="3" />
+                          <rect style="fill:#da121a" x="0" y="3.5" width="20" height="3" />
+                        </g>
+                        <g>
+                          <polygon style="fill:#0f47af" points="8.660254,5 0,10 0,0 " />
+                          <polygon style="fill:#fcdd09" points="415571,301930 -158734,-488533 -158734,488533 415571,-301930 -513674,0 " transform="matrix(3.114816e-6,0,0,3.114816e-6,2.88675,5)" />
+                        </g>
+                      </g>
+                    </g>
+                  </svg>
+                </div>
                 <div class="id-card-header-text">
-                  <div class="id-card-ministry">Ministry of Higher Education</div>
-                  <div class="id-card-country">Science &amp; Technology · Republic of South Sudan</div>
+                  <div class="id-card-republic">Republic of South Sudan</div>
+                  <div class="id-card-ministry">Min. of Higher Education, Science &amp; Tech</div>
                   <div class="id-card-subtitle">Official Staff Identification Card</div>
                 </div>
               </div>
@@ -169,12 +188,42 @@
                 <div class="id-card-details">
                   <div class="id-card-name" id="id-preview-name">—</div>
                   <div class="id-card-pos" id="id-preview-pos">—</div>
-                  <div class="id-card-dept" id="id-preview-dept">—</div>
+                  <div class="id-preview-dept-wrap">
+                    <span style="font-weight:600; color:var(--ink);">Directorate:</span> <span id="id-preview-dept">—</span>
+                  </div>
                   <div class="id-card-num" id="id-preview-num">EMP NO: —</div>
+                  <div class="id-card-dates">
+                    <div>Issued: <span id="id-preview-issued">—</span></div>
+                    <div>Expires: <span id="id-preview-expires">—</span></div>
+                  </div>
                 </div>
-                <div id="id-card-qr" class="id-card-qr"></div>
+                <div style="display:flex; flex-direction:column; align-items:center; justify-content:space-between; height:100%; padding-top:4px; gap:4px; flex-shrink:0;">
+                  <div id="id-card-qr" class="id-card-qr"></div>
+                  <div class="id-card-sig-container">
+                    <div class="id-card-sig-line">
+                      <span class="id-card-sig-cursive" id="id-preview-sig">A. Deng</span>
+                    </div>
+                    <div class="id-card-sig-label">Authorizing Sig.</div>
+                  </div>
+                </div>
               </div>
               <div class="id-card-footer">Valid · MoHEST Staff Portal · <span id="id-preview-year"></span></div>
+            </div>
+
+            <!-- Back Card -->
+            <div style="font-weight:600; font-size:12px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.05em; margin-top:8px;">Back Side</div>
+            <div class="id-card id-card-back" id="id-card-render-back">
+              <div class="id-card-back-container">
+                <div class="id-card-back-title">Ministry of Higher Education, Science &amp; Technology</div>
+                <div class="id-card-back-text">
+                  This is to certify that the person named and whose photograph appears on the card is our employee.
+                  <br><br>
+                  This card is the property of The Ministry of Higher Education, Science and Technology and must be surrendered on the termination of the contract of employment.
+                  <br><br>
+                  <span class="id-card-back-warning">IN CASE OF ANY LOSS, CONTACT THE NEAREST POLICE STATION.</span>
+                </div>
+                <div class="id-card-back-footer">Official Verification: portal.mohest.gov.ss</div>
+              </div>
             </div>
           </div>
           <div id="id-card-placeholder" style="text-align:center; color:var(--ink-faint);">
@@ -686,12 +735,22 @@ function selectForIdCard(id) {
 
 function renderIdCardPreview(emp) {
   document.getElementById('id-card-placeholder').style.display = 'none';
-  document.getElementById('id-card-preview').style.display = 'block';
+  document.getElementById('id-card-preview').style.display = 'flex';
   document.getElementById('id-preview-name').textContent = `${emp.firstName} ${emp.lastName}`;
   document.getElementById('id-preview-pos').textContent = emp.position;
   document.getElementById('id-preview-dept').textContent = emp.department ? emp.department.name : 'MoHEST';
   document.getElementById('id-preview-num').textContent = `EMP NO: ${emp.employeeNumber}`;
   document.getElementById('id-preview-year').textContent = new Date().getFullYear();
+
+  // Calculate dynamic dates based on hire date
+  const hireDateStr = emp.hireDate ? emp.hireDate.slice(0, 10) : new Date().toISOString().slice(0, 10);
+  const issueDate = new Date(hireDateStr);
+  const expiryDate = new Date(issueDate);
+  expiryDate.setFullYear(expiryDate.getFullYear() + 3); // 3-year validity
+
+  document.getElementById('id-preview-issued').textContent = fmtDateShort(issueDate);
+  document.getElementById('id-preview-expires').textContent = fmtDateShort(expiryDate);
+  document.getElementById('id-preview-sig').textContent = 'Adut Deng'; // Standard HR Director signature placeholder
 
   const photoEl = document.getElementById('id-card-photo-el');
   photoEl.innerHTML = '';
@@ -710,18 +769,27 @@ function renderIdCardPreview(emp) {
   qrEl.innerHTML = '';
   new QRCode(qrEl, {
     text: `MoHEST-EMP|${emp.employeeNumber}|${emp.firstName} ${emp.lastName}`,
-    width: 64,
-    height: 64,
+    width: 48,
+    height: 48,
     colorDark: '#0F2B40',
     colorLight: '#ffffff',
     correctLevel: QRCode.CorrectLevel.M,
   });
 }
 
+function fmtDateShort(date) {
+  const d = new Date(date);
+  const day = String(d.getDate()).padStart(2, '0');
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const year = d.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
 async function generateIdCard() {
   if (!idCardEmployee) { showToast('Please select an employee first.', true); return; }
-  const cardEl = document.getElementById('id-card-render');
-  if (!cardEl) return;
+  const frontEl = document.getElementById('id-card-render-front');
+  const backEl = document.getElementById('id-card-render-back');
+  if (!frontEl || !backEl) return;
 
   const btn = document.querySelector('#section-id-cards .btn-primary');
   const prevLabel = btn ? btn.textContent : '';
@@ -729,9 +797,9 @@ async function generateIdCard() {
 
   try {
     // Wait for photo to finish loading before capture
-    const photoImg = cardEl.querySelector('.id-card-photo img');
+    const photoImg = frontEl.querySelector('.id-card-photo img');
     if (photoImg && !photoImg.complete) {
-      await new Promise((resolve, reject) => {
+      await new Promise((resolve) => {
         photoImg.onload = resolve;
         photoImg.onerror = resolve;
         setTimeout(resolve, 1500);
@@ -740,7 +808,8 @@ async function generateIdCard() {
     // Brief pause so QR canvas paints fully
     await new Promise(r => setTimeout(r, 200));
 
-    const canvas = await html2canvas(cardEl, {
+    // Render Front Side
+    const canvasFront = await html2canvas(frontEl, {
       scale: 4,
       useCORS: true,
       allowTaint: true,
@@ -748,12 +817,30 @@ async function generateIdCard() {
       logging: false,
     });
 
-    const imgData = canvas.toDataURL('image/png');
+    // Render Back Side
+    const canvasBack = await html2canvas(backEl, {
+      scale: 4,
+      useCORS: true,
+      allowTaint: true,
+      backgroundColor: '#0F2B40',
+      logging: false,
+    });
+
+    const imgDataFront = canvasFront.toDataURL('image/png');
+    const imgDataBack = canvasBack.toDataURL('image/png');
+
     const { jsPDF } = window.jspdf;
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [85.6, 54] });
-    doc.addImage(imgData, 'PNG', 0, 0, 85.6, 54);
+    
+    // Page 1: Front
+    doc.addImage(imgDataFront, 'PNG', 0, 0, 85.6, 54);
+    
+    // Page 2: Back
+    doc.addPage([85.6, 54], 'landscape');
+    doc.addImage(imgDataBack, 'PNG', 0, 0, 85.6, 54);
+
     doc.save(`ID_Card_${idCardEmployee.employeeNumber}_${idCardEmployee.lastName}.pdf`);
-    showToast('ID card PDF generated and downloaded.');
+    showToast('ID card PDF generated and downloaded (Front & Back).');
   } catch (err) {
     showToast('Failed to generate PDF: ' + err.message, true);
   } finally {

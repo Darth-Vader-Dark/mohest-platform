@@ -350,18 +350,34 @@
   flex: 0 0 33%;
 }
 .id-card-header-text { flex: 1; min-width: 0; }
-.id-card-logo {
-  width: 32px; height: 32px;
-  border-radius: 6px;
-  background: rgba(255,255,255,0.1);
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Fraunces', serif;
-  font-size: 15px; color: #E7B75E; font-weight: 600;
+.id-card-flag-wrap {
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
 }
-.id-card-ministry { font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.04em; color: #E7B75E; line-height: 1.2; }
-.id-card-country { font-size: 8px; color: #B4C8D6; margin-top: 2px; line-height: 1.2; }
-.id-card-subtitle { font-size: 7.5px; color: #9FB2C1; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.06em; line-height: 1.2; }
+.id-card-republic {
+  font-size: 9.5px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: #ffffff;
+  line-height: 1.1;
+}
+.id-card-ministry {
+  font-size: 7.5px;
+  font-weight: 600;
+  color: #E7B75E;
+  margin-top: 1px;
+  line-height: 1.1;
+}
+.id-card-subtitle {
+  font-size: 6.5px;
+  color: #9FB2C1;
+  margin-top: 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1.1;
+}
 .id-card-body {
   background: #fff;
   padding: 10px 12px;
@@ -386,14 +402,23 @@
   object-fit: cover;
   display: block;
 }
-.id-card-details { flex: 1; min-width: 0; }
-.id-card-name { font-size: 12.5px; font-weight: 700; color: #111318; line-height: 1.2; }
-.id-card-pos  { font-size: 10px; color: #2952E3; margin-top: 2px; line-height: 1.2; }
-.id-card-dept { font-size: 9px; color: #646E82; margin-top: 2px; line-height: 1.2; }
-.id-card-num  { font-size: 9px; font-weight: 600; color: #111318; margin-top: 4px; font-family: 'JetBrains Mono', monospace; }
+.id-card-details { flex: 1; min-width: 0; display: flex; flex-direction: column; justify-content: center; }
+.id-card-name { font-size: 11.5px; font-weight: 700; color: #111318; line-height: 1.2; }
+.id-card-pos  { font-size: 9px; color: #2952E3; margin-top: 1px; line-height: 1.2; font-weight: 500; }
+.id-preview-dept-wrap { font-size: 8px; color: #646E82; margin-top: 1px; line-height: 1.2; }
+.id-preview-dept-wrap span { font-weight: 600; }
+.id-card-num  { font-size: 8px; font-weight: 600; color: #111318; margin-top: 2px; font-family: 'JetBrains Mono', monospace; }
+.id-card-dates {
+  display: flex;
+  gap: 6px;
+  font-size: 7.5px;
+  color: #646E82;
+  margin-top: 3px;
+  font-family: 'JetBrains Mono', monospace;
+}
 .id-card-qr {
-  width: 64px;
-  height: 64px;
+  width: 48px;
+  height: 48px;
   flex-shrink: 0;
   display: flex;
   align-items: center;
@@ -402,8 +427,37 @@
 .id-card-qr img,
 .id-card-qr canvas {
   display: block;
-  width: 64px !important;
-  height: 64px !important;
+  width: 48px !important;
+  height: 48px !important;
+}
+.id-card-sig-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 2px;
+  flex-shrink: 0;
+}
+.id-card-sig-line {
+  border-bottom: 1px solid #96A0AF;
+  width: 55px;
+  text-align: center;
+  padding-bottom: 1px;
+}
+.id-card-sig-cursive {
+  font-family: 'Fraunces', serif;
+  font-style: italic;
+  font-size: 9px;
+  color: #0F2B40;
+  line-height: 1;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.id-card-sig-label {
+  font-size: 6px;
+  color: #96A0AF;
+  margin-top: 1px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 .id-card-footer {
   background: #F0F2F6;
@@ -413,6 +467,55 @@
   padding: 5px 8px;
   border-top: 1px solid #e8eaf0;
   flex: 0 0 auto;
+}
+
+/* ID Card Back Styling */
+.id-card-back {
+  background: #0f2b40;
+  color: #ffffff;
+  border: 1px solid #E7B75E;
+}
+.id-card-back-container {
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  height: 100%;
+  box-sizing: border-box;
+}
+.id-card-back-title {
+  font-size: 8.5px;
+  font-weight: 700;
+  color: #E7B75E;
+  text-transform: uppercase;
+  text-align: center;
+  letter-spacing: 0.03em;
+  border-bottom: 1px solid rgba(231, 183, 94, 0.2);
+  padding-bottom: 4px;
+  line-height: 1.2;
+}
+.id-card-back-text {
+  font-size: 7.5px;
+  color: #e2e8f0;
+  line-height: 1.35;
+  text-align: center;
+  margin: 4px 0;
+}
+.id-card-back-warning {
+  color: #fcdd09;
+  font-weight: 600;
+  display: block;
+  letter-spacing: 0.01em;
+  margin-top: 2px;
+}
+.id-card-back-footer {
+  font-size: 7px;
+  color: #9FB2C1;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 4px;
 }
 
 /* ID card list item */
