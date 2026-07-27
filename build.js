@@ -55,4 +55,19 @@ const redirectHtml = `<!DOCTYPE html>
 `;
 fs.writeFileSync(path.join(distPath, 'index.html'), redirectHtml, 'utf8');
 
+// Inject environment variables if present on Vercel
+const apiJsPath = path.join(distPath, 'enterprise-portal', 'assets', 'api.js');
+if (fs.existsSync(apiJsPath)) {
+  let content = fs.readFileSync(apiJsPath, 'utf8');
+  if (process.env.MOHEST_API) {
+    console.log(`Injecting MOHEST_API: ${process.env.MOHEST_API}`);
+    content = content.replace('http://localhost:4000/api/v1', process.env.MOHEST_API);
+  }
+  if (process.env.MOHEST_ORIGIN) {
+    console.log(`Injecting MOHEST_ORIGIN: ${process.env.MOHEST_ORIGIN}`);
+    content = content.replace('http://localhost:4000', process.env.MOHEST_ORIGIN);
+  }
+  fs.writeFileSync(apiJsPath, content, 'utf8');
+}
+
 console.log('Build completed successfully!');
