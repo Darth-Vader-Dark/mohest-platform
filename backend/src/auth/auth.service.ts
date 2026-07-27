@@ -135,7 +135,7 @@ export class AuthService {
     return this.jwt.signAsync(
       { sub: userId, email },
       {
-        secret: process.env.JWT_ACCESS_SECRET,
+        secret: process.env.JWT_ACCESS_SECRET || 'mohest-enterprise-secret-key-2026',
         expiresIn: (process.env.JWT_ACCESS_EXPIRES_IN ?? '15m') as `${number}m`,
       },
     );
