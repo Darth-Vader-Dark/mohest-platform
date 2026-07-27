@@ -1,3 +1,7 @@
-uploads/
-uploads/**/*
+# Exclude the runtime uploads storage folder (disk-based files)
+# Only applies to the root /backend/uploads/ folder
+/backend/uploads/
+/uploads/
+
+# Environment files
 .env.example
