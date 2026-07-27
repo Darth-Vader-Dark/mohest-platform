@@ -457,6 +457,23 @@ let allDepartments = [];
 let idCardEmployee = null;
 let editingEmpId = null;
 let logoBase64 = '';
+let flagBase64 = '';
+
+async function loadFlagBase64() {
+  try {
+    const svgStr = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400"><g transform="translate(0,-81.146301)"><g transform="matrix(40,0,0,40,0,81.146301)"><g><rect style="fill:#078930" y="0" x="0" width="20" height="10" /><rect style="fill:#ffffff" y="0" x="0" width="20" height="7" /><rect y="0" x="0" width="20" height="3" /><rect style="fill:#da121a" x="0" y="3.5" width="20" height="3" /></g><g><polygon style="fill:#0f47af" points="8.660254,5 0,10 0,0 " /><polygon style="fill:#fcdd09" points="415571,301930 -158734,-488533 -158734,488533 415571,-301930 -513674,0 " transform="matrix(3.114816e-6,0,0,3.114816e-6,2.88675,5)" /></g></g></g></svg>`;
+    const blob = new Blob([svgStr], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    await new Promise(r => { img.onload = r; img.onerror = r; img.src = url; });
+    const canvas = document.createElement('canvas');
+    canvas.width = 800; canvas.height = 400;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0, 800, 400);
+    flagBase64 = canvas.toDataURL('image/png');
+    URL.revokeObjectURL(url);
+  } catch(e) { console.error('Flag error', e); }
+}
 
 async function loadLogoBase64() {
   try {
@@ -498,7 +515,8 @@ async function loadLogoBase64() {
   await Promise.all([
     loadDepartments(),
     loadEmployees(),
-    loadLogoBase64()
+    loadLogoBase64(),
+    loadFlagBase64()
   ]);
   
   renderOverview();
@@ -935,8 +953,11 @@ function generateLeavePdf() {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const m = 20; let y = m;
 
+  if (flagBase64) {
+    doc.addImage(flagBase64, 'PNG', m, 15, 30, 15);
+  }
   if (logoBase64) {
-    doc.addImage(logoBase64, 'JPEG', 95, 12, 20, 20);
+    doc.addImage(logoBase64, 'JPEG', 210 - m - 20, 12, 20, 20);
   }
   doc.setTextColor(15, 43, 64); doc.setFontSize(13); doc.setFont('helvetica', 'bold');
   doc.text('MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY', 105, 37, { align: 'center' });
@@ -974,7 +995,11 @@ function generateLeavePdf() {
   const body3 = 'You are expected to resume duties on the next working day following the expiry of your approved leave period. Please ensure proper handover of your responsibilities before proceeding on leave.';
   const wrapped3 = doc.splitTextToSize(body3, 170);
   doc.text(wrapped3, m, y); y += wrapped3.length * 6 + 16;
-  doc.text('Yours sincerely,', m, y); y += 16;
+  doc.text('Yours sincerely,', m, y); y += 8;
+  if (typeof hrSignatureBase64 !== 'undefined' && hrSignatureBase64) {
+    doc.addImage(hrSignatureBase64, 'PNG', m, y, 40, 15);
+  }
+  y += 18;
   doc.setFont('helvetica', 'bold'); doc.text('____________________________', m, y); y += 6;
   doc.text(auth, m, y); y += 6;
   doc.setFont('helvetica', 'normal'); doc.text('Ministry of Higher Education, Science & Technology', m, y); y += 6;
@@ -1022,8 +1047,11 @@ function generateApptPdf() {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const m = 20; let y = m;
 
+  if (flagBase64) {
+    doc.addImage(flagBase64, 'PNG', m, 15, 30, 15);
+  }
   if (logoBase64) {
-    doc.addImage(logoBase64, 'JPEG', 95, 12, 20, 20);
+    doc.addImage(logoBase64, 'JPEG', 210 - m - 20, 12, 20, 20);
   }
   doc.setTextColor(15, 43, 64); doc.setFontSize(13); doc.setFont('helvetica', 'bold');
   doc.text('MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY', 105, 37, { align: 'center' });
@@ -1064,7 +1092,11 @@ function generateApptPdf() {
   const p4 = 'Congratulations on your appointment. We look forward to your continued contributions to the Ministry.';
   const w4 = doc.splitTextToSize(p4, 170); doc.text(w4, m, y); y += w4.length * 6 + 14;
 
-  doc.text('Yours faithfully,', m, y); y += 16;
+  doc.text('Yours faithfully,', m, y); y += 8;
+  if (typeof hrSignatureBase64 !== 'undefined' && hrSignatureBase64) {
+    doc.addImage(hrSignatureBase64, 'PNG', m, y, 40, 15);
+  }
+  y += 18;
   doc.setFont('helvetica', 'bold'); doc.text('____________________________', m, y); y += 6;
   doc.text(auth, m, y); y += 6;
   doc.setFont('helvetica', 'normal'); doc.text('Ministry of Higher Education, Science & Technology', m, y); y += 6;
