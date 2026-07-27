@@ -287,12 +287,15 @@
         <div class="panel">
           <div class="panel-head"><h3>Preview</h3></div>
           <div class="letter-preview" id="leave-preview">
-            <div class="letter-head" style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px;">
-              <img src="logo.jpg" alt="MoHEST Crest" style="width: 50px; height: 50px; object-fit: contain;">
+            <div class="letter-head" style="display: flex; justify-content: space-between; align-items: center; text-align: center;">
+              <svg class="id-card-flag-svg" viewBox="0 0 800 400" style="width:40px; height:20px; border:1px solid rgba(0,0,0,0.1); border-radius:2px; display:block;">
+                <g transform="translate(0,-81.146301)"><g transform="matrix(40,0,0,40,0,81.146301)"><g><rect style="fill:#078930" y="0" x="0" width="20" height="10" /><rect style="fill:#ffffff" y="0" x="0" width="20" height="7" /><rect y="0" x="0" width="20" height="3" /><rect style="fill:#da121a" x="0" y="3.5" width="20" height="3" /></g><g><polygon style="fill:#0f47af" points="8.660254,5 0,10 0,0 " /><polygon style="fill:#fcdd09" points="415571,301930 -158734,-488533 -158734,488533 415571,-301930 -513674,0 " transform="matrix(3.114816e-6,0,0,3.114816e-6,2.88675,5)" /></g></g></g>
+              </svg>
               <div>
                 <div style="font-size:14px; font-weight:700; color: #0F2B40;">MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY</div>
                 <div style="font-size:11px; color:#666; margin-top:2px;">Republic of South Sudan</div>
               </div>
+              <img id="leave-preview-logo-img" src="logo.jpg" alt="MoHEST Crest" style="width: 40px; height: 40px; object-fit: contain;">
             </div>
             <div style="border-bottom: 2px solid #0F2B40; border-top: 1px solid #E7B75E; height: 3px; margin: 10px 0;"></div>
             <div style="font-size:15px; font-weight:600; text-align:center; text-transform:uppercase; margin-bottom:14px; color: #0F2B40;">Leave Approval Letter</div>
@@ -345,12 +348,15 @@
         <div class="panel">
           <div class="panel-head"><h3>Preview</h3></div>
           <div class="letter-preview" id="appt-preview">
-            <div class="letter-head" style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px;">
-              <img src="logo.jpg" alt="MoHEST Crest" style="width: 50px; height: 50px; object-fit: contain;">
+            <div class="letter-head" style="display: flex; justify-content: space-between; align-items: center; text-align: center;">
+              <svg class="id-card-flag-svg" viewBox="0 0 800 400" style="width:40px; height:20px; border:1px solid rgba(0,0,0,0.1); border-radius:2px; display:block;">
+                <g transform="translate(0,-81.146301)"><g transform="matrix(40,0,0,40,0,81.146301)"><g><rect style="fill:#078930" y="0" x="0" width="20" height="10" /><rect style="fill:#ffffff" y="0" x="0" width="20" height="7" /><rect y="0" x="0" width="20" height="3" /><rect style="fill:#da121a" x="0" y="3.5" width="20" height="3" /></g><g><polygon style="fill:#0f47af" points="8.660254,5 0,10 0,0 " /><polygon style="fill:#fcdd09" points="415571,301930 -158734,-488533 -158734,488533 415571,-301930 -513674,0 " transform="matrix(3.114816e-6,0,0,3.114816e-6,2.88675,5)" /></g></g></g>
+              </svg>
               <div>
                 <div style="font-size:14px; font-weight:700; color: #0F2B40;">MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY</div>
                 <div style="font-size:11px; color:#666; margin-top:2px;">Republic of South Sudan</div>
               </div>
+              <img id="appt-preview-logo-img" src="logo.jpg" alt="MoHEST Crest" style="width: 40px; height: 40px; object-fit: contain;">
             </div>
             <div style="border-bottom: 2px solid #0F2B40; border-top: 1px solid #E7B75E; height: 3px; margin: 10px 0;"></div>
             <div style="font-size:15px; font-weight:600; text-align:center; text-transform:uppercase; margin-bottom:14px; color: #0F2B40;">Letter of Appointment</div>
@@ -492,6 +498,10 @@ async function loadLogoBase64() {
     logoBase64 = canvas.toDataURL('image/jpeg');
     const logoImgEl = document.getElementById('id-preview-logo-img');
     if (logoImgEl) logoImgEl.src = logoBase64;
+    const leaveLogoEl = document.getElementById('leave-preview-logo-img');
+    if (leaveLogoEl) leaveLogoEl.src = logoBase64;
+    const apptLogoEl = document.getElementById('appt-preview-logo-img');
+    if (apptLogoEl) apptLogoEl.src = logoBase64;
   } catch (e) {
     console.error('Failed to preload logo.jpg', e);
   }
@@ -940,7 +950,8 @@ function generateLeavePdf() {
     <div>This is to inform you that your application for <strong>${leaveType}</strong> has been duly reviewed and approved. You are hereby granted <strong>${days} day(s)</strong> of leave from <strong>${start ? fmtDate(start) : '___'}</strong> to <strong>${end ? fmtDate(end) : '___'}</strong>.</div><br>
     <div>${reason}</div><br>
     <div>You are expected to resume duties on the next working day following the expiry of your approved leave period. Please ensure proper handover of your responsibilities before proceeding on leave.</div><br>
-    <div>Yours sincerely,</div><br><br>
+    <div>Yours sincerely,</div><br>
+    ${typeof hrSignatureBase64 !== 'undefined' && hrSignatureBase64 ? `<img src="${hrSignatureBase64}" style="max-height: 40px; margin-bottom: 5px;">` : '<br>'}
     <div>____________________________</div>
     <div><strong>${auth}</strong></div>
     <div>Ministry of Higher Education, Science & Technology</div>
@@ -1035,7 +1046,8 @@ function generateApptPdf() {
     <div>Your employment type is classified as <strong>${empType}</strong>${grade ? ` on salary grade <strong>${grade}</strong>` : ''}. You will report directly to <strong>${reportsTo || 'your department head'}</strong>.</div><br>
     <div>You are required to comply with all Ministry policies, procedures, and the code of conduct for public servants of the Republic of South Sudan.</div><br>
     <div>Congratulations on your appointment. We look forward to your continued contributions to the Ministry.</div><br>
-    <div>Yours faithfully,</div><br><br>
+    <div>Yours faithfully,</div><br>
+    ${typeof hrSignatureBase64 !== 'undefined' && hrSignatureBase64 ? `<img src="${hrSignatureBase64}" style="max-height: 40px; margin-bottom: 5px;">` : '<br>'}
     <div>____________________________</div>
     <div><strong>${auth}</strong></div>
     <div>Ministry of Higher Education, Science & Technology</div>
