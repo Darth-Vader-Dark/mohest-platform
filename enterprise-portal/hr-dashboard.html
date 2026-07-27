@@ -165,7 +165,7 @@
             <div class="id-card" id="id-card-render-front">
               <div class="id-card-header" style="justify-content: space-between;">
                 <div class="id-card-flag-wrap">
-                  <svg class="id-card-flag-svg" viewBox="0 0 800 400" style="width:36px; height:18px; border:1px solid rgba(255,255,255,0.3); border-radius:2px; display:block;">
+                  <svg class="id-card-flag-svg" viewBox="0 0 800 400" style="width:48px; height:24px; border:1px solid rgba(255,255,255,0.3); border-radius:2px; display:block;">
                     <g transform="translate(0,-81.146301)">
                       <g transform="matrix(40,0,0,40,0,81.146301)">
                         <g>
@@ -288,11 +288,11 @@
           <div class="panel-head"><h3>Preview</h3></div>
           <div class="letter-preview" id="leave-preview">
             <div class="letter-head" style="display: flex; justify-content: space-between; align-items: center; text-align: center;">
-              <svg class="id-card-flag-svg" viewBox="0 0 800 400" style="width:40px; height:20px; border:1px solid rgba(0,0,0,0.1); border-radius:2px; display:block;">
+              <svg class="id-card-flag-svg" viewBox="0 0 800 400" style="width:50px; height:25px; border:1px solid rgba(0,0,0,0.1); border-radius:2px; display:block;">
                 <g transform="translate(0,-81.146301)"><g transform="matrix(40,0,0,40,0,81.146301)"><g><rect style="fill:#078930" y="0" x="0" width="20" height="10" /><rect style="fill:#ffffff" y="0" x="0" width="20" height="7" /><rect y="0" x="0" width="20" height="3" /><rect style="fill:#da121a" x="0" y="3.5" width="20" height="3" /></g><g><polygon style="fill:#0f47af" points="8.660254,5 0,10 0,0 " /><polygon style="fill:#fcdd09" points="415571,301930 -158734,-488533 -158734,488533 415571,-301930 -513674,0 " transform="matrix(3.114816e-6,0,0,3.114816e-6,2.88675,5)" /></g></g></g>
               </svg>
               <div>
-                <div style="font-size:11px; color:#666; margin-bottom:2px;">Republic of South Sudan</div>
+                <div style="font-size:12px; font-weight:700; color:#666; margin-bottom:2px; text-transform:uppercase;">Republic of South Sudan</div>
                 <div style="font-size:14px; font-weight:700; color: #0F2B40;">MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY</div>
               </div>
               <img id="leave-preview-logo-img" src="logo.jpg" alt="MoHEST Crest" style="width: 40px; height: 40px; object-fit: contain;">
@@ -349,11 +349,11 @@
           <div class="panel-head"><h3>Preview</h3></div>
           <div class="letter-preview" id="appt-preview">
             <div class="letter-head" style="display: flex; justify-content: space-between; align-items: center; text-align: center;">
-              <svg class="id-card-flag-svg" viewBox="0 0 800 400" style="width:40px; height:20px; border:1px solid rgba(0,0,0,0.1); border-radius:2px; display:block;">
+              <svg class="id-card-flag-svg" viewBox="0 0 800 400" style="width:50px; height:25px; border:1px solid rgba(0,0,0,0.1); border-radius:2px; display:block;">
                 <g transform="translate(0,-81.146301)"><g transform="matrix(40,0,0,40,0,81.146301)"><g><rect style="fill:#078930" y="0" x="0" width="20" height="10" /><rect style="fill:#ffffff" y="0" x="0" width="20" height="7" /><rect y="0" x="0" width="20" height="3" /><rect style="fill:#da121a" x="0" y="3.5" width="20" height="3" /></g><g><polygon style="fill:#0f47af" points="8.660254,5 0,10 0,0 " /><polygon style="fill:#fcdd09" points="415571,301930 -158734,-488533 -158734,488533 415571,-301930 -513674,0 " transform="matrix(3.114816e-6,0,0,3.114816e-6,2.88675,5)" /></g></g></g>
               </svg>
               <div>
-                <div style="font-size:11px; color:#666; margin-bottom:2px;">Republic of South Sudan</div>
+                <div style="font-size:12px; font-weight:700; color:#666; margin-bottom:2px; text-transform:uppercase;">Republic of South Sudan</div>
                 <div style="font-size:14px; font-weight:700; color: #0F2B40;">MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY</div>
               </div>
               <img id="appt-preview-logo-img" src="logo.jpg" alt="MoHEST Crest" style="width: 40px; height: 40px; object-fit: contain;">
@@ -965,13 +965,13 @@ function generateLeavePdf() {
   const m = 20; let y = m;
 
   if (flagBase64) {
-    doc.addImage(flagBase64, 'PNG', m, 22, 28, 14);
+    doc.addImage(flagBase64, 'PNG', m, 20, 34, 17);
   }
   if (logoBase64) {
-    doc.addImage(logoBase64, 'JPEG', 210 - m - 20, 18, 20, 20);
+    doc.addImage(logoBase64, 'JPEG', 210 - m - 24, 18, 24, 24);
   }
-  doc.setTextColor(100, 100, 100); doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-  doc.text('Republic of South Sudan', 105, 24, { align: 'center' });
+  doc.setTextColor(100, 100, 100); doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+  doc.text('REPUBLIC OF SOUTH SUDAN', 105, 24, { align: 'center' });
   doc.setTextColor(15, 43, 64); doc.setFontSize(13); doc.setFont('helvetica', 'bold');
   doc.text('MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY', 105, 31, { align: 'center' });
   
@@ -1060,13 +1060,13 @@ function generateApptPdf() {
   const m = 20; let y = m;
 
   if (flagBase64) {
-    doc.addImage(flagBase64, 'PNG', m, 22, 28, 14);
+    doc.addImage(flagBase64, 'PNG', m, 20, 34, 17);
   }
   if (logoBase64) {
-    doc.addImage(logoBase64, 'JPEG', 210 - m - 20, 18, 20, 20);
+    doc.addImage(logoBase64, 'JPEG', 210 - m - 24, 18, 24, 24);
   }
-  doc.setTextColor(100, 100, 100); doc.setFontSize(10); doc.setFont('helvetica', 'normal');
-  doc.text('Republic of South Sudan', 105, 24, { align: 'center' });
+  doc.setTextColor(100, 100, 100); doc.setFontSize(12); doc.setFont('helvetica', 'bold');
+  doc.text('REPUBLIC OF SOUTH SUDAN', 105, 24, { align: 'center' });
   doc.setTextColor(15, 43, 64); doc.setFontSize(13); doc.setFont('helvetica', 'bold');
   doc.text('MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY', 105, 31, { align: 'center' });
   
