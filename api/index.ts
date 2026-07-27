@@ -35,6 +35,12 @@ async function createApp(): Promise<NestExpressApplication> {
   app.setGlobalPrefix('api/v1');
 
   await app.init();
+
+  const expressApp = app.getHttpAdapter().getInstance();
+  if (expressApp && typeof expressApp.set === 'function') {
+    expressApp.set('trust proxy', 1);
+  }
+
   cachedApp = app;
   return app;
 }
