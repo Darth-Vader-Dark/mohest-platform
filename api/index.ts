@@ -49,8 +49,18 @@ async function createApp(): Promise<NestExpressApplication> {
 }
 
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
-  const app = await createApp();
-  const httpAdapter = app.getHttpAdapter();
-  const expressInstance = httpAdapter.getInstance();
-  expressInstance(req, res);
+  try {
+    const app = await createApp();
+    const httpAdapter = app.getHttpAdapter();
+    const expressInstance = httpAdapter.getInstance();
+    expressInstance(req, res);
+  } catch (err: any) {
+    console.error('Vercel serverless function error:', err);
+    res.statusCode = 500;
+    res.setHeader('Content-Type', 'application/json');
+    res.end(JSON.stringify({
+      statusCode: 500,
+      message: err?.message || 'Server error during request execution',
+    }));
+  }
 }
