@@ -2,37 +2,36 @@
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   /* ---------- Page-wide parallax ----------
-     Each layer's true (untransformed) document position is measured once
-     on load/resize and cached. Movement is then computed each scroll tick
-     as (scrollY - cachedDocTop) * speed — pure arithmetic, no layout
-     reads on every frame, and critically: it never measures an element
-     that already has a transform applied to itself (which would feed
-     the previous frame's offset back into the next one).
-     Layers are only active while their section is near the viewport,
-     which keeps per-frame work small and constant no matter how long
-     the page is. */
-  var parallaxEls = Array.prototype.slice.call(document.querySelectorAll('.parallax-el:not(.bg-dots)'));
-  var meta = new Map();
+     Viewport-relative approach: offset is based on how far the element's
+     centre is from the viewport centre, multiplied by speed.
+     - Elements near the viewport centre get near-zero offset (no jitter).
+     - Elements above the centre drift upward slightly (sky layer effect).
+     - Elements below drift downward slightly (depth layer effect).
+     This prevents footer elements from accumulating a huge offset just because
+     they are far down the page — a common bug with document-top approaches.
+     bg-horizon and any parallax elements inside <footer> are excluded because
+     those decorative motifs look best static and drift badly when translated. */
+
+  var parallaxEls = Array.prototype.slice.call(
+    document.querySelectorAll('.parallax-el:not(.bg-dots):not(.bg-horizon)')
+  ).filter(function(el){ return !el.closest('footer'); });
+
   var activeLayers = [];
   var ticking = false;
-
-  function measureLayers(){
-    parallaxEls.forEach(function(el){
-      var prevTransform = el.style.transform;
-      el.style.transform = 'none';
-      var rect = el.getBoundingClientRect();
-      el.style.transform = prevTransform;
-      var speed = parseFloat(el.getAttribute('data-speed')) || 0.1;
-      meta.set(el, { docTop: rect.top + window.scrollY, speed: speed });
-    });
-  }
+  var vh = window.innerHeight;
 
   function applyParallax(){
     for (var i = 0; i < activeLayers.length; i++){
       var el = activeLayers[i];
-      var m = meta.get(el);
-      if (!m) continue;
-      var offset = (window.scrollY - m.docTop) * m.speed;
+      var speed = parseFloat(el.getAttribute('data-speed')) || 0.1;
+      var rect = el.getBoundingClientRect();
+      /* Centre of the element relative to viewport */
+      var elementCentreY = rect.top + rect.height / 2;
+      /* Distance from viewport centre: negative = above, positive = below */
+      var distance = elementCentreY - (vh / 2);
+      /* Negate: element above viewport centre shifts further up (moves away),
+         element below shifts further down — creates natural depth illusion */
+      var offset = -(distance * speed);
       el.style.transform = 'translate3d(0,' + offset.toFixed(1) + 'px,0)';
     }
     ticking = false;
@@ -43,19 +42,19 @@
   }
 
   if (!reduceMotion && parallaxEls.length){
-    measureLayers();
-    window.addEventListener('resize', measureLayers);
-    window.setTimeout(measureLayers, 400);
+    window.addEventListener('resize', function(){ vh = window.innerHeight; requestApply(); });
 
     if ('IntersectionObserver' in window){
       var sections = [];
       parallaxEls.forEach(function(el){
-        var sec = el.closest('section, footer');
+        var sec = el.closest('section, .hero');
         if (sec && sections.indexOf(sec) === -1) sections.push(sec);
       });
       var sectionObserver = new IntersectionObserver(function(entries){
         entries.forEach(function(entry){
-          var els = Array.prototype.slice.call(entry.target.querySelectorAll('.parallax-el'));
+          var els = Array.prototype.slice.call(
+            entry.target.querySelectorAll('.parallax-el:not(.bg-dots):not(.bg-horizon)')
+          ).filter(function(e){ return !e.closest('footer'); });
           els.forEach(function(el){
             var idx = activeLayers.indexOf(el);
             if (entry.isIntersecting && idx === -1){
@@ -77,11 +76,9 @@
   }
 
   /* ---------- Scroll-reveal for cards ---------- */
-  var revealEls = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
-  if (reduceMotion || !('IntersectionObserver' in window)){
-    revealEls.forEach(function(el){ el.classList.add('in'); });
-  } else if (revealEls.length){
-    var revealObserver = new IntersectionObserver(function(entries){
+  var revealObserver = null;
+  if (!reduceMotion && 'IntersectionObserver' in window) {
+    revealObserver = new IntersectionObserver(function(entries){
       entries.forEach(function(entry){
         if (entry.isIntersecting){
           entry.target.classList.add('in');
@@ -89,8 +86,30 @@
         }
       });
     }, { threshold: 0.16, rootMargin: '0px 0px -60px 0px' });
+  }
+
+  /* Observe elements that are already in the DOM at load time */
+  var revealEls = Array.prototype.slice.call(document.querySelectorAll('.reveal'));
+  if (reduceMotion || !('IntersectionObserver' in window)) {
+    revealEls.forEach(function(el){ el.classList.add('in'); });
+  } else {
     revealEls.forEach(function(el){ revealObserver.observe(el); });
   }
+
+  /**
+   * window.observeReveal(nodeList | Array)
+   * Call this after injecting dynamic .reveal elements so they animate in.
+   * Falls back to immediately adding 'in' if reduced-motion or no observer.
+   */
+  window.observeReveal = function(els) {
+    if (!els) return;
+    var arr = Array.prototype.slice.call(els);
+    if (reduceMotion || !revealObserver) {
+      arr.forEach(function(el){ el.classList.add('in'); });
+    } else {
+      arr.forEach(function(el){ revealObserver.observe(el); });
+    }
+  };
 
   /* ---------- Stat counters, run once when scrolled into view ---------- */
   var statEls = document.querySelectorAll('.stat .num');

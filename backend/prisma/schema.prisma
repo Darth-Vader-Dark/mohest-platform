@@ -375,7 +375,7 @@ model PublicDownload {
   id          String   @id @default(uuid())
   title       String
   description String?
-  category    String   @default("form") // "form" | "guideline" | "policy" | "other"
+  category    String   @default("form") // "form" | "guideline" | "policy" | "statement" | "other"
   fileUrl     String
   fileSize    Int?
   fileLabel   String   @default("PDF")
@@ -387,3 +387,16 @@ model PublicDownload {
   @@index([category])
   @@map("public_downloads")
 }
+
+model GalleryItem {
+  id          String   @id @default(uuid())
+  title       String
+  imageUrl    String
+  sortOrder   Int      @default(0)
+  isPublished Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("gallery_items")
+}
+

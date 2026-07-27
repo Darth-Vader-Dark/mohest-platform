@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link class="brand-favicon" rel="icon" type="image/jpeg" href="logo.jpg">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Search — MoHEST</title>
@@ -9,12 +10,132 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/styles.css">
+<style>
+/* ── Search specific ─────────────────────────────────── */
+.search-box {
+  display: flex;
+  gap: 12px;
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  padding: 8px 12px;
+  border-radius: 12px;
+  box-shadow: var(--shadow-card);
+}
+.search-box input {
+  flex: 1;
+  border: none;
+  background: none;
+  font-family: inherit;
+  font-size: 16px;
+  color: var(--ink);
+  outline: none;
+}
+.search-box input::placeholder {
+  color: var(--ink-soft);
+  opacity: 0.7;
+}
+
+.search-results-container {
+  margin-top: 36px;
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.search-result {
+  background: var(--paper-raised);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 20px 24px;
+  box-shadow: var(--shadow-card);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  animation: fadeUp 0.3s ease;
+}
+.search-result:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(0, 43, 73, 0.08);
+}
+.search-result .kind {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--brick);
+  margin-bottom: 8px;
+}
+.search-result h3 {
+  font-size: 1.25rem;
+  margin: 0 0 8px;
+}
+.search-result h3 a {
+  text-decoration: none;
+  color: var(--nile);
+}
+.search-result h3 a:hover {
+  color: var(--gold-deep);
+}
+.search-result p {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  margin: 0;
+  line-height: 1.6;
+}
+
+/* Loading state */
+.search-loading {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--ink-soft);
+  padding: 40px 0;
+}
+.spinner {
+  width: 22px;
+  height: 22px;
+  border: 2px solid rgba(185, 130, 46, 0.3);
+  border-top-color: var(--gold);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Empty state */
+.search-empty {
+  text-align: center;
+  padding: 60px 0;
+  color: var(--ink-soft);
+}
+.search-empty h3 {
+  font-size: 1.4rem;
+  color: var(--nile-deep);
+  margin-bottom: 8px;
+}
+</style>
 </head>
 <body>
+<div class="national-ribbon">
+  <div class="wrap">
+    <div class="ribbon-content">
+      <div class="flag-stripes">
+        <span class="stripe stripe-black"></span>
+        <span class="stripe stripe-white"></span>
+        <span class="stripe stripe-red"></span>
+        <span class="stripe stripe-white"></span>
+        <span class="stripe stripe-green"></span>
+        <span class="stripe stripe-blue"></span>
+        <span class="stripe stripe-yellow"></span>
+      </div>
+      <span class="ribbon-text">Official Website of the Republic of South Sudan</span>
+    </div>
+  </div>
+</div>
 <header>
   <div class="wrap nav-row">
     <a class="brand" href="index.html">
-      <div class="brand-mark">M</div>
+      <div class="brand-mark"><img src="logo.jpg" alt="MoHEST logo" class="brand-logo"></div>
       <div class="brand-text">
         <div class="top">MoHEST</div>
         <div class="bottom">Republic of South Sudan</div>
@@ -24,10 +145,11 @@
       <a href="about.html">About</a><a href="leadership.html">Leadership</a><a href="departments.html">Departments</a><a href="universities.html">Universities</a><a href="admissions.html">Admissions</a><a href="news.html">News</a><a href="contact.html">Contact</a>
     </nav>
     <div class="nav-actions">
-      <a class="icon-btn" href="search.html" aria-label="Search" title="Search">&#8981;</a>
+      <a class="icon-btn active" href="search.html" aria-label="Search" title="Search">&#8981;</a>
     </div>
   </div>
 </header>
+
 <section class="page-hero">
   <div class="bg-dots parallax-el" data-speed="0.12" style="--dot-color:rgba(185,130,46,0.4);" aria-hidden="true"></div>
   <div class="bg-glow gold parallax-el" data-speed="0.16" style="width:380px; height:380px; top:30px; right:40px;" aria-hidden="true"></div>
@@ -42,41 +164,27 @@
 <section class="departments">
   <div class="bg-dots parallax-el" data-speed="0.12" style="--dot-color:rgba(51,85,58,0.5);" aria-hidden="true"></div>
   <div class="wrap">
-    <div class="section-head">
-      <span class="kicker">Global search</span>
-      <h2>Search the ministry site.</h2>
+    <div class="search-box">
+      <input type="text" id="search-input" placeholder="Search universities, policies, news, documents&hellip;">
+      <button class="btn btn-primary" id="search-button" type="button">Search</button>
     </div>
-    <div class="search-box reveal up">
-      <input type="text" placeholder="Search universities, policies, news&hellip;" value="admission">
-      <button class="btn btn-primary" type="button">Search</button>
-    </div>
-    <div style="margin-top:36px; position:relative; z-index:1;">
-      <div class="search-result reveal up">
-        <div class="kind">Page</div>
-        <h3><a href="admissions.html" style="text-decoration:none;">Admission Policies</a></h3>
-        <p>The national admission process, timeline, and entry requirements for South Sudan's public universities.</p>
-      </div>
-      <div class="search-result reveal up">
-        <div class="kind">News</div>
-        <h3><a href="news.html" style="text-decoration:none;">2026 foreign scholarship intake opens for STEM fields</a></h3>
-        <p>Published 28 June 2026.</p>
-      </div>
-      <div class="search-result reveal up">
-        <div class="kind">Document</div>
-        <h3><a href="downloads.html" style="text-decoration:none;">National Admission Policy 2026 (PDF)</a></h3>
-        <p>Official policy document &middot; 1.2 MB.</p>
-      </div>
+
+    <!-- Status & Results -->
+    <div id="search-loading" class="search-loading" style="display:none;"><div class="spinner"></div> Searching ministry repository…</div>
+    <div id="search-results" class="search-results-container"></div>
+    <div id="search-empty" class="search-empty" style="display:none;">
+      <h3>No results found</h3>
+      <p id="search-empty-text">Try adjusting your terms or check your spelling.</p>
     </div>
   </div>
 </section>
+
 <footer>
-  <div class="bg-dots parallax-el" data-speed="0.12" style="--dot-color:rgba(185,130,46,0.42);" aria-hidden="true"></div>
-  <div class="bg-horizon parallax-el" data-speed="0.1" style="top:-20px;" aria-hidden="true"></div>
   <div class="wrap">
     <div class="footer-grid">
       <div class="footer-brand">
         <div class="brand" style="gap:10px;">
-          <div class="brand-mark">M</div>
+          <div class="brand-mark"><img src="logo.jpg" alt="MoHEST logo" class="brand-logo"></div>
           <div class="brand-text">
             <div class="top" style="color:#FFFDF8;">MoHEST</div>
             <div class="bottom" style="color:#B8AF97;">Republic of South Sudan</div>
@@ -110,7 +218,7 @@
           <li><a href="news.html">News</a></li>
           <li><a href="media-center.html">Media centre</a></li>
           <li><a href="downloads.html">Downloads</a></li>
-          <li><a href="#">Privacy</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
           <li><a href="../enterprise-portal/login.html">Staff portal</a></li>
         </ul>
       </div>
@@ -121,6 +229,158 @@
     </div>
   </div>
 </footer>
+<script src="assets/api.js"></script>
 <script src="assets/main.js"></script>
+<script>
+(function(){
+  const API = window.MOHEST_API;
+  
+  // Static pages search index
+  const staticIndex = [
+    { kind: 'Page', title: 'About MoHEST', url: 'about.html', text: 'Ministry mandate, vision, mission, organizational structure, values, and scientific technology targets in South Sudan.' },
+    { kind: 'Page', title: 'Admissions Policies', url: 'admissions.html', text: 'How admissions work, national application window, entry requirements, placement and eligibility details for public universities.' },
+    { kind: 'Page', title: 'Leadership & Cabinet', url: 'leadership.html', text: 'Ministerial team, Cabinet Minister, Undersecretary, Directors, and profiles of key ministry figures.' },
+    { kind: 'Page', title: 'Departments & Directorates', url: 'departments.html', text: 'Explore standard departments, higher education boards, planning, and scientific research administration.' },
+    { kind: 'Page', title: 'Contact Ministry', url: 'contact.html', text: 'Official phone number, email address, physical location office in Juba, South Sudan and feedback form.' },
+    { kind: 'Page', title: 'Privacy Policy', url: 'privacy.html', text: 'Information protection, data privacy policy, logs storage, cookie options, and student records transparency.' }
+  ];
+
+  const searchInput = document.getElementById('search-input');
+  const searchBtn = document.getElementById('search-button');
+  const resultsContainer = document.getElementById('search-results');
+  const loadingEl = document.getElementById('search-loading');
+  const emptyEl = document.getElementById('search-empty');
+  const emptyText = document.getElementById('search-empty-text');
+
+  // Trigger search on button click or enter key
+  searchBtn.addEventListener('click', () => performSearch(searchInput.value));
+  searchInput.addEventListener('keydown', e => { if (e.key === 'Enter') performSearch(searchInput.value); });
+
+  // Initial load from URL query param
+  const urlParams = new URLSearchParams(window.location.search);
+  const initialQuery = urlParams.get('q') || '';
+  if (initialQuery) {
+    searchInput.value = initialQuery;
+    performSearch(initialQuery);
+  }
+
+  async function performSearch(query) {
+    query = (query || '').trim();
+    if (!query) {
+      resultsContainer.innerHTML = '';
+      emptyEl.style.display = 'none';
+      return;
+    }
+
+    // Update URL query param quietly
+    const newUrl = window.location.protocol + "//" + window.location.host + window.location.pathname + '?q=' + encodeURIComponent(query);
+    window.history.replaceState({ path: newUrl }, '', newUrl);
+
+    // Show loading
+    loadingEl.style.display = 'flex';
+    resultsContainer.innerHTML = '';
+    emptyEl.style.display = 'none';
+
+    try {
+      // Fetch dynamic content in parallel
+      const [news, scholarships, downloads, institutions] = await Promise.all([
+        fetch(`${API}/public-site/news-articles`).then(r => r.ok ? r.json() : []).catch(() => []),
+        fetch(`${API}/public-site/scholarships`).then(r => r.ok ? r.json() : []).catch(() => []),
+        fetch(`${API}/public-site/downloads`).then(r => r.ok ? r.json() : []).catch(() => []),
+        fetch(`${API}/public-site/institutions`).then(r => r.ok ? r.json() : []).catch(() => [])
+      ]);
+
+      const queryLower = query.toLowerCase();
+      const results = [];
+
+      // 1. Search Static Index
+      staticIndex.forEach(item => {
+        if (item.title.toLowerCase().includes(queryLower) || item.text.toLowerCase().includes(queryLower)) {
+          results.push(item);
+        }
+      });
+
+      // 2. Search News Articles
+      news.forEach(item => {
+        if (item.title.toLowerCase().includes(queryLower) || 
+            (item.summary && item.summary.toLowerCase().includes(queryLower)) ||
+            (item.content && item.content.toLowerCase().includes(queryLower))) {
+          results.push({
+            kind: 'News',
+            title: item.title,
+            url: 'news.html',
+            text: item.summary || (item.content ? item.content.substring(0, 140) + '...' : '')
+          });
+        }
+      });
+
+      // 3. Search Scholarships
+      scholarships.forEach(item => {
+        if (item.title.toLowerCase().includes(queryLower) || 
+            item.country.toLowerCase().includes(queryLower) ||
+            item.fieldsOfStudy.toLowerCase().includes(queryLower) ||
+            (item.description && item.description.toLowerCase().includes(queryLower))) {
+          results.push({
+            kind: 'Scholarship',
+            title: `${item.title} (${item.country})`,
+            url: 'scholarships.html',
+            text: `Fields: ${item.fieldsOfStudy} · Level: ${item.level || 'All'} · Status: ${item.status}`
+          });
+        }
+      });
+
+      // 4. Search Downloads
+      downloads.forEach(item => {
+        if (item.title.toLowerCase().includes(queryLower) || 
+            (item.description && item.description.toLowerCase().includes(queryLower))) {
+          results.push({
+            kind: 'Document',
+            title: `${item.title} (${item.fileLabel || 'PDF'})`,
+            url: item.fileUrl.startsWith('http') ? item.fileUrl : 'http://localhost:3000' + item.fileUrl,
+            text: item.description || 'Official downloadable ministry resource.'
+          });
+        }
+      });
+
+      // 5. Search Institutions
+      institutions.forEach(item => {
+        if (item.name.toLowerCase().includes(queryLower) || 
+            (item.details && item.details.toLowerCase().includes(queryLower)) ||
+            item.category.toLowerCase().includes(queryLower)) {
+          results.push({
+            kind: 'Institution',
+            title: item.name,
+            url: 'universities.html',
+            text: `${item.type || 'Public'} ${item.category.replace('_',' ')} · Location: ${item.location || 'South Sudan'} · Status: ${item.status || 'Accredited'}`
+          });
+        }
+      });
+
+      // Hide loading
+      loadingEl.style.display = 'none';
+
+      if (results.length === 0) {
+        emptyText.textContent = `We couldn't find any matches for "${query}".`;
+        emptyEl.style.display = 'block';
+      } else {
+        resultsContainer.innerHTML = results.map(r => `
+          <div class="search-result">
+            <span class="kind">${esc(r.kind)}</span>
+            <h3><a href="${r.url}" ${r.url.startsWith('http') ? 'target="_blank"' : ''}>${esc(r.title)}</a></h3>
+            <p>${esc(r.text)}</p>
+          </div>
+        `).join('');
+      }
+    } catch(e) {
+      console.error(e);
+      loadingEl.style.display = 'none';
+      emptyText.textContent = 'A network error occurred while performing search. Please try again.';
+      emptyEl.style.display = 'block';
+    }
+  }
+
+  function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+})();
+</script>
 </body>
 </html>

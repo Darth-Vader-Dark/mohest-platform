@@ -80,16 +80,25 @@ async function main() {
   console.log('Seeding ICT Administrator role...');
   const ictAdminRole = await prisma.role.upsert({
     where: { name: 'ICT Administrator' },
-    update: {},
+    update: {
+      description: 'Full system administration access. Seeded role — cannot be deleted.',
+      isSystem: true,
+    },
     create: {
       name: 'ICT Administrator',
       description: 'Full system administration access. Seeded role — cannot be deleted.',
       isSystem: true,
-      permissions: {
-        create: permissionIds.map((permissionId) => ({ permissionId })),
-      },
     },
   });
+
+  // Always ensure ICT Administrator has ALL permissions (idempotent upsert per permission)
+  for (const permissionId of permissionIds) {
+    await prisma.rolePermission.upsert({
+      where: { roleId_permissionId: { roleId: ictAdminRole.id, permissionId } },
+      update: {},
+      create: { roleId: ictAdminRole.id, permissionId },
+    });
+  }
 
   // --- HR roles (include departments.read so HR staff can load department dropdowns) ---
   console.log('Seeding HR roles...');

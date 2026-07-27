@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link class="brand-favicon" rel="icon" type="image/jpeg" href="logo.jpg">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>HR Dashboard — MoHEST Staff Portal</title>
@@ -20,7 +21,7 @@
   <!-- ═══════════ SIDEBAR ═══════════ -->
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-mark">M</div>
+      <div class="brand-mark"><img src="logo.jpg" alt="MoHEST logo" class="brand-logo"></div>
       <div class="brand-text">MoHEST Portal</div>
     </div>
 
@@ -156,7 +157,7 @@
           <div id="id-card-preview" class="id-card-preview" style="display:none;">
             <div class="id-card" id="id-card-render">
               <div class="id-card-header">
-                <div class="id-card-logo">M</div>
+                <div class="id-card-logo"><img src="logo.jpg" alt="MoHEST logo" class="brand-logo"></div>
                 <div class="id-card-header-text">
                   <div class="id-card-ministry">Ministry of Higher Education</div>
                   <div class="id-card-country">Science &amp; Technology · Republic of South Sudan</div>
@@ -228,12 +229,15 @@
         <div class="panel">
           <div class="panel-head"><h3>Preview</h3></div>
           <div class="letter-preview" id="leave-preview">
-            <div class="letter-head">
-              <div style="font-size:15px; font-weight:700; text-align:center;">MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY</div>
-              <div style="text-align:center; font-size:12px; color:#666; margin-top:2px;">Republic of South Sudan</div>
-              <hr style="margin:12px 0; border-color:#ccc;">
-              <div style="font-size:17px; font-weight:600; text-align:center; text-transform:uppercase; margin-bottom:14px;">Leave Approval Letter</div>
+            <div class="letter-head" style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px;">
+              <img src="logo.jpg" alt="MoHEST Crest" style="width: 50px; height: 50px; object-fit: contain;">
+              <div>
+                <div style="font-size:14px; font-weight:700; color: #0F2B40;">MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY</div>
+                <div style="font-size:11px; color:#666; margin-top:2px;">Republic of South Sudan</div>
+              </div>
             </div>
+            <div style="border-bottom: 2px solid #0F2B40; border-top: 1px solid #E7B75E; height: 3px; margin: 10px 0;"></div>
+            <div style="font-size:15px; font-weight:600; text-align:center; text-transform:uppercase; margin-bottom:14px; color: #0F2B40;">Leave Approval Letter</div>
             <div id="leave-preview-body" style="font-size:13px; color:#333; line-height:1.7;">
               Fill the form and click <em>Generate</em> to see a preview.
             </div>
@@ -283,12 +287,15 @@
         <div class="panel">
           <div class="panel-head"><h3>Preview</h3></div>
           <div class="letter-preview" id="appt-preview">
-            <div class="letter-head">
-              <div style="font-size:15px; font-weight:700; text-align:center;">MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY</div>
-              <div style="text-align:center; font-size:12px; color:#666; margin-top:2px;">Republic of South Sudan</div>
-              <hr style="margin:12px 0; border-color:#ccc;">
-              <div style="font-size:17px; font-weight:600; text-align:center; text-transform:uppercase; margin-bottom:14px;">Letter of Appointment</div>
+            <div class="letter-head" style="display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px;">
+              <img src="logo.jpg" alt="MoHEST Crest" style="width: 50px; height: 50px; object-fit: contain;">
+              <div>
+                <div style="font-size:14px; font-weight:700; color: #0F2B40;">MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY</div>
+                <div style="font-size:11px; color:#666; margin-top:2px;">Republic of South Sudan</div>
+              </div>
             </div>
+            <div style="border-bottom: 2px solid #0F2B40; border-top: 1px solid #E7B75E; height: 3px; margin: 10px 0;"></div>
+            <div style="font-size:15px; font-weight:600; text-align:center; text-transform:uppercase; margin-bottom:14px; color: #0F2B40;">Letter of Appointment</div>
             <div id="appt-preview-body" style="font-size:13px; color:#333; line-height:1.7;">
               Fill the form and click <em>Generate</em> to see a preview.
             </div>
@@ -391,6 +398,27 @@ let allEmployees = [];
 let allDepartments = [];
 let idCardEmployee = null;
 let editingEmpId = null;
+let logoBase64 = '';
+
+async function loadLogoBase64() {
+  try {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    await new Promise((resolve, reject) => {
+      img.onload = resolve;
+      img.onerror = reject;
+      img.src = 'logo.jpg';
+    });
+    const canvas = document.createElement('canvas');
+    canvas.width = img.width;
+    canvas.height = img.height;
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(img, 0, 0);
+    logoBase64 = canvas.toDataURL('image/jpeg');
+  } catch (e) {
+    console.error('Failed to preload logo.jpg', e);
+  }
+}
 
 // ── Bootstrap ──────────────────────────────────────────────
 (async function init() {
@@ -409,7 +437,8 @@ let editingEmpId = null;
 
   await Promise.all([
     loadDepartments(),
-    loadEmployees()
+    loadEmployees(),
+    loadLogoBase64()
   ]);
   
   renderOverview();
@@ -771,16 +800,21 @@ function generateLeavePdf() {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const m = 20; let y = m;
 
-  doc.setFillColor(15, 43, 64); doc.rect(0, 0, 210, 22, 'F');
-  doc.setTextColor(231, 183, 94); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
-  doc.text('MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY', 105, 10, { align: 'center' });
-  doc.setTextColor(180, 200, 210); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-  doc.text('Republic of South Sudan', 105, 16, { align: 'center' });
+  if (logoBase64) {
+    doc.addImage(logoBase64, 'JPEG', 95, 12, 20, 20);
+  }
+  doc.setTextColor(15, 43, 64); doc.setFontSize(13); doc.setFont('helvetica', 'bold');
+  doc.text('MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY', 105, 37, { align: 'center' });
+  doc.setTextColor(100, 100, 100); doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+  doc.text('Republic of South Sudan', 105, 42, { align: 'center' });
+  
+  doc.setDrawColor(15, 43, 64); doc.setLineWidth(0.8); doc.line(m, 46, 210-m, 46);
+  doc.setDrawColor(231, 183, 94); doc.setLineWidth(0.3); doc.line(m, 47.5, 210-m, 47.5);
 
-  y = 34;
+  y = 56;
   doc.setTextColor(17, 19, 24); doc.setFontSize(14); doc.setFont('helvetica', 'bold');
   doc.text('LEAVE APPROVAL LETTER', 105, y, { align: 'center' }); y += 12;
-  doc.setDrawColor(200); doc.line(m, y, 210-m, y); y += 8;
+  doc.setDrawColor(200); doc.setLineWidth(0.2); doc.line(m, y, 210-m, y); y += 8;
 
   const addLine = (label, val) => {
     doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(17,19,24);
@@ -853,16 +887,21 @@ function generateApptPdf() {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const m = 20; let y = m;
 
-  doc.setFillColor(15, 43, 64); doc.rect(0, 0, 210, 22, 'F');
-  doc.setTextColor(231, 183, 94); doc.setFontSize(11); doc.setFont('helvetica', 'bold');
-  doc.text('MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY', 105, 10, { align: 'center' });
-  doc.setTextColor(180, 200, 210); doc.setFontSize(8); doc.setFont('helvetica', 'normal');
-  doc.text('Republic of South Sudan', 105, 16, { align: 'center' });
+  if (logoBase64) {
+    doc.addImage(logoBase64, 'JPEG', 95, 12, 20, 20);
+  }
+  doc.setTextColor(15, 43, 64); doc.setFontSize(13); doc.setFont('helvetica', 'bold');
+  doc.text('MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY', 105, 37, { align: 'center' });
+  doc.setTextColor(100, 100, 100); doc.setFontSize(9); doc.setFont('helvetica', 'normal');
+  doc.text('Republic of South Sudan', 105, 42, { align: 'center' });
+  
+  doc.setDrawColor(15, 43, 64); doc.setLineWidth(0.8); doc.line(m, 46, 210-m, 46);
+  doc.setDrawColor(231, 183, 94); doc.setLineWidth(0.3); doc.line(m, 47.5, 210-m, 47.5);
 
-  y = 34;
+  y = 56;
   doc.setTextColor(17, 19, 24); doc.setFontSize(14); doc.setFont('helvetica', 'bold');
   doc.text('LETTER OF APPOINTMENT', 105, y, { align: 'center' }); y += 12;
-  doc.setDrawColor(200); doc.line(m, y, 210-m, y); y += 8;
+  doc.setDrawColor(200); doc.setLineWidth(0.2); doc.line(m, y, 210-m, y); y += 8;
 
   const addLine = (label, val) => {
     doc.setFontSize(10); doc.setFont('helvetica', 'bold'); doc.setTextColor(17,19,24);

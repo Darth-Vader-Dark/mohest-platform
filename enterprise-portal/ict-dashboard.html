@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link class="brand-favicon" rel="icon" type="image/jpeg" href="logo.jpg">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>ICT Administration — MoHEST Staff Portal</title>
@@ -16,7 +17,7 @@
   <!-- ═══════════ SIDEBAR ═══════════ -->
   <aside class="sidebar">
     <div class="brand">
-      <div class="brand-mark">M</div>
+      <div class="brand-mark"><img src="logo.jpg" alt="MoHEST logo" class="brand-logo"></div>
       <div class="brand-text">MoHEST Portal</div>
     </div>
 
@@ -39,6 +40,8 @@
       <div class="nav-item" data-section="institutions" onclick="showSection('institutions',this)"><span class="ic">🏫</span> Institutions</div>
       <div class="nav-item" data-section="scholarships" onclick="showSection('scholarships',this)"><span class="ic">🎓</span> Scholarships</div>
       <div class="nav-item" data-section="leaders" onclick="showSection('leaders',this)"><span class="ic">👔</span> Leadership</div>
+      <div class="nav-item" data-section="downloads" onclick="showSection('downloads',this)"><span class="ic">📁</span> Downloads</div>
+      <div class="nav-item" data-section="media" onclick="showSection('media',this)"><span class="ic">🖼️</span> Media &amp; Gallery</div>
     </div>
 
     <div class="sidebar-foot">
@@ -256,6 +259,67 @@
       </div>
     </div>
 
+    <!-- ─── DOWNLOADS SECTION ─── -->
+    <div class="content hidden" id="section-downloads">
+      <div class="page-title">
+        <div>
+          <h1>Downloads</h1>
+          <div class="sub">Manage forms, guidelines, and policy documents listed on the public site.</div>
+        </div>
+        <button class="btn-primary" onclick="openDownloadModal()">+ Add download</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3>All downloads</h3>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <select id="dl-cat-filter" onchange="filterDownloads()" style="padding:6px 10px; border:1px solid var(--border); border-radius:6px; font-family:inherit; font-size:12.5px; background:var(--surface-2); color:var(--ink);">
+              <option value="">All categories</option>
+              <option value="form">Forms</option>
+              <option value="guideline">Guidelines</option>
+              <option value="policy">Policies</option>
+              <option value="statement">Statements</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <table class="table-e">
+          <thead><tr><th>Title</th><th>Category</th><th>File</th><th>Size</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="downloads-tbody"><tr><td colspan="6" class="loading-cell">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── MEDIA & GALLERY SECTION ─── -->
+    <div class="content hidden" id="section-media">
+      <div class="page-title">
+        <div>
+          <h1>Media &amp; Gallery</h1>
+          <div class="sub">Manage photo gallery items and ministerial statements shown on the public Media Centre page.</div>
+        </div>
+        <button class="btn-primary" onclick="openGalleryModal()">+ Add photo</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h3>Photo Gallery</h3></div>
+        <table class="table-e">
+          <thead><tr><th>Photo</th><th>Title</th><th>Order</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="gallery-tbody"><tr><td colspan="5" class="loading-cell">Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="panel" style="margin-top:24px;">
+        <div class="panel-head">
+          <h3>Ministerial Statements</h3>
+          <span class="link" onclick="showSection('downloads',document.querySelector('[data-section=downloads]')); setTimeout(()=>{ const f=document.getElementById('dl-cat-filter'); if(f){ f.value='statement'; filterDownloads(); } },300)">Manage in Downloads →</span>
+        </div>
+        <table class="table-e">
+          <thead><tr><th>Title</th><th>File</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="stmts-tbody"><tr><td colspan="4" class="loading-cell">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
   </div><!-- .main -->
 </div><!-- .shell -->
 
@@ -444,7 +508,72 @@
   </form>
 </div>
 
-<!-- Department Modal -->
+<!-- Download Modal -->
+<div class="modal hidden" id="download-modal">
+  <div class="modal-head">
+    <h2 id="download-modal-title">Add download</h2>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <form id="download-form" onsubmit="submitDownloadForm(event)">
+    <div class="field"><label>Title *</label><input id="dl-title" required class="field-input" placeholder="e.g. Scholarship Application Form 2026"></div>
+    <div class="field"><label>Description</label><textarea id="dl-description" rows="2" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; resize:vertical;" placeholder="Brief description of the document..."></textarea></div>
+    <div class="form-grid-2">
+      <div class="field"><label>Category *</label>
+        <select id="dl-category" class="field-select">
+          <option value="form">Form</option>
+          <option value="guideline">Guideline</option>
+          <option value="policy">Policy</option>
+          <option value="statement">Statement</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="field"><label>Sort order</label><input type="number" id="dl-sortOrder" class="field-input" value="0" min="0"></div>
+    </div>
+    <div class="field"><label>PDF File</label>
+      <input type="file" id="dl-file" accept="application/pdf" class="field-input">
+      <div id="dl-file-info" style="margin-top:6px; font-size:12.5px; color:var(--ink-soft); display:none;"></div>
+      <input type="hidden" id="dl-fileUrl">
+      <input type="hidden" id="dl-fileSize">
+    </div>
+    <div class="field" style="display:flex; align-items:center; gap:8px;">
+      <input type="checkbox" id="dl-isPublished" style="width:auto;" checked>
+      <label for="dl-isPublished" style="margin:0; font-weight:500;">Published (visible on public site)</label>
+    </div>
+    <div id="download-form-error" class="form-error hidden"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button type="submit" class="btn-primary" id="download-form-submit">Save download</button>
+    </div>
+  </form>
+</div>
+
+<!-- Gallery Photo Modal -->
+<div class="modal hidden" id="gallery-modal">
+  <div class="modal-head">
+    <h2 id="gallery-modal-title">Add gallery photo</h2>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <form id="gallery-form" onsubmit="submitGalleryForm(event)">
+    <div class="field"><label>Caption / Title *</label><input id="g-title" required class="field-input" placeholder="e.g. Graduation ceremony — Juba University 2026"></div>
+    <div class="field"><label>Photo</label>
+      <input type="file" id="g-file" accept="image/*" class="field-input">
+      <div id="g-file-info" style="margin-top:6px; font-size:12.5px; color:var(--ink-soft); display:none;"></div>
+      <input type="hidden" id="g-imageUrl">
+    </div>
+    <div class="form-grid-2">
+      <div class="field"><label>Sort order</label><input type="number" id="g-sortOrder" class="field-input" value="0" min="0"></div>
+      <div class="field" style="display:flex; align-items:center; gap:8px; padding-top:22px;">
+        <input type="checkbox" id="g-isPublished" style="width:auto;" checked>
+        <label for="g-isPublished" style="margin:0; font-weight:500;">Published</label>
+      </div>
+    </div>
+    <div id="gallery-form-error" class="form-error hidden"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button type="submit" class="btn-primary" id="gallery-form-submit">Save photo</button>
+    </div>
+  </form>
+</div>
 <div class="modal hidden" id="dept-modal">
   <div class="modal-head">
     <h2 id="dept-modal-title">Create department</h2>
@@ -519,6 +648,8 @@ let editingNewsId = null;
 let editingInstId = null;
 let editingScholarId = null;
 let editingLeaderId = null;
+let editingDownloadId = null;
+let downloadList = [];
 let resetPwTargetId = null;
 
 // ── Bootstrap ──────────────────────────────────────────────
@@ -603,6 +734,7 @@ function showSection(id, el) {
     overview: 'Dashboard', users: 'User Management', audit: 'Audit Logs',
     news: 'News Articles', institutions: 'Institutions',
     scholarships: 'Scholarships', leaders: 'Leadership',
+    downloads: 'Downloads', media: 'Media & Gallery',
     departments: 'Departments', roles: 'Roles & Permissions',
   };
   document.getElementById('topbar-title').textContent = titles[id] || id;
@@ -615,6 +747,8 @@ function showSection(id, el) {
   if (id === 'institutions') loadInstitutions();
   if (id === 'scholarships') loadScholarships();
   if (id === 'leaders') loadLeaders();
+  if (id === 'downloads') loadDownloads();
+  if (id === 'media') loadMedia();
 }
 
 // ── KPIs / Overview ─────────────────────────────────────────
@@ -1113,6 +1247,7 @@ async function doDelete(type, id) {
     institution: `${API}/public-site/institutions/${id}`,
     scholarship: `${API}/public-site/scholarships/${id}`,
     leader: `${API}/public-site/leaders/${id}`,
+    download: `${API}/public-site/downloads/${id}`,
     department: `${API}/departments/${id}`,
     role: `${API}/roles/${id}`,
   };
@@ -1128,6 +1263,7 @@ async function doDelete(type, id) {
     if (type==='institution') loadInstitutions();
     if (type==='scholarship') loadScholarships();
     if (type==='leader') loadLeaders();
+    if (type==='download') loadDownloads();
     loadOverviewKPIs();
   } catch(err) { showToast('Error: ' + err.message, true); }
 }
@@ -1336,6 +1472,275 @@ async function submitRoleForm(e) {
   } finally {
     btn.disabled = false; btn.textContent = 'Create role';
   }
+}
+
+// ── Downloads ─────────────────────────────────────────────────
+function fmtFileSize(bytes) {
+  if (!bytes) return '—';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+
+function fmtCategory(cat) {
+  const map = { form: 'Form', guideline: 'Guideline', policy: 'Policy', other: 'Other' };
+  return map[cat] || cat;
+}
+
+async function loadDownloads() {
+  const tbody = document.getElementById('downloads-tbody');
+  tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">Loading…</td></tr>';
+  try {
+    const res = await fetch(`${API}/public-site/downloads?all=true`, { headers: authHeaders() });
+    if (!res.ok) throw new Error('Could not load downloads');
+    downloadList = await res.json();
+    renderDownloads(downloadList);
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="6" class="loading-cell" style="color:red;">Error: ${err.message}</td></tr>`;
+  }
+}
+
+function filterDownloads() {
+  const cat = document.getElementById('dl-cat-filter').value;
+  const filtered = cat ? downloadList.filter(d => d.category === cat) : downloadList;
+  renderDownloads(filtered);
+}
+
+function renderDownloads(list) {
+  const tbody = document.getElementById('downloads-tbody');
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">No downloads yet. Add one above.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(d => `
+    <tr>
+      <td><strong>${d.title}</strong>${d.description ? `<div style="font-size:12px;color:var(--ink-soft);margin-top:2px;">${d.description}</div>` : ''}</td>
+      <td><span class="badge-e" style="font-size:11.5px;">${fmtCategory(d.category)}</span></td>
+      <td style="font-size:12.5px;">${d.fileUrl ? `<a href="${resolveAssetUrl(d.fileUrl)}" target="_blank" style="color:var(--accent);">📄 ${d.fileLabel || 'PDF'}</a>` : '—'}</td>
+      <td style="font-size:12.5px;">${fmtFileSize(d.fileSize)}</td>
+      <td><span class="badge-e ${d.isPublished ? 'success' : ''}" style="font-size:11.5px;">${d.isPublished ? 'Published' : 'Draft'}</span></td>
+      <td>
+        <button class="action-btn" onclick="openDownloadModal('${d.id}')">✏️</button>
+        <button class="action-btn danger" onclick="confirmDelete('download','${d.id}','Delete &quot;${d.title.replace(/'/g, "\\'")}&quot;?')">🗑</button>
+      </td>
+    </tr>`).join('');
+}
+
+function openDownloadModal(id = null) {
+  editingDownloadId = id;
+  const d = id ? downloadList.find(x => x.id === id) : null;
+  document.getElementById('download-modal-title').textContent = d ? 'Edit download' : 'Add download';
+  document.getElementById('dl-title').value       = d ? d.title : '';
+  document.getElementById('dl-description').value = d ? (d.description || '') : '';
+  document.getElementById('dl-category').value    = d ? (d.category || 'form') : 'form';
+  document.getElementById('dl-sortOrder').value   = d ? (d.sortOrder ?? 0) : 0;
+  document.getElementById('dl-isPublished').checked = d ? d.isPublished : true;
+  document.getElementById('dl-fileUrl').value     = d ? (d.fileUrl || '') : '';
+  document.getElementById('dl-fileSize').value    = d ? (d.fileSize || '') : '';
+  document.getElementById('dl-file').value        = '';
+  const fileInfo = document.getElementById('dl-file-info');
+  if (d && d.fileUrl) {
+    fileInfo.textContent = `Current file: ${d.fileLabel || 'PDF'} (${fmtFileSize(d.fileSize)})`;
+    fileInfo.style.display = 'block';
+  } else {
+    fileInfo.style.display = 'none';
+  }
+  document.getElementById('download-form-error').classList.add('hidden');
+  openModal('download-modal');
+}
+
+// Show selected filename in the file info area
+document.getElementById('dl-file').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  const fileInfo = document.getElementById('dl-file-info');
+  if (file) {
+    fileInfo.textContent = `Selected: ${file.name} (${fmtFileSize(file.size)})`;
+    fileInfo.style.display = 'block';
+  } else {
+    fileInfo.style.display = 'none';
+  }
+});
+
+async function submitDownloadForm(e) {
+  e.preventDefault();
+  const btn = document.getElementById('download-form-submit');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  let fileUrl  = document.getElementById('dl-fileUrl').value || null;
+  let fileSize = parseInt(document.getElementById('dl-fileSize').value) || null;
+  const pdfFile = document.getElementById('dl-file').files[0];
+
+  try {
+    // Upload PDF if a new file was selected
+    if (pdfFile) {
+      btn.textContent = 'Uploading…';
+      const form = new FormData();
+      form.append('file', pdfFile);
+      const upRes = await fetch(`${API}/uploads/document`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      });
+      if (!upRes.ok) {
+        const err = await upRes.json().catch(() => ({}));
+        throw new Error(err.message || 'File upload failed');
+      }
+      const upData = await upRes.json();
+      fileUrl  = upData.url;
+      fileSize = upData.size ?? null;
+    }
+
+    if (!fileUrl) throw new Error('Please select a PDF file to upload.');
+
+    const payload = {
+      title:       document.getElementById('dl-title').value,
+      description: document.getElementById('dl-description').value || null,
+      category:    document.getElementById('dl-category').value,
+      fileUrl,
+      fileSize,
+      fileLabel:   'PDF',
+      sortOrder:   parseInt(document.getElementById('dl-sortOrder').value) || 0,
+      isPublished: document.getElementById('dl-isPublished').checked,
+    };
+
+    btn.textContent = 'Saving…';
+    const url    = editingDownloadId ? `${API}/public-site/downloads/${editingDownloadId}` : `${API}/public-site/downloads`;
+    const method = editingDownloadId ? 'PUT' : 'POST';
+    const res    = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(payload) });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.message || 'Error saving download'); }
+
+    showToast('Download saved.'); closeModal(); loadDownloads();
+  } catch (err) {
+    showFormError('download-form-error', err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save download';
+  }
+}
+
+// ── Gallery & Media ────────────────────────────────────────────
+let editingGalleryId = null;
+
+async function loadMedia() {
+  await Promise.all([loadGallery(), loadStatementsTable()]);
+}
+
+async function loadGallery() {
+  const tbody = document.getElementById('gallery-tbody');
+  tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">Loading…</td></tr>';
+  try {
+    const res = await fetch(`${API}/public-site/gallery-items/all`, { headers: authHeaders() });
+    const items = await res.json();
+    if (!items || !items.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="empty-cell">No gallery photos yet.</td></tr>'; return;
+    }
+    tbody.innerHTML = items.map(g => `
+      <tr>
+        <td><img src="${g.imageUrl.startsWith('http') ? g.imageUrl : 'http://localhost:3000' + g.imageUrl}" style="width:64px;height:44px;object-fit:cover;border-radius:6px;" alt="${esc(g.title)}"></td>
+        <td>${esc(g.title)}</td>
+        <td>${g.sortOrder}</td>
+        <td><span class="badge ${g.isPublished ? 'badge-active' : 'badge-inactive'}">${g.isPublished ? 'Published' : 'Draft'}</span></td>
+        <td>
+          <button class="action-btn" onclick="openGalleryModal(${JSON.stringify(g)})">Edit</button>
+          <button class="action-btn danger" onclick="deleteGalleryItem('${g.id}')">Delete</button>
+        </td>
+      </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="5" class="error-cell">Failed to load gallery.</td></tr>';
+  }
+}
+
+async function loadStatementsTable() {
+  const tbody = document.getElementById('stmts-tbody');
+  tbody.innerHTML = '<tr><td colspan="4" class="loading-cell">Loading…</td></tr>';
+  try {
+    const res = await fetch(`${API}/public-site/downloads?category=statement&all=true`, { headers: authHeaders() });
+    const items = await res.json();
+    if (!items || !items.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="empty-cell">No statements yet. Add them via Downloads → Statements.</td></tr>'; return;
+    }
+    tbody.innerHTML = items.map(d => `
+      <tr>
+        <td>${esc(d.title)}</td>
+        <td><a href="${d.fileUrl.startsWith('http') ? d.fileUrl : 'http://localhost:3000' + d.fileUrl}" target="_blank" style="color:var(--accent);">PDF ↗</a></td>
+        <td><span class="badge ${d.isPublished ? 'badge-active' : 'badge-inactive'}">${d.isPublished ? 'Published' : 'Draft'}</span></td>
+        <td><button class="action-btn" onclick="showSection('downloads',document.querySelector('[data-section=downloads]')); setTimeout(()=>{ filterDownloads(); },300)">Manage</button></td>
+      </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="4" class="error-cell">Failed to load statements.</td></tr>';
+  }
+}
+
+function openGalleryModal(item) {
+  editingGalleryId = item ? item.id : null;
+  document.getElementById('gallery-modal-title').textContent = item ? 'Edit gallery photo' : 'Add gallery photo';
+  document.getElementById('g-title').value = item ? item.title : '';
+  document.getElementById('g-imageUrl').value = item ? item.imageUrl : '';
+  document.getElementById('g-sortOrder').value = item ? item.sortOrder : 0;
+  document.getElementById('g-isPublished').checked = item ? item.isPublished : true;
+  document.getElementById('g-file').value = '';
+  const fi = document.getElementById('g-file-info');
+  fi.style.display = item && item.imageUrl ? 'block' : 'none';
+  fi.textContent = item && item.imageUrl ? `Current: ${item.imageUrl.split('/').pop()}` : '';
+  document.getElementById('gallery-form-error').classList.add('hidden');
+  openModal('gallery-modal');
+}
+
+document.getElementById('g-file').addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  const fi = document.getElementById('g-file-info');
+  if (file) { fi.textContent = `Selected: ${file.name} (${fmtFileSize(file.size)})`; fi.style.display = 'block'; }
+  else { fi.style.display = 'none'; }
+});
+
+async function submitGalleryForm(e) {
+  e.preventDefault();
+  const btn = document.getElementById('gallery-form-submit');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  let imageUrl = document.getElementById('g-imageUrl').value || null;
+  const imgFile = document.getElementById('g-file').files[0];
+
+  try {
+    if (imgFile) {
+      btn.textContent = 'Uploading…';
+      const form = new FormData();
+      form.append('file', imgFile);
+      const upRes = await fetch(`${API}/uploads/gallery-photo`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      });
+      if (!upRes.ok) { const err = await upRes.json().catch(() => ({})); throw new Error(err.message || 'Image upload failed'); }
+      imageUrl = (await upRes.json()).url;
+    }
+    if (!imageUrl) throw new Error('Please select a photo to upload.');
+
+    const payload = {
+      title:       document.getElementById('g-title').value,
+      imageUrl,
+      sortOrder:   parseInt(document.getElementById('g-sortOrder').value) || 0,
+      isPublished: document.getElementById('g-isPublished').checked,
+    };
+    btn.textContent = 'Saving…';
+    const url    = editingGalleryId ? `${API}/public-site/gallery-items/${editingGalleryId}` : `${API}/public-site/gallery-items`;
+    const method = editingGalleryId ? 'PUT' : 'POST';
+    const res    = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(payload) });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.message || 'Error saving gallery item'); }
+    showToast('Gallery photo saved.'); closeModal(); loadGallery();
+  } catch(err) {
+    showFormError('gallery-form-error', err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save photo';
+  }
+}
+
+async function deleteGalleryItem(id) {
+  if (!confirm('Delete this gallery photo? This cannot be undone.')) return;
+  try {
+    const res = await fetch(`${API}/public-site/gallery-items/${id}`, { method: 'DELETE', headers: authHeaders() });
+    if (!res.ok) throw new Error('Delete failed');
+    showToast('Gallery photo deleted.'); loadGallery();
+  } catch(e) { showToast('Failed to delete photo.', true); }
 }
 
 // ── Utilities ─────────────────────────────────────────────────

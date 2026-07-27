@@ -1,20 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link class="brand-favicon" rel="icon" type="image/jpeg" href="logo.jpg">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Media Centre — MoHEST</title>
-<meta name="description" content="Press releases, ministerial statements, and photography from MoHEST.">
+<meta name="description" content="Press releases, ministerial statements, event photography, and official communications from the Ministry of Higher Education, Science and Technology.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Public+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/styles.css">
+<style>
+/* ── Media-centre specific ─────────────────────────────── */
+.mc-tabs{display:flex;gap:8px;margin-bottom:40px;border-bottom:2px solid rgba(255,255,255,.08);padding-bottom:0;}
+.mc-tab{background:none;border:none;cursor:pointer;font-family:'Public Sans',sans-serif;font-size:.92rem;font-weight:600;color:#8a7f6a;padding:10px 20px 14px;border-bottom:3px solid transparent;margin-bottom:-2px;transition:color .2s,border-color .2s;}
+.mc-tab.active{color:var(--gold);border-bottom-color:var(--gold);}
+.mc-panel{display:none;animation:fadeUp .35s ease;}
+.mc-panel.active{display:block;}
+@keyframes fadeUp{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+
+/* News grid */
+.news-live-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:28px;}
+.news-live-card{background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;transition:transform .25s,box-shadow .25s;}
+.news-live-card:hover{transform:translateY(-4px);box-shadow:0 12px 40px rgba(0,0,0,.35);}
+.news-live-img{width:100%;aspect-ratio:16/9;object-fit:cover;background:var(--nile);}
+.news-live-img-placeholder{width:100%;aspect-ratio:16/9;background:linear-gradient(135deg,var(--nile) 0%,var(--nile-deep) 100%);display:flex;align-items:center;justify-content:center;font-size:2.5rem;opacity:.35;}
+.news-live-body{padding:20px;}
+.news-live-tag{font-size:.72rem;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gold);margin-bottom:8px;}
+.news-live-title{font-family:'Fraunces',serif;font-size:1.1rem;color:#FFFDF8;margin:0 0 10px;line-height:1.4;}
+.news-live-meta{font-size:.8rem;color:#8a7f6a;}
+.news-live-link{display:inline-block;margin-top:14px;font-size:.82rem;font-weight:600;color:var(--gold);text-decoration:none;}
+.news-live-link:hover{text-decoration:underline;}
+
+/* Gallery grid */
+.gallery-live-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px;}
+.gallery-live-item{position:relative;border-radius:10px;overflow:hidden;aspect-ratio:4/3;cursor:pointer;}
+.gallery-live-item img{width:100%;height:100%;object-fit:cover;transition:transform .35s;}
+.gallery-live-item:hover img{transform:scale(1.06);}
+.gallery-live-item .tag{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(0,0,0,.75));color:#fff;padding:22px 12px 10px;font-size:.78rem;font-weight:600;}
+
+/* Lightbox */
+.lb-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.88);z-index:999;display:none;align-items:center;justify-content:center;flex-direction:column;gap:14px;padding:20px;}
+.lb-backdrop.open{display:flex;}
+.lb-backdrop img{max-width:90vw;max-height:80vh;border-radius:8px;object-fit:contain;}
+.lb-caption{color:#ccc;font-size:.9rem;}
+.lb-close{position:absolute;top:18px;right:22px;background:none;border:none;color:#fff;font-size:2rem;cursor:pointer;line-height:1;}
+
+/* Loading / empty */
+.mc-loading{display:flex;align-items:center;gap:12px;color:#8a7f6a;padding:32px 0;}
+.spinner{width:22px;height:22px;border:2px solid rgba(185,130,46,.3);border-top-color:var(--gold);border-radius:50%;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg)}}
+.mc-empty{color:#8a7f6a;font-size:.95rem;padding:40px 0;text-align:center;}
+</style>
 </head>
 <body>
+<div class="national-ribbon">
+  <div class="wrap">
+    <div class="ribbon-content">
+      <div class="flag-stripes">
+        <span class="stripe stripe-black"></span>
+        <span class="stripe stripe-white"></span>
+        <span class="stripe stripe-red"></span>
+        <span class="stripe stripe-white"></span>
+        <span class="stripe stripe-green"></span>
+        <span class="stripe stripe-blue"></span>
+        <span class="stripe stripe-yellow"></span>
+      </div>
+      <span class="ribbon-text">Official Website of the Republic of South Sudan</span>
+    </div>
+  </div>
+</div>
 <header>
   <div class="wrap nav-row">
     <a class="brand" href="index.html">
-      <div class="brand-mark">M</div>
+      <div class="brand-mark"><img src="logo.jpg" alt="MoHEST logo" class="brand-logo"></div>
       <div class="brand-text">
         <div class="top">MoHEST</div>
         <div class="bottom">Republic of South Sudan</div>
@@ -28,6 +87,7 @@
     </div>
   </div>
 </header>
+
 <section class="page-hero">
   <div class="bg-dots parallax-el" data-speed="0.12" style="--dot-color:rgba(185,130,46,0.4);" aria-hidden="true"></div>
   <div class="bg-glow gold parallax-el" data-speed="0.16" style="width:380px; height:380px; top:30px; right:40px;" aria-hidden="true"></div>
@@ -35,53 +95,55 @@
     <div class="breadcrumb"><a href="index.html">Home</a> &nbsp;/&nbsp; Media centre</div>
     <span class="eyebrow"><span class="dot"></span>Press &amp; media</span>
     <h1>Photos, statements &amp; press resources.</h1>
-    <p>Official ministerial statements, circulars, and photography from ministry events.</p>
+    <p>Official ministerial statements, circulars, news, and photography from ministry events.</p>
   </div>
 </section>
 
 <section class="departments">
   <div class="bg-dots parallax-el" data-speed="0.12" style="--dot-color:rgba(185,130,46,0.5);" aria-hidden="true"></div>
   <div class="wrap">
-    <div class="section-head">
-      <span class="kicker">Media centre</span>
-      <h2>Photos, statements &amp; press resources.</h2>
-      <p>Official ministerial statements, circulars, and photography from ministry events.</p>
+    <div class="mc-tabs" role="tablist">
+      <button class="mc-tab active" role="tab" aria-selected="true" data-panel="panel-news" id="tab-news">Latest News</button>
+      <button class="mc-tab" role="tab" aria-selected="false" data-panel="panel-statements" id="tab-statements">Ministerial Statements</button>
+      <button class="mc-tab" role="tab" aria-selected="false" data-panel="panel-gallery" id="tab-gallery">Photo Gallery</button>
     </div>
-    <div class="gallery-grid">
-      <div class="gallery-item reveal left"><span class="tag">Conference &mdash; Juba</span></div>
-      <div class="gallery-item n2 reveal up"><span class="tag">Campus visit &mdash; Wau</span></div>
-      <div class="gallery-item n3 reveal right"><span class="tag">Graduation &mdash; Juba</span></div>
-      <div class="gallery-item n2 reveal left"><span class="tag">Signing ceremony</span></div>
-      <div class="gallery-item reveal up"><span class="tag">Accreditation visit</span></div>
-      <div class="gallery-item n3 reveal right"><span class="tag">Scholarship briefing</span></div>
-      <div class="gallery-item n2 reveal left"><span class="tag">Minister's address</span></div>
-      <div class="gallery-item reveal up"><span class="tag">Community college launch</span></div>
+
+    <!-- News panel -->
+    <div class="mc-panel active" id="panel-news" role="tabpanel" aria-labelledby="tab-news">
+      <div id="news-loading" class="mc-loading"><div class="spinner"></div> Loading news articles…</div>
+      <div id="news-grid" class="news-live-grid" style="display:none;"></div>
+      <div id="news-empty" class="mc-empty" style="display:none;">No news articles have been published yet. Check back soon.</div>
+    </div>
+
+    <!-- Statements panel -->
+    <div class="mc-panel" id="panel-statements" role="tabpanel" aria-labelledby="tab-statements">
+      <div id="stmt-loading" class="mc-loading"><div class="spinner"></div> Loading statements…</div>
+      <div id="stmt-list" class="download-list" style="display:none;"></div>
+      <div id="stmt-empty" class="mc-empty" style="display:none;">No ministerial statements have been published yet. Check back soon.</div>
+    </div>
+
+    <!-- Gallery panel -->
+    <div class="mc-panel" id="panel-gallery" role="tabpanel" aria-labelledby="tab-gallery">
+      <div id="gallery-loading" class="mc-loading"><div class="spinner"></div> Loading gallery…</div>
+      <div id="gallery-grid" class="gallery-live-grid" style="display:none;"></div>
+      <div id="gallery-empty" class="mc-empty" style="display:none;">No gallery photos have been published yet. Check back after ministry events.</div>
     </div>
   </div>
 </section>
 
-<section class="mission tight">
-  <div class="bg-dots parallax-el" data-speed="0.12" style="--dot-color:rgba(51,85,58,0.5);" aria-hidden="true"></div>
-  <div class="wrap">
-    <div class="section-head">
-      <span class="kicker">Statements</span>
-      <h2>Ministerial statements &amp; circulars.</h2>
-    </div>
-    <div class="download-list">
-      <div class="download-item reveal up"><div class="download-icon">PDF</div><div class="meta"><h4>Ministerial statement on 2026 admission cycle</h4><div class="file-info">Published 1 July 2026 &middot; 240 KB</div></div><a class="dl-btn" href="#">Download</a></div>
-      <div class="download-item reveal up"><div class="download-icon">PDF</div><div class="meta"><h4>Circular: certificate equivalence digital processing</h4><div class="file-info">Published 22 May 2026 &middot; 180 KB</div></div><a class="dl-btn" href="#">Download</a></div>
-      <div class="download-item reveal up"><div class="download-icon">PDF</div><div class="meta"><h4>Press statement: community college accreditation, Eastern Equatoria</h4><div class="file-info">Published 19 June 2026 &middot; 210 KB</div></div><a class="dl-btn" href="#">Download</a></div>
-    </div>
-  </div>
-</section>
+<!-- Lightbox -->
+<div class="lb-backdrop" id="lb" role="dialog" aria-modal="true" aria-label="Photo viewer">
+  <button class="lb-close" id="lb-close" aria-label="Close photo viewer">&#10005;</button>
+  <img id="lb-img" src="" alt="">
+  <p class="lb-caption" id="lb-caption"></p>
+</div>
+
 <footer>
-  <div class="bg-dots parallax-el" data-speed="0.12" style="--dot-color:rgba(185,130,46,0.42);" aria-hidden="true"></div>
-  <div class="bg-horizon parallax-el" data-speed="0.1" style="top:-20px;" aria-hidden="true"></div>
   <div class="wrap">
     <div class="footer-grid">
       <div class="footer-brand">
         <div class="brand" style="gap:10px;">
-          <div class="brand-mark">M</div>
+          <div class="brand-mark"><img src="logo.jpg" alt="MoHEST logo" class="brand-logo"></div>
           <div class="brand-text">
             <div class="top" style="color:#FFFDF8;">MoHEST</div>
             <div class="bottom" style="color:#B8AF97;">Republic of South Sudan</div>
@@ -115,7 +177,7 @@
           <li><a href="news.html">News</a></li>
           <li><a href="media-center.html">Media centre</a></li>
           <li><a href="downloads.html">Downloads</a></li>
-          <li><a href="#">Privacy</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
           <li><a href="../enterprise-portal/login.html">Staff portal</a></li>
         </ul>
       </div>
@@ -127,5 +189,141 @@
   </div>
 </footer>
 <script src="assets/main.js"></script>
+<script>
+(function(){
+  const API = 'http://localhost:3000/api';
+
+  /* ── Tab switching ────────────────────────────────────── */
+  let loaded = {news:false, statements:false, gallery:false};
+  document.querySelectorAll('.mc-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.mc-tab').forEach(b => { b.classList.remove('active'); b.setAttribute('aria-selected','false'); });
+      document.querySelectorAll('.mc-panel').forEach(p => p.classList.remove('active'));
+      btn.classList.add('active'); btn.setAttribute('aria-selected','true');
+      const panel = document.getElementById(btn.dataset.panel);
+      if(panel) panel.classList.add('active');
+      const key = btn.dataset.panel.replace('panel-','');
+      if(key === 'news' && !loaded.news) loadNews();
+      if(key === 'statements' && !loaded.statements) loadStatements();
+      if(key === 'gallery' && !loaded.gallery) loadGallery();
+    });
+  });
+
+  /* ── News ─────────────────────────────────────────────── */
+  function loadNews(){
+    loaded.news = true;
+    fetch(`${API}/public-site/news-articles`)
+      .then(r => r.ok ? r.json() : [])
+      .then(items => {
+        document.getElementById('news-loading').style.display = 'none';
+        if(!items || !items.length){
+          document.getElementById('news-empty').style.display = 'block'; return;
+        }
+        const grid = document.getElementById('news-grid');
+        grid.style.display = 'grid';
+        grid.innerHTML = items.map(a => `
+          <article class="news-live-card reveal up">
+            ${a.imageUrl
+              ? `<img class="news-live-img" src="${a.imageUrl.startsWith('http') ? a.imageUrl : API.replace('/api','') + a.imageUrl}" alt="${esc(a.title)}" loading="lazy">`
+              : `<div class="news-live-img-placeholder">📰</div>`}
+            <div class="news-live-body">
+              ${a.category ? `<div class="news-live-tag">${esc(a.category)}</div>` : ''}
+              <h3 class="news-live-title">${esc(a.title)}</h3>
+              <div class="news-live-meta">${fmtDate(a.publishedAt || a.createdAt)}</div>
+              ${a.summary ? `<p style="font-size:.85rem;color:#8a7f6a;margin:.6rem 0 0;line-height:1.6;">${esc(a.summary)}</p>` : ''}
+              <a class="news-live-link" href="news.html">Read more &rarr;</a>
+            </div>
+          </article>`).join('');
+        if(window.initReveals) window.initReveals();
+      })
+      .catch(() => {
+        document.getElementById('news-loading').style.display = 'none';
+        document.getElementById('news-empty').style.display = 'block';
+      });
+  }
+  loadNews(); // load on first paint
+
+  /* ── Statements ───────────────────────────────────────── */
+  function loadStatements(){
+    loaded.statements = true;
+    fetch(`${API}/public-site/downloads?category=statement`)
+      .then(r => r.ok ? r.json() : [])
+      .then(items => {
+        document.getElementById('stmt-loading').style.display = 'none';
+        if(!items || !items.length){
+          document.getElementById('stmt-empty').style.display = 'block'; return;
+        }
+        const list = document.getElementById('stmt-list');
+        list.style.display = 'block';
+        list.innerHTML = items.map(d => `
+          <div class="download-item reveal up">
+            <div class="download-icon">${esc(d.fileLabel || 'PDF')}</div>
+            <div class="meta">
+              <h4>${esc(d.title)}</h4>
+              <div class="file-info">Published ${fmtDate(d.createdAt)}${d.fileSize ? ' &middot; ' + fmtSize(d.fileSize) : ''}</div>
+              ${d.description ? `<p style="font-size:.82rem;color:#8a7f6a;margin:.4rem 0 0;">${esc(d.description)}</p>` : ''}
+            </div>
+            <a class="dl-btn" href="${d.fileUrl.startsWith('http') ? d.fileUrl : 'http://localhost:3000' + d.fileUrl}" target="_blank" rel="noopener">Download</a>
+          </div>`).join('');
+        if(window.initReveals) window.initReveals();
+      })
+      .catch(() => {
+        document.getElementById('stmt-loading').style.display = 'none';
+        document.getElementById('stmt-empty').style.display = 'block';
+      });
+  }
+
+  /* ── Gallery ──────────────────────────────────────────── */
+  function loadGallery(){
+    loaded.gallery = true;
+    fetch(`${API}/public-site/gallery-items`)
+      .then(r => r.ok ? r.json() : [])
+      .then(items => {
+        document.getElementById('gallery-loading').style.display = 'none';
+        if(!items || !items.length){
+          document.getElementById('gallery-empty').style.display = 'block'; return;
+        }
+        const grid = document.getElementById('gallery-grid');
+        grid.style.display = 'grid';
+        grid.innerHTML = items.map(g => `
+          <div class="gallery-live-item reveal up" data-url="${g.imageUrl.startsWith('http') ? g.imageUrl : 'http://localhost:3000' + g.imageUrl}" data-title="${esc(g.title)}">
+            <img src="${g.imageUrl.startsWith('http') ? g.imageUrl : 'http://localhost:3000' + g.imageUrl}" alt="${esc(g.title)}" loading="lazy">
+            <span class="tag">${esc(g.title)}</span>
+          </div>`).join('');
+        grid.querySelectorAll('.gallery-live-item').forEach(el => {
+          el.addEventListener('click', () => openLightbox(el.dataset.url, el.dataset.title));
+        });
+        if(window.initReveals) window.initReveals();
+      })
+      .catch(() => {
+        document.getElementById('gallery-loading').style.display = 'none';
+        document.getElementById('gallery-empty').style.display = 'block';
+      });
+  }
+
+  /* ── Lightbox ─────────────────────────────────────────── */
+  function openLightbox(url, caption){
+    document.getElementById('lb-img').src = url;
+    document.getElementById('lb-caption').textContent = caption || '';
+    document.getElementById('lb').classList.add('open');
+  }
+  document.getElementById('lb-close').addEventListener('click', () => document.getElementById('lb').classList.remove('open'));
+  document.getElementById('lb').addEventListener('click', e => { if(e.target === document.getElementById('lb')) document.getElementById('lb').classList.remove('open'); });
+  document.addEventListener('keydown', e => { if(e.key === 'Escape') document.getElementById('lb').classList.remove('open'); });
+
+  /* ── Helpers ──────────────────────────────────────────── */
+  function esc(s){ const d=document.createElement('div'); d.textContent=s||''; return d.innerHTML; }
+  function fmtDate(s){
+    if(!s) return '';
+    try{ return new Date(s).toLocaleDateString('en-GB',{day:'numeric',month:'long',year:'numeric'}); }
+    catch{ return s; }
+  }
+  function fmtSize(bytes){
+    if(bytes < 1024) return bytes + ' B';
+    if(bytes < 1024*1024) return Math.round(bytes/1024) + ' KB';
+    return (bytes/(1024*1024)).toFixed(1) + ' MB';
+  }
+})();
+</script>
 </body>
 </html>

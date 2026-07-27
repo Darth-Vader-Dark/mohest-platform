@@ -2,7 +2,6 @@ import {
   IsString,
   IsOptional,
   IsInt,
-  IsIn,
   IsBoolean,
   MinLength,
   MaxLength,
@@ -14,42 +13,18 @@ import { Transform, Type } from 'class-transformer';
 const trim = ({ value }: { value: unknown }) =>
   typeof value === 'string' ? value.trim() : value;
 
-export class CreatePublicDownloadDto {
+export class CreateGalleryItemDto {
   @Transform(trim)
   @IsString()
   @MinLength(1)
   @MaxLength(300)
   title: string;
 
-  @IsOptional()
-  @Transform(trim)
-  @IsString()
-  @MaxLength(2000)
-  description?: string;
-
-  @IsOptional()
-  @Transform(trim)
-  @IsString()
-  @IsIn(['form', 'guideline', 'policy', 'statement', 'other'])
-  category?: string;
-
   @Transform(trim)
   @IsString()
   @MinLength(1)
   @MaxLength(500)
-  fileUrl: string;
-
-  @IsOptional()
-  @Type(() => Number)
-  @IsInt()
-  @Min(0)
-  fileSize?: number;
-
-  @IsOptional()
-  @Transform(trim)
-  @IsString()
-  @MaxLength(20)
-  fileLabel?: string;
+  imageUrl: string;
 
   @IsOptional()
   @Type(() => Number)
@@ -63,4 +38,4 @@ export class CreatePublicDownloadDto {
   isPublished?: boolean;
 }
 
-export class UpdatePublicDownloadDto extends CreatePublicDownloadDto {}
+export class UpdateGalleryItemDto extends CreateGalleryItemDto {}

@@ -20,6 +20,7 @@ import { CreateScholarshipDto, UpdateScholarshipDto } from './dto/create-scholar
 import { CreateNewsArticleDto, UpdateNewsArticleDto } from './dto/create-news-article.dto';
 import { CreateLeaderDto, UpdateLeaderDto } from './dto/create-leader.dto';
 import { CreatePublicDownloadDto, UpdatePublicDownloadDto } from './dto/create-public-download.dto';
+import { CreateGalleryItemDto, UpdateGalleryItemDto } from './dto/create-gallery-item.dto';
 
 function scholarshipData(dto: CreateScholarshipDto | UpdateScholarshipDto) {
   const mode = dto.applicationMode || 'none';
@@ -299,14 +300,21 @@ export class PublicSiteController {
   // ---------------------------------------------------------------------------
 
   @Get('downloads')
-  @ApiOperation({ summary: 'List published downloads (public)' })
-  async findDownloads(@Query('category') category?: string) {
-    const allowed = new Set(['form', 'guideline', 'policy', 'other']);
+  @ApiOperation({ summary: 'List downloads' })
+  async findDownloads(
+    @Query('category') category?: string,
+    @Query('all') all?: string,
+  ) {
+    const allowed = new Set(['form', 'guideline', 'policy', 'statement', 'other']);
     const safeCategory = category && allowed.has(category) ? category : undefined;
+    const showAll = all === 'true';
     return this.prisma.publicDownload.findMany({
       where: {
-        isPublished: true,
-        ...(safeCategory ? { category: safeCategory } : {}),
+        ...(showAll ? {} : { isPublished: true }),
+        // When no specific category requested, exclude statements (media-center only)
+        ...(safeCategory
+          ? { category: safeCategory }
+          : { NOT: { category: 'statement' } }),
       },
       orderBy: [{ sortOrder: 'asc' }, { title: 'asc' }],
     });
@@ -360,5 +368,71 @@ export class PublicSiteController {
   @ApiOperation({ summary: 'Delete download (ICT admin)' })
   async deleteDownload(@Param('id', ParseUUIDPipe) id: string) {
     return this.prisma.publicDownload.delete({ where: { id } });
+  }
+
+  // ---------------------------------------------------------------------------
+  // Gallery items (media centre event photography)
+  // ---------------------------------------------------------------------------
+
+  @Get('gallery-items')
+  @ApiOperation({ summary: 'List gallery items (public)' })
+  async findGalleryItems() {
+    return this.prisma.galleryItem.findMany({
+      where: { isPublished: true },
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+    });
+  }
+
+  @Get('gallery-items/all')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('roles.manage')
+  @ApiOperation({ summary: 'List all gallery items (ICT admin, incl. unpublished)' })
+  async findAllGalleryItems() {
+    return this.prisma.galleryItem.findMany({
+      orderBy: [{ sortOrder: 'asc' }, { createdAt: 'desc' }],
+    });
+  }
+
+  @Post('gallery-items')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('roles.manage')
+  @ApiOperation({ summary: 'Create gallery item (ICT admin)' })
+  async createGalleryItem(@Body() dto: CreateGalleryItemDto) {
+    return this.prisma.galleryItem.create({
+      data: {
+        title: dto.title,
+        imageUrl: dto.imageUrl,
+        sortOrder: dto.sortOrder ?? 0,
+        isPublished: dto.isPublished !== false,
+      },
+    });
+  }
+
+  @Put('gallery-items/:id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('roles.manage')
+  @ApiOperation({ summary: 'Update gallery item (ICT admin)' })
+  async updateGalleryItem(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateGalleryItemDto) {
+    return this.prisma.galleryItem.update({
+      where: { id },
+      data: {
+        title: dto.title,
+        imageUrl: dto.imageUrl,
+        sortOrder: dto.sortOrder ?? 0,
+        isPublished: dto.isPublished !== false,
+      },
+    });
+  }
+
+  @Delete('gallery-items/:id')
+  @ApiBearerAuth()
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('roles.manage')
+  @ApiOperation({ summary: 'Delete gallery item (ICT admin)' })
+  async deleteGalleryItem(@Param('id', ParseUUIDPipe) id: string) {
+    return this.prisma.galleryItem.delete({ where: { id } });
   }
 }

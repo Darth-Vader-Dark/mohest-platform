@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<link class="brand-favicon" rel="icon" type="image/jpeg" href="logo.jpg">
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Downloads — MoHEST</title>
@@ -11,10 +12,26 @@
 <link rel="stylesheet" href="assets/styles.css">
 </head>
 <body>
+<div class="national-ribbon">
+  <div class="wrap">
+    <div class="ribbon-content">
+      <div class="flag-stripes">
+        <span class="stripe stripe-black"></span>
+        <span class="stripe stripe-white"></span>
+        <span class="stripe stripe-red"></span>
+        <span class="stripe stripe-white"></span>
+        <span class="stripe stripe-green"></span>
+        <span class="stripe stripe-blue"></span>
+        <span class="stripe stripe-yellow"></span>
+      </div>
+      <span class="ribbon-text">Official Website of the Republic of South Sudan</span>
+    </div>
+  </div>
+</div>
 <header>
   <div class="wrap nav-row">
     <a class="brand" href="index.html">
-      <div class="brand-mark">M</div>
+      <div class="brand-mark"><img src="logo.jpg" alt="MoHEST logo" class="brand-logo"></div>
       <div class="brand-text">
         <div class="top">MoHEST</div>
         <div class="bottom">Republic of South Sudan</div>
@@ -47,26 +64,17 @@
       <h2>Forms, guidelines &amp; official documents.</h2>
       <p>Everything institutions and the public need in one place.</p>
     </div>
-    <div class="download-list">
-      <div class="download-item reveal up"><div class="download-icon">PDF</div><div class="meta"><h4>National Admission Policy 2026</h4><div class="file-info">PDF &middot; 1.2 MB</div></div><a class="dl-btn" href="#">Download</a></div>
-      <div class="download-item reveal up"><div class="download-icon">PDF</div><div class="meta"><h4>University Application Form</h4><div class="file-info">PDF &middot; 340 KB</div></div><a class="dl-btn" href="#">Download</a></div>
-      <div class="download-item reveal up"><div class="download-icon">PDF</div><div class="meta"><h4>Certificate Equivalence Request Form</h4><div class="file-info">PDF &middot; 290 KB</div></div><a class="dl-btn" href="#">Download</a></div>
-      <div class="download-item reveal up"><div class="download-icon">PDF</div><div class="meta"><h4>National Qualifications Framework (NQF) Guide</h4><div class="file-info">PDF &middot; 2.4 MB</div></div><a class="dl-btn" href="#">Download</a></div>
-      <div class="download-item reveal up"><div class="download-icon">PDF</div><div class="meta"><h4>Scholarship Information Booklet 2026</h4><div class="file-info">PDF &middot; 1.8 MB</div></div><a class="dl-btn" href="#">Download</a></div>
-      <div class="download-item reveal up"><div class="download-icon">PDF</div><div class="meta"><h4>University Accreditation Guidelines</h4><div class="file-info">PDF &middot; 980 KB</div></div><a class="dl-btn" href="#">Download</a></div>
-      <div class="download-item reveal up"><div class="download-icon">PDF</div><div class="meta"><h4>Community College Establishment Guidelines</h4><div class="file-info">PDF &middot; 760 KB</div></div><a class="dl-btn" href="#">Download</a></div>
-      <div class="download-item reveal up"><div class="download-icon">PDF</div><div class="meta"><h4>Ministry Organisational Structure</h4><div class="file-info">PDF &middot; 410 KB</div></div><a class="dl-btn" href="#">Download</a></div>
+    <div class="download-list" id="download-list">
+      <p style="color:var(--ink-soft); padding: 20px 0;">Loading documents...</p>
     </div>
   </div>
 </section>
 <footer>
-  <div class="bg-dots parallax-el" data-speed="0.12" style="--dot-color:rgba(185,130,46,0.42);" aria-hidden="true"></div>
-  <div class="bg-horizon parallax-el" data-speed="0.1" style="top:-20px;" aria-hidden="true"></div>
   <div class="wrap">
     <div class="footer-grid">
       <div class="footer-brand">
         <div class="brand" style="gap:10px;">
-          <div class="brand-mark">M</div>
+          <div class="brand-mark"><img src="logo.jpg" alt="MoHEST logo" class="brand-logo"></div>
           <div class="brand-text">
             <div class="top" style="color:#FFFDF8;">MoHEST</div>
             <div class="bottom" style="color:#B8AF97;">Republic of South Sudan</div>
@@ -100,7 +108,7 @@
           <li><a href="news.html">News</a></li>
           <li><a href="media-center.html">Media centre</a></li>
           <li><a href="downloads.html">Downloads</a></li>
-          <li><a href="#">Privacy</a></li>
+          <li><a href="privacy.html">Privacy</a></li>
           <li><a href="../enterprise-portal/login.html">Staff portal</a></li>
         </ul>
       </div>
@@ -111,6 +119,47 @@
     </div>
   </div>
 </footer>
+<script src="assets/api.js"></script>
 <script src="assets/main.js"></script>
+<script>
+  const API = window.MOHEST_API;
+  const resolveAssetUrl = window.resolveAssetUrl;
+
+  async function loadDownloads() {
+    const container = document.getElementById('download-list');
+    try {
+      const res = await fetch(`${API}/public-site/downloads`);
+      const data = res.ok ? await res.json() : [];
+      if (!data || data.length === 0) {
+        container.innerHTML = '<p style="color:var(--ink-soft); padding: 20px 0;">No official downloads available at this time.</p>';
+        return;
+      }
+      container.innerHTML = data.map((d, index) => `
+        <div class="download-item" style="opacity: 0; transform: translateY(20px); transition: all 0.5s ease ${index * 0.05}s;">
+          <div class="download-icon">${(d.fileLabel || 'PDF').toUpperCase()}</div>
+          <div class="meta">
+            <h4>${d.title}</h4>
+            <div class="file-info">${(d.fileLabel || 'PDF').toUpperCase()} &middot; ${d.fileSize || 'Unknown Size'}</div>
+          </div>
+          <a class="dl-btn" href="${resolveAssetUrl(d.fileUrl)}" target="_blank" download>Download</a>
+        </div>
+      `).join('');
+
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          container.querySelectorAll('.download-item').forEach(el => {
+            el.style.opacity = '1';
+            el.style.transform = 'translateY(0)';
+          });
+        }, 50);
+      });
+    } catch (err) {
+      console.error(err);
+      container.innerHTML = '<p style="color:var(--ink-soft); padding: 20px 0;">Failed to load documents. Please try again later.</p>';
+    }
+  }
+
+  loadDownloads();
+</script>
 </body>
 </html>
