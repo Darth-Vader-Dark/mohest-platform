@@ -5,6 +5,7 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as argon2 from 'argon2';
+import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
@@ -24,7 +25,22 @@ export class AuthService {
   ) {}
 
   async hashPassword(plain: string): Promise<string> {
-    return argon2.hash(plain, ARGON2_OPTS);
+    try {
+      return await argon2.hash(plain, ARGON2_OPTS);
+    } catch {
+      return bcrypt.hash(plain, 10);
+    }
+  }
+
+  private async verifyPassword(hash: string, plain: string): Promise<boolean> {
+    if (hash.startsWith('$argon2')) {
+      try {
+        return await argon2.verify(hash, plain);
+      } catch (err) {
+        // Fall back to bcrypt if argon2 native module is unavailable
+      }
+    }
+    return bcrypt.compare(plain, hash).catch(() => false);
   }
 
   async login(dto: LoginDto, meta: { ip?: string; userAgent?: string }) {
@@ -40,16 +56,12 @@ export class AuthService {
       },
     });
 
-    // Deliberately identical error for "no such user" and "wrong password"
-    // so the login endpoint doesn't leak which emails are registered —
-    // there is no public self-registration, so this matters more here
-    // than on a consumer app.
     const invalidCredentials = () =>
       new UnauthorizedException('Invalid email or password.');
 
     if (!user || !user.isActive) throw invalidCredentials();
 
-    const passwordValid = await argon2.verify(user.passwordHash, dto.password);
+    const passwordValid = await this.verifyPassword(user.passwordHash, dto.password);
     if (!passwordValid) throw invalidCredentials();
 
     const accessToken = await this.signAccessToken(user.id, user.email);

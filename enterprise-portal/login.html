@@ -93,8 +93,8 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     }
 
   } catch (err) {
-    const msg = err.message === 'Failed to fetch'
-      ? 'Cannot reach the API server. Make sure the backend is running (npm run start:dev in the backend folder) at http://localhost:4000.'
+    const msg = (err.message === 'Failed to fetch' || err.message.includes('fetch'))
+      ? 'Unable to connect to the authentication server. Please try again or check your connection.'
       : err.message;
     errorDiv.innerText = msg;
     errorDiv.style.display = 'block';
