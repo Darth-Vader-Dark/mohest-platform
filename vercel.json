@@ -14,23 +14,6 @@
     { "src": "/SouthSudanFlag.svg", "dest": "/SouthSudanFlag.svg" },
     { "src": "/assets/(.*)", "dest": "/public-site/assets/$1" },
     { "src": "/(.*)", "dest": "/public-site/$1" }
-  ],
-  "env": {
-    "NODE_ENV": "production",
-    "DATABASE_URL": "@database_url",
-    "DIRECT_URL": "@direct_url",
-    "SUPABASE_URL": "@supabase_url",
-    "SUPABASE_PUBLISHABLE_KEY": "@supabase_publishable_key",
-    "SUPABASE_SECRET_KEY": "@supabase_secret_key",
-    "SUPABASE_JWKS_URL": "@supabase_jwks_url",
-    "JWT_ACCESS_SECRET": "@jwt_access_secret",
-    "JWT_REFRESH_SECRET": "@jwt_refresh_secret",
-    "JWT_ACCESS_EXPIRES_IN": "15m",
-    "JWT_REFRESH_EXPIRES_IN": "7d",
-    "CORS_ORIGIN": "@cors_origin",
-    "ARGON2_MEMORY_COST": "19456",
-    "ARGON2_TIME_COST": "2",
-    "ARGON2_PARALLELISM": "1"
-  }
+  ]
 }
 
