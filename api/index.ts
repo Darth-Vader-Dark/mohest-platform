@@ -1,6 +1,6 @@
+import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
-import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
 import { AppModule } from '../backend/src/app.module';
@@ -12,7 +12,7 @@ async function createApp(): Promise<NestExpressApplication> {
   if (cachedApp) return cachedApp;
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
-    logger: process.env.NODE_ENV === 'production' ? ['error', 'warn'] : ['log', 'error', 'warn', 'debug'],
+    logger: ['error', 'warn'],
   });
 
   app.use(helmet({
@@ -34,15 +34,6 @@ async function createApp(): Promise<NestExpressApplication> {
 
   app.setGlobalPrefix('api/v1');
 
-  const config = new DocumentBuilder()
-    .setTitle('MoHEST Enterprise Portal API')
-    .setDescription('Authentication, RBAC, and shared platform services for the MoHEST enterprise portal.')
-    .setVersion('0.1.0')
-    .addBearerAuth()
-    .build();
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
-
   await app.init();
   cachedApp = app;
   return app;
@@ -51,9 +42,8 @@ async function createApp(): Promise<NestExpressApplication> {
 export default async function handler(req: IncomingMessage, res: ServerResponse) {
   try {
     const app = await createApp();
-    const httpAdapter = app.getHttpAdapter();
-    const expressInstance = httpAdapter.getInstance();
-    expressInstance(req, res);
+    const expressInstance = app.getHttpAdapter().getInstance();
+    return expressInstance(req, res);
   } catch (err: any) {
     console.error('Vercel serverless function error:', err);
     res.statusCode = 500;
