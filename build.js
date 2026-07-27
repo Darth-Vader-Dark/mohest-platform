@@ -59,10 +59,12 @@ fs.writeFileSync(path.join(distPath, 'index.html'), redirectHtml, 'utf8');
 const apiJsPath = path.join(distPath, 'enterprise-portal', 'assets', 'api.js');
 if (fs.existsSync(apiJsPath)) {
   let content = fs.readFileSync(apiJsPath, 'utf8');
-  if (process.env.MOHEST_API) {
-    console.log(`Injecting MOHEST_API: ${process.env.MOHEST_API}`);
-    content = content.replace('http://localhost:4000/api/v1', process.env.MOHEST_API);
-  }
+  // On Vercel the API runs as a serverless function on the SAME domain,
+  // so we use a relative path (no hostname needed).
+  const apiBase = process.env.MOHEST_API || '/api/v1';
+  console.log(`Injecting API base: ${apiBase}`);
+  content = content.replace('http://localhost:4000/api/v1', apiBase);
+
   if (process.env.MOHEST_ORIGIN) {
     console.log(`Injecting MOHEST_ORIGIN: ${process.env.MOHEST_ORIGIN}`);
     content = content.replace('http://localhost:4000', process.env.MOHEST_ORIGIN);

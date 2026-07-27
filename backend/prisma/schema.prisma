@@ -1,8 +1,3 @@
-// MoHEST Enterprise Portal — core schema
-// Dynamic RBAC: no roles or permissions are hardcoded in application code.
-// Everything is data — new roles, permissions, and departments can be added
-// without a deployment.
-
 generator client {
   provider = "prisma-client-js"
 }
@@ -13,46 +8,38 @@ datasource db {
   directUrl = env("DIRECT_URL")
 }
 
-// ---------------------------------------------------------------------------
-// Identity & access
-// ---------------------------------------------------------------------------
-
 model User {
-  id            String   @id @default(uuid())
-  email         String   @unique
-  passwordHash  String
-  firstName     String
-  lastName      String
-  isActive      Boolean  @default(true)
-  mustResetPassword Boolean @default(false)
-  lastLoginAt   DateTime?
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-
-  departmentId  String?
-  department    Department? @relation(fields: [departmentId], references: [id])
-
-  employee      Employee?
-
-  roles         UserRole[]
-  sessions      Session[]
-  refreshTokens RefreshToken[]
-  auditLogs     AuditLog[]
-  notifications Notification[]
-  createdBy     String?
+  id                String         @id @default(uuid())
+  email             String         @unique
+  passwordHash      String
+  firstName         String
+  lastName          String
+  isActive          Boolean        @default(true)
+  mustResetPassword Boolean        @default(false)
+  lastLoginAt       DateTime?
+  createdAt         DateTime       @default(now())
+  updatedAt         DateTime       @updatedAt
+  departmentId      String?
+  createdBy         String?
+  auditLogs         AuditLog[]
+  employee          Employee?
+  notifications     Notification[]
+  refreshTokens     RefreshToken[]
+  sessions          Session[]
+  roles             UserRole[]
+  department        Department?    @relation(fields: [departmentId], references: [id])
 
   @@index([departmentId])
   @@map("users")
 }
 
 model Role {
-  id          String   @id @default(uuid())
-  name        String   @unique
+  id          String           @id @default(uuid())
+  name        String           @unique
   description String?
-  isSystem    Boolean  @default(false) // seed roles (e.g. ICT Administrator) that cannot be deleted
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
+  isSystem    Boolean          @default(false)
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
   permissions RolePermission[]
   users       UserRole[]
 
@@ -60,13 +47,11 @@ model Role {
 }
 
 model Permission {
-  id          String   @id @default(uuid())
-  // e.g. "users.create", "employees.transfer", "id_cards.print"
-  key         String   @unique
-  module      String   // e.g. "ICT", "HR", "HR_ID_CARDS"
+  id          String           @id @default(uuid())
+  key         String           @unique
+  module      String
   description String?
-  createdAt   DateTime @default(now())
-
+  createdAt   DateTime         @default(now())
   roles       RolePermission[]
 
   @@index([module])
@@ -76,8 +61,8 @@ model Permission {
 model RolePermission {
   roleId       String
   permissionId String
-  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+  role         Role       @relation(fields: [roleId], references: [id], onDelete: Cascade)
 
   @@id([roleId, permissionId])
   @@map("role_permissions")
@@ -86,124 +71,111 @@ model RolePermission {
 model UserRole {
   userId String
   roleId String
-  user   User @relation(fields: [userId], references: [id], onDelete: Cascade)
-  role   Role @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  role   Role   @relation(fields: [roleId], references: [id], onDelete: Cascade)
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@id([userId, roleId])
   @@map("user_roles")
 }
 
 model Session {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   ipAddress String?
   userAgent String?
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   expiresAt DateTime
   revokedAt DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("sessions")
 }
 
 model RefreshToken {
-  id        String   @id @default(uuid())
+  id        String    @id @default(uuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   tokenHash String
-  createdAt DateTime @default(now())
+  createdAt DateTime  @default(now())
   expiresAt DateTime
   revokedAt DateTime?
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("refresh_tokens")
 }
 
-// ---------------------------------------------------------------------------
-// Organisation
-// ---------------------------------------------------------------------------
-
 model Department {
-  id          String   @id @default(uuid())
-  name        String   @unique
-  code        String   @unique // e.g. "ICT", "HR", "HES"
+  id          String       @id @default(uuid())
+  name        String       @unique
+  code        String       @unique
   description String?
   parentId    String?
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
   parent      Department?  @relation("DeptHierarchy", fields: [parentId], references: [id])
   children    Department[] @relation("DeptHierarchy")
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-
-  users       User[]
   employees   Employee[]
+  users       User[]
 
   @@map("departments")
 }
 
-// ---------------------------------------------------------------------------
-// HR
-// ---------------------------------------------------------------------------
-
 model Employee {
-  id             String   @id @default(uuid())
-  employeeNumber String   @unique
-  userId         String?  @unique
-  user           User?    @relation(fields: [userId], references: [id])
-
-  firstName      String
-  lastName       String
-  dateOfBirth    DateTime?
-  gender         String?
-  nationalId     String?
-  phone          String?
-  personalEmail  String?
-  photoUrl       String?
-
-  departmentId   String
-  department     Department @relation(fields: [departmentId], references: [id])
-  position       String
-  employmentType String   // Permanent, Contract, Probation
-  hireDate       DateTime
-  status         String   @default("Active") // Active, On Leave, Suspended, Terminated
-
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-
+  id                  String               @id @default(uuid())
+  employeeNumber      String               @unique
+  userId              String?              @unique
+  firstName           String
+  lastName            String
+  dateOfBirth         DateTime?
+  gender              String?
+  nationalId          String?
+  phone               String?
+  personalEmail       String?
+  photoUrl            String?
+  departmentId        String
+  position            String
+  employmentType      String
+  hireDate            DateTime
+  status              String               @default("Active")
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+  departmentTransfers DepartmentTransfer[]
+  documents           EmployeeDocument[]
+  department          Department           @relation(fields: [departmentId], references: [id])
+  user                User?                @relation(fields: [userId], references: [id])
+  idCards             IdCard[]
+  promotions          Promotion[]
   qualifications      Qualification[]
-  workExperience       WorkExperience[]
-  departmentTransfers  DepartmentTransfer[]
-  promotions           Promotion[]
-  documents             EmployeeDocument[]
-  idCards               IdCard[]
+  workExperience      WorkExperience[]
 
   @@index([departmentId])
   @@map("employees")
 }
 
 model Qualification {
-  id          String   @id @default(uuid())
-  employeeId  String
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  level       String   // e.g. Bachelor's, Master's, PhD
-  fieldOfStudy String
-  institution String
-  yearAwarded Int
+  id             String   @id @default(uuid())
+  employeeId     String
+  level          String
+  fieldOfStudy   String
+  institution    String
+  yearAwarded    Int
   certificateUrl String?
+  employee       Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([employeeId])
   @@map("qualifications")
 }
 
 model WorkExperience {
-  id          String   @id @default(uuid())
+  id          String    @id @default(uuid())
   employeeId  String
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   employer    String
   title       String
   startDate   DateTime
   endDate     DateTime?
   description String?
+  employee    Employee  @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([employeeId])
   @@map("work_experience")
@@ -212,13 +184,13 @@ model WorkExperience {
 model DepartmentTransfer {
   id             String   @id @default(uuid())
   employeeId     String
-  employee       Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   fromDepartment String
   toDepartment   String
   effectiveDate  DateTime
   reason         String?
   approvedBy     String?
   createdAt      DateTime @default(now())
+  employee       Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([employeeId])
   @@map("department_transfers")
@@ -227,12 +199,12 @@ model DepartmentTransfer {
 model Promotion {
   id            String   @id @default(uuid())
   employeeId    String
-  employee      Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   fromPosition  String
   toPosition    String
   effectiveDate DateTime
   approvedBy    String?
   createdAt     DateTime @default(now())
+  employee      Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([employeeId])
   @@map("promotions")
@@ -241,46 +213,42 @@ model Promotion {
 model EmployeeDocument {
   id         String   @id @default(uuid())
   employeeId String
-  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
   title      String
-  category   String   // Appointment Letter, Contract, Certificate, etc.
+  category   String
   fileUrl    String
   uploadedAt DateTime @default(now())
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([employeeId])
   @@map("employee_documents")
 }
 
 model IdCard {
-  id          String   @id @default(uuid())
-  employeeId  String
-  employee    Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
-  templateId  String?
-  cardNumber  String   @unique
-  issueDate   DateTime
-  expiryDate  DateTime
-  status      String   @default("Active") // Active, Reissued, Revoked, Expired
-  qrPayload   String?
-  createdAt   DateTime @default(now())
+  id         String   @id @default(uuid())
+  employeeId String
+  templateId String?
+  cardNumber String   @unique
+  issueDate  DateTime
+  expiryDate DateTime
+  status     String   @default("Active")
+  qrPayload  String?
+  createdAt  DateTime @default(now())
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
 
   @@index([employeeId])
   @@map("id_cards")
 }
 
-// ---------------------------------------------------------------------------
-// Shared platform services
-// ---------------------------------------------------------------------------
-
 model AuditLog {
   id         String   @id @default(uuid())
   userId     String?
-  user       User?    @relation(fields: [userId], references: [id])
-  action     String   // e.g. "user.create", "role.permission.update"
+  action     String
   entityType String
   entityId   String?
   metadata   Json?
   ipAddress  String?
   createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id])
 
   @@index([userId])
   @@index([entityType, entityId])
@@ -290,29 +258,25 @@ model AuditLog {
 model Notification {
   id        String   @id @default(uuid())
   userId    String
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   title     String
   body      String?
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@index([userId])
   @@map("notifications")
 }
-
-// ---------------------------------------------------------------------------
-// Public site content (managed via Supabase, read by the public website)
-// ---------------------------------------------------------------------------
 
 model Institution {
   id          String   @id @default(uuid())
   name        String
   location    String
   state       String
-  category    String   // "university" | "institute" | "community_college"
-  type        String?  // "Public" | "Private" (for universities)
+  category    String
+  type        String?
   established Int?
-  status      String   @default("Accredited") // "Accredited" | "Under review" | "Provisional"
+  status      String   @default("Accredited")
   website     String?
   sortOrder   Int      @default(0)
   createdAt   DateTime @default(now())
@@ -324,20 +288,20 @@ model Institution {
 }
 
 model Scholarship {
-  id              String   @id @default(uuid())
+  id              String    @id @default(uuid())
   title           String
   description     String?
-  fields          String   // e.g. "STEM fields"
-  level           String?  // "Undergraduate" | "Postgraduate" | "All levels"
+  fields          String
+  level           String?
   country         String
-  status          String   @default("Open") // "Open" | "Opens quarterly" | "Annual cycle" | "Closed"
-  applicationMode String   @default("none") // "link" | "pdf" | "none"
-  link            String?  // external application site when applicationMode is "link"
-  pdfUrl          String?  // downloadable application form when applicationMode is "pdf"
+  status          String    @default("Open")
+  link            String?
   deadline        DateTime?
-  sortOrder       Int      @default(0)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  sortOrder       Int       @default(0)
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  applicationMode String    @default("none")
+  pdfUrl          String?
 
   @@map("scholarships")
 }
@@ -348,7 +312,7 @@ model NewsArticle {
   excerpt     String?
   publishedAt DateTime @default(now())
   isLead      Boolean  @default(false)
-  thumbStyle  String?  // "gold" | null (green default)
+  thumbStyle  String?
   link        String?
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -375,7 +339,7 @@ model PublicDownload {
   id          String   @id @default(uuid())
   title       String
   description String?
-  category    String   @default("form") // "form" | "guideline" | "policy" | "statement" | "other"
+  category    String   @default("form")
   fileUrl     String
   fileSize    Int?
   fileLabel   String   @default("PDF")
@@ -399,4 +363,3 @@ model GalleryItem {
 
   @@map("gallery_items")
 }
-

@@ -3,33 +3,21 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
-import { join } from 'path';
-import { existsSync, mkdirSync } from 'fs';
-import { Request, Response, NextFunction } from 'express';
 import { AppModule } from './app.module';
 
 async function bootstrap() {
   const app = await NestFactory.create<NestExpressApplication>(AppModule);
 
-  const uploadsDir = join(process.cwd(), 'uploads');
-  if (!existsSync(uploadsDir)) mkdirSync(uploadsDir, { recursive: true });
-  app.use('/uploads', (_req: Request, res: Response, next: NextFunction) => {
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    next();
-  });
-  app.useStaticAssets(uploadsDir, { prefix: '/uploads' });
-
   app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
   }));
+
   const isProd = process.env.NODE_ENV === 'production';
   const allowedOrigins = (process.env.CORS_ORIGIN ?? '')
     .split(',')
     .map((s) => s.trim())
     .filter(Boolean);
 
-  // In development we allow any origin (including `null` from file://)
-  // to avoid "Failed to fetch" from CORS when opening static HTML pages.
   app.enableCors({
     origin: isProd
       ? (allowedOrigins.length ? allowedOrigins : false)
@@ -37,6 +25,7 @@ async function bootstrap() {
           cb(null, true),
     credentials: true,
   });
+
   app.useGlobalPipes(
     new ValidationPipe({
       whitelist: true,
@@ -63,3 +52,4 @@ async function bootstrap() {
   console.log(`MoHEST API listening on port ${port} — docs at /api/docs`);
 }
 bootstrap();
+
