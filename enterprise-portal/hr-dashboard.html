@@ -147,8 +147,13 @@
             <label>Search employee</label>
             <input type="text" id="id-card-search" placeholder="Type to search…" oninput="filterIdCardList(this.value)" class="field-input">
           </div>
-          <div id="id-card-list" style="max-height:320px; overflow-y:auto; border:1px solid var(--border); border-radius:8px;">
+          <div id="id-card-list" style="max-height:280px; overflow-y:auto; border:1px solid var(--border); border-radius:8px;">
             <div class="loading-row">Loading employees…</div>
+          </div>
+          <div class="field" style="margin-top:16px;">
+            <label>Authorizing Signature Image</label>
+            <input type="file" id="id-sig-upload" accept="image/*" class="field-input" onchange="handleSigUpload(this)">
+            <div style="font-size:11px; color:var(--ink-faint); margin-top:4px;">Upload PNG/JPG signature image to print on the ID card.</div>
           </div>
           <button class="btn-primary" style="margin-top:16px; width:100%;" onclick="generateIdCard()">🖨 Generate ID Card PDF</button>
         </div>
@@ -158,7 +163,7 @@
             <!-- Front Card -->
             <div style="font-weight:600; font-size:12px; color:var(--ink-faint); text-transform:uppercase; letter-spacing:0.05em;">Front Side</div>
             <div class="id-card" id="id-card-render-front">
-              <div class="id-card-header">
+              <div class="id-card-header" style="justify-content: space-between;">
                 <div class="id-card-flag-wrap">
                   <svg class="id-card-flag-svg" viewBox="0 0 800 400" style="width:36px; height:18px; border:1px solid rgba(255,255,255,0.3); border-radius:2px; display:block;">
                     <g transform="translate(0,-81.146301)">
@@ -177,10 +182,13 @@
                     </g>
                   </svg>
                 </div>
-                <div class="id-card-header-text">
+                <div class="id-card-header-text" style="text-align:center;">
                   <div class="id-card-republic">Republic of South Sudan</div>
                   <div class="id-card-ministry">Min. of Higher Education, Science &amp; Tech</div>
                   <div class="id-card-subtitle">Official Staff Identification Card</div>
+                </div>
+                <div class="id-card-logo-wrap" style="flex-shrink:0;">
+                  <img id="id-preview-logo-img" src="" alt="Logo" style="width:20px; height:20px; object-fit:contain; border-radius:2px; display:block; background:rgba(255,255,255,0.1);">
                 </div>
               </div>
               <div class="id-card-body">
@@ -200,8 +208,9 @@
                 <div style="display:flex; flex-direction:column; align-items:center; justify-content:space-between; height:100%; padding-top:4px; gap:4px; flex-shrink:0;">
                   <div id="id-card-qr" class="id-card-qr"></div>
                   <div class="id-card-sig-container">
-                    <div class="id-card-sig-line">
-                      <span class="id-card-sig-cursive" id="id-preview-sig">A. Deng</span>
+                    <div class="id-card-sig-line" style="display:flex; justify-content:center; align-items:center; height:22px; min-height:22px;">
+                      <span class="id-card-sig-cursive" id="id-preview-sig-text" style="font-family:'Inter', sans-serif; font-size:7px; color:var(--accent); font-style:normal; font-weight:500;">(Upload Sig)</span>
+                      <img id="id-preview-sig-img" src="" alt="Signature" style="display:none; max-width:60px; max-height:20px; object-fit:contain;">
                     </div>
                     <div class="id-card-sig-label">Authorizing Sig.</div>
                   </div>
@@ -464,6 +473,8 @@ async function loadLogoBase64() {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(img, 0, 0);
     logoBase64 = canvas.toDataURL('image/jpeg');
+    const logoImgEl = document.getElementById('id-preview-logo-img');
+    if (logoImgEl) logoImgEl.src = logoBase64;
   } catch (e) {
     console.error('Failed to preload logo.jpg', e);
   }
@@ -733,6 +744,35 @@ function selectForIdCard(id) {
   renderIdCardPreview(idCardEmployee);
 }
 
+let hrSignatureBase64 = null;
+
+function handleSigUpload(input) {
+  const file = input.files[0];
+  if (file) {
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      hrSignatureBase64 = e.target.result;
+      updateSignaturePreview();
+    };
+    reader.readAsDataURL(file);
+  }
+}
+
+function updateSignaturePreview() {
+  const sigImgEl = document.getElementById('id-preview-sig-img');
+  const sigTextEl = document.getElementById('id-preview-sig-text');
+  if (hrSignatureBase64) {
+    sigImgEl.src = hrSignatureBase64;
+    sigImgEl.style.display = 'block';
+    sigTextEl.style.display = 'none';
+  } else {
+    sigImgEl.removeAttribute('src');
+    sigImgEl.style.display = 'none';
+    sigTextEl.textContent = '(Upload Sig)';
+    sigTextEl.style.display = 'block';
+  }
+}
+
 function renderIdCardPreview(emp) {
   document.getElementById('id-card-placeholder').style.display = 'none';
   document.getElementById('id-card-preview').style.display = 'flex';
@@ -742,6 +782,12 @@ function renderIdCardPreview(emp) {
   document.getElementById('id-preview-num').textContent = `EMP NO: ${emp.employeeNumber}`;
   document.getElementById('id-preview-year').textContent = new Date().getFullYear();
 
+  // Populate preloaded Logo image
+  const logoImgEl = document.getElementById('id-preview-logo-img');
+  if (logoImgEl) {
+    logoImgEl.src = logoBase64 || 'logo.jpg';
+  }
+
   // Calculate dynamic dates based on hire date
   const hireDateStr = emp.hireDate ? emp.hireDate.slice(0, 10) : new Date().toISOString().slice(0, 10);
   const issueDate = new Date(hireDateStr);
@@ -750,7 +796,9 @@ function renderIdCardPreview(emp) {
 
   document.getElementById('id-preview-issued').textContent = fmtDateShort(issueDate);
   document.getElementById('id-preview-expires').textContent = fmtDateShort(expiryDate);
-  document.getElementById('id-preview-sig').textContent = 'Adut Deng'; // Standard HR Director signature placeholder
+  
+  // Render signature preview
+  updateSignaturePreview();
 
   const photoEl = document.getElementById('id-card-photo-el');
   photoEl.innerHTML = '';
