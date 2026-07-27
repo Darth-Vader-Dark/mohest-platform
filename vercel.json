@@ -1,6 +1,8 @@
 {
   "cleanUrls": true,
   "rewrites": [
+    { "source": "/", "destination": "/public-site/index.html" },
+    { "source": "/index.html", "destination": "/public-site/index.html" },
     { "source": "/enterprise-portal/:path*", "destination": "/enterprise-portal/:path*" },
     { "source": "/public-site/:path*", "destination": "/public-site/:path*" },
     { "source": "/SouthSudanFlag.svg", "destination": "/SouthSudanFlag.svg" },
