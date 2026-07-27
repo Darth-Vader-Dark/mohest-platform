@@ -3,10 +3,10 @@
   "outputDirectory": "dist",
   "builds": [
     { "src": "package.json", "use": "@vercel/static-build" },
-    { "src": "backend/api/index.ts", "use": "@vercel/node" }
+    { "src": "api/index.ts", "use": "@vercel/node" }
   ],
   "routes": [
-    { "src": "/api/(.*)", "dest": "/backend/api/index.ts" },
+    { "src": "/api/(.*)", "dest": "/api/index.ts" },
     { "src": "/", "dest": "/public-site/index.html" },
     { "src": "/index.html", "dest": "/public-site/index.html" },
     { "src": "/enterprise-portal/(.*)", "dest": "/enterprise-portal/$1" },
