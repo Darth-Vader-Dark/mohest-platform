@@ -6,5 +6,5 @@
     "baseUrl": ".",
     "paths": {}
   },
-  "include": ["backend/api/**/*", "backend/src/**/*"]
+  "include": ["api/**/*", "backend/src/**/*"]
 }
