@@ -2,7 +2,7 @@
 // Shared API helpers for MoHEST public site
 // On Vercel, the API is on the same domain — use a relative path.
 // In local dev, fall back to localhost:4000.
-const _isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+const _isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.protocol === 'file:' || !window.location.hostname;
 window.MOHEST_API = window.MOHEST_API || (_isLocalhost ? 'http://localhost:4000/api/v1' : '/api/v1');
 window.MOHEST_ORIGIN = window.MOHEST_ORIGIN || (_isLocalhost ? 'http://localhost:4000' : '');
 
