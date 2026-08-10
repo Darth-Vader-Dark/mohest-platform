@@ -264,7 +264,7 @@
               <div class="file-info">Published ${fmtDate(d.createdAt)}${d.fileSize ? ' &middot; ' + fmtSize(d.fileSize) : ''}</div>
               ${d.description ? `<p style="font-size:.82rem;color:#8a7f6a;margin:.4rem 0 0;">${esc(d.description)}</p>` : ''}
             </div>
-            <button class="dl-btn" onclick="window.downloadFile(window.stmtItemsData[${idx}].fileUrl, window.stmtItemsData[${idx}].title)" style="cursor:pointer; border:none;">Download</button>
+            <a class="dl-btn" href="${API}/public-site/downloads/${d.id}/file" target="_blank" download style="cursor:pointer; border:none; text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">Download</a>
           </div>`).join('');
         if(window.initReveals) window.initReveals();
       })

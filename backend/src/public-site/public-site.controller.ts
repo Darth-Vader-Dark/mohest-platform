@@ -9,7 +9,10 @@ import {
   UseGuards,
   Query,
   ParseUUIDPipe,
+  Res,
+  NotFoundException,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { ApiTags, ApiBearerAuth, ApiOperation } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../auth/jwt-auth.guard';
 import { PermissionsGuard } from '../rbac/permissions.guard';
@@ -320,6 +323,31 @@ export class PublicSiteController {
       },
       orderBy: [{ sortOrder: 'asc' }, { title: 'asc' }],
     });
+  }
+
+  @Get('downloads/:id/file')
+  @ApiOperation({ summary: 'Stream download PDF file' })
+  async getDownloadFile(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Res() res: Response,
+  ) {
+    const item = await this.prisma.publicDownload.findUnique({ where: { id } });
+    if (!item || !item.fileUrl) {
+      throw new NotFoundException('Download file not found');
+    }
+    const safeTitle = (item.title || 'document').replace(/[^a-zA-Z0-9_-]/g, '_');
+    const filename = safeTitle.endsWith('.pdf') ? safeTitle : `${safeTitle}.pdf`;
+
+    if (item.fileUrl.startsWith('data:')) {
+      const parts = item.fileUrl.split(';base64,');
+      const contentType = parts[0].replace('data:', '') || 'application/pdf';
+      const buffer = Buffer.from(parts[1], 'base64');
+      res.setHeader('Content-Type', contentType);
+      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+      res.send(buffer);
+    } else {
+      res.redirect(item.fileUrl);
+    }
   }
 
   @Post('downloads')

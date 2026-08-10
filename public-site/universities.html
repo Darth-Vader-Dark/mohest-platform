@@ -70,14 +70,7 @@
       <span class="filter-chip" data-filter="Private">Private</span>
       <span class="filter-chip" data-filter="Accredited">Accredited</span>
     </div>
-    <div class="table-wrap reveal up">
-      <table class="data">
-        <thead>
-          <tr><th>Institution</th><th>Location</th><th>Type</th><th>Established</th><th>Status</th></tr>
-        </thead>
-        <tbody id="uni-tbody"><tr><td colspan="5" style="color:var(--ink-soft)">Loading…</td></tr></tbody>
-      </table>
-    </div>
+    <div id="uni-grid" class="card-grid" style="margin-top:32px;"><div style="color:var(--ink-soft);padding:32px 0;">Loading…</div></div>
     </div>
   </div>
 </section>
@@ -107,8 +100,6 @@
         <h4>Education</h4>
         <ul>
           <li><a href="universities.html">Universities</a></li>
-          <li><a href="institutes.html">Institutes</a></li>
-          <li><a href="community-colleges.html">Community colleges</a></li>
           <li><a href="admissions.html">Admission policies</a></li>
           <li><a href="certification-equivalence.html">Certificate equivalence</a></li>
           <li><a href="scholarships.html">Foreign scholarships</a></li>
@@ -138,32 +129,38 @@ const API = window.MOHEST_API;
 const PILL = { Public: 'pill-nile', Private: 'pill-gold', Accredited: 'pill-green', 'Under review': 'pill-gold', Provisional: 'pill-gold' };
 let allData = [];
 
-function renderTable(rows) {
-  const tbody = document.getElementById('uni-tbody');
-  if (!rows.length) { tbody.innerHTML = '<tr><td colspan="5" style="color:var(--ink-soft)">No institutions match this filter.</td></tr>'; return; }
-  tbody.innerHTML = rows.map(r => `
-    <tr>
-      <td><strong>${r.name}</strong></td>
-      <td>${r.location || '—'}</td>
-      <td><span class="pill ${PILL[r.type] || 'pill-nile'}">${r.type || 'Public'}</span></td>
-      <td>${r.established ?? '—'}</td>
-      <td><span class="pill ${PILL[r.status] || 'pill-green'}">${r.status || 'Accredited'}</span></td>
-    </tr>`).join('');
+function renderGrid(rows) {
+  const grid = document.getElementById('uni-grid');
+  if (!rows.length) { grid.innerHTML = '<div style="color:var(--ink-soft);padding:32px 0;">No institutions match this filter.</div>'; return; }
+  grid.innerHTML = rows.map((r, i) => {
+    const logoHtml = r.logoUrl ? `<img src="${r.logoUrl}" alt="${r.name} logo" style="width:72px; height:72px; object-fit:contain; border-radius:8px; border:1px solid var(--line); padding:4px; background:#fff; margin-bottom:12px;">` : `<div style="width:72px; height:72px; border-radius:8px; background:linear-gradient(135deg,var(--nile),var(--nile-deep)); display:flex; align-items:center; justify-content:center; color:#fff; font-size:22px; font-weight:700; margin-bottom:12px;">${r.name.slice(0,2).toUpperCase()}</div>`;
+    const revealClass = i % 3 === 0 ? 'reveal left' : i % 3 === 1 ? 'reveal up' : 'reveal right';
+    return `
+    <div class="dept-card ${revealClass}" style="text-align:center;">
+      ${logoHtml}
+      <h3 style="font-size:16px; margin-bottom:6px;">${r.name}</h3>
+      <p style="font-size:13px; color:var(--ink-soft); margin-bottom:8px;">${r.location || ''}${r.state ? ', ' + r.state : ''}${r.established ? ' &nbsp;·&nbsp; Est. ' + r.established : ''}</p>
+      <div style="display:flex; gap:6px; justify-content:center; flex-wrap:wrap; margin-bottom:10px;">
+        ${r.type ? `<span class="pill ${PILL[r.type] || 'pill-nile'}" style="font-size:11px;">${r.type}</span>` : ''}
+        <span class="pill ${PILL[r.status] || 'pill-green'}" style="font-size:11px;">${r.status || 'Accredited'}</span>
+      </div>
+      ${r.website ? `<a href="${r.website}" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:700; color:#fff; background:#002B49; padding:6px 14px; border-radius:6px; text-decoration:none; margin-top:4px;">Visit Website ↗</a>` : ''}
+    </div>`;
+  }).join('');
+  if (typeof window.observeReveal === 'function') window.observeReveal(grid.querySelectorAll('.reveal'));
 }
 
 async function load() {
+  const grid = document.getElementById('uni-grid');
   try {
     const res = await fetch(`${API}/public-site/institutions?category=university`);
     if (!res.ok) throw new Error('API error');
     const data = await res.json();
     allData = data;
-    if (!data.length) {
-      document.getElementById('uni-tbody').innerHTML = '<tr><td colspan="5" style="color:var(--ink-soft)">No universities listed yet.</td></tr>';
-      return;
-    }
-    renderTable(data);
+    if (!data.length) { grid.innerHTML = '<div style="color:var(--ink-soft);padding:32px 0;">No universities listed yet.</div>'; return; }
+    renderGrid(data);
   } catch {
-    document.getElementById('uni-tbody').innerHTML = '<tr><td colspan="5" style="color:var(--ink-soft)">Unable to load data.</td></tr>';
+    grid.innerHTML = '<div style="color:var(--ink-soft);padding:32px 0;">Unable to load data.</div>';
   }
 }
 
@@ -172,8 +169,8 @@ document.querySelectorAll('.filter-chip').forEach(chip => {
     document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
     chip.classList.add('active');
     const f = chip.dataset.filter;
-    if (f === 'All') { renderTable(allData); return; }
-    renderTable(allData.filter(r => r.type === f || r.state === f || r.status === f));
+    if (f === 'All') { renderGrid(allData); return; }
+    renderGrid(allData.filter(r => r.type === f || r.state === f || r.status === f));
   });
 });
 

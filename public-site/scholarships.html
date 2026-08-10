@@ -74,17 +74,29 @@ async function load() {
   const grid = document.getElementById('scholarships-grid');
   try {
     const res = await fetch(`${API}/public-site/scholarships`);
+    if (!res.ok) throw new Error('API error');
     const data = await res.json();
     if (!data || !data.length) { grid.innerHTML = '<div style="color:var(--ink-soft);padding:32px 0;">No scholarships listed yet.</div>'; return; }
-    grid.innerHTML = data.map((s, i) => `
-      <div class="dept-card ${i % 3 === 0 ? 'reveal left' : i % 3 === 1 ? 'reveal up' : 'reveal right'}">
-        <div class="dept-icon">${s.title ? s.title.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase() : 'Sc'}</div>
+    grid.innerHTML = data.map((s, i) => {
+      const revealClass = i % 3 === 0 ? 'reveal left' : i % 3 === 1 ? 'reveal up' : 'reveal right';
+      const deadline = s.deadline ? new Date(s.deadline).toLocaleDateString('en-GB', { day:'numeric', month:'long', year:'numeric'}) : null;
+      const statusColor = s.status === 'Open' ? '#007A33' : s.status === 'Closed' ? '#DA291C' : '#D4AF37';
+      return `
+      <div class="dept-card ${revealClass}">
+        <div class="dept-icon">${s.title ? s.title.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase() : 'SC'}</div>
         <h3>${s.title}</h3>
-        <p>${s.description || ''}</p>
-        ${s.country ? `<p style="margin-top:4px;font-size:0.85em;color:var(--ink-soft)">${s.country}${s.level ? ' &nbsp;·&nbsp; ' + s.level : ''}</p>` : ''}
-        <span class="pill pill-green" style="margin-top:12px;">${s.status || 'Open'}</span>
-      </div>`).join('');
-  } catch {
+        ${s.country ? `<p style="font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:4px;">${s.country}${s.level ? ' &nbsp;·&nbsp; ' + s.level : ''}</p>` : ''}
+        ${s.description ? `<p style="font-size:13.5px; line-height:1.55;">${s.description}</p>` : ''}
+        <div style="display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; align-items:center;">
+          <span style="display:inline-block; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700; color:#fff; background:${statusColor};">${s.status || 'Open'}</span>
+          ${deadline ? `<span style="font-size:12px; color:var(--ink-soft);">Deadline: ${deadline}</span>` : ''}
+        </div>
+        ${s.link ? `<a href="${s.link}" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:4px; margin-top:14px; font-size:12px; font-weight:700; color:#fff; background:#002B49; padding:6px 14px; border-radius:6px; text-decoration:none;">Apply / Learn More ↗</a>` : ''}
+      </div>`;
+    }).join('');
+    if (typeof window.observeReveal === 'function') window.observeReveal(grid.querySelectorAll('.reveal'));
+  } catch(e) {
+    console.error(e);
     grid.innerHTML = '<div style="color:var(--ink-soft);">Error loading scholarships.</div>';
   }
 }
@@ -116,8 +128,6 @@ load();
         <h4>Education</h4>
         <ul>
           <li><a href="universities.html">Universities</a></li>
-          <li><a href="institutes.html">Institutes</a></li>
-          <li><a href="community-colleges.html">Community colleges</a></li>
           <li><a href="admissions.html">Admission policies</a></li>
           <li><a href="certification-equivalence.html">Certificate equivalence</a></li>
           <li><a href="scholarships.html">Foreign scholarships</a></li>
@@ -140,6 +150,5 @@ load();
     </div>
   </div>
 </footer>
-<script src="assets/main.js"></script>
 </body>
 </html>

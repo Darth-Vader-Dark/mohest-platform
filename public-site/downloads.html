@@ -142,7 +142,7 @@
             <h4>${d.title}</h4>
             <div class="file-info">${(d.fileLabel || 'PDF').toUpperCase()} &middot; ${d.fileSize || 'Unknown Size'}</div>
           </div>
-          <button class="dl-btn" onclick="window.downloadFile(downloadsData[${index}].fileUrl, downloadsData[${index}].title)" style="cursor:pointer; border:none;">Download</button>
+          <a class="dl-btn" href="${API}/public-site/downloads/${d.id}/file" target="_blank" download style="cursor:pointer; border:none; text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">Download</a>
         </div>
       `).join('');
 
