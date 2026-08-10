@@ -23,7 +23,6 @@ export class CreateGalleryItemDto {
   @Transform(trim)
   @IsString()
   @MinLength(1)
-  @MaxLength(500)
   imageUrl: string;
 
   @IsOptional()

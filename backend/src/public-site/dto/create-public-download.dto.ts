@@ -36,7 +36,6 @@ export class CreatePublicDownloadDto {
   @Transform(trim)
   @IsString()
   @MinLength(1)
-  @MaxLength(500)
   fileUrl: string;
 
   @IsOptional()

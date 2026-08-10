@@ -83,7 +83,6 @@ export class CreateEmployeeDto {
   @IsOptional()
   @Transform(trim)
   @IsString()
-  @MaxLength(500)
   photoUrl?: string;
 
   @IsOptional()

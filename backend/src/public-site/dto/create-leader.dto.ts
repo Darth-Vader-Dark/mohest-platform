@@ -7,6 +7,7 @@ import {
   Min,
   Max,
 } from 'class-validator';
+// Note: photoUrl stores base64 data URIs from the upload endpoint — no MaxLength on that field.
 import { Transform, Type } from 'class-transformer';
 
 const trim = ({ value }: { value: unknown }) =>
@@ -40,7 +41,6 @@ export class CreateLeaderDto {
   @IsOptional()
   @Transform(trim)
   @IsString()
-  @MaxLength(500)
   photoUrl?: string;
 
   @IsOptional()
