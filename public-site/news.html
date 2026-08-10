@@ -127,20 +127,29 @@ async function load() {
   const container = document.getElementById('news-grid');
   try {
     const res = await fetch(`${API}/public-site/news-articles`);
+    if (!res.ok) {
+      console.error('News API error:', res.status, res.statusText);
+      container.innerHTML = '<div style="color:var(--ink-soft);">Unable to load news at this time. Please try again later.</div>';
+      return;
+    }
     const data = await res.json();
-    if (!data || !data.length) { container.innerHTML = '<div style="color:var(--ink-soft);">No news articles yet.</div>'; return; }
+    if (!Array.isArray(data) || !data.length) {
+      container.innerHTML = '<div style="color:var(--ink-soft);">No news articles yet.</div>';
+      return;
+    }
     const revealClasses = ['reveal left', 'reveal up', 'reveal right'];
     container.innerHTML = data.map((a, i) => `
-      <a href="news.html" class="news-card${a.isLead ? ' lead' : ''}${a.thumbStyle === 'gold' ? ' thumb-gold' : ''} ${revealClasses[i % 3]}">
+      <a href="${a.link || 'news.html'}" ${a.link ? 'target="_blank" rel="noopener"' : ''} class="news-card${a.isLead ? ' lead' : ''}${a.thumbStyle === 'gold' ? ' thumb-gold' : ''} ${revealClasses[i % 3]}">
         <div class="thumb"></div>
         <div class="news-body">
-          <div class="news-date">${new Date(a.publishedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()}</div>
+          <div class="news-date">${a.publishedAt ? new Date(a.publishedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase() : ''}</div>
           <h3>${a.title}</h3>
           ${a.excerpt ? `<p>${a.excerpt}</p>` : ''}
         </div>
       </a>`).join('');
-  } catch {
-    container.innerHTML = '<div style="color:var(--ink-soft);">Error loading news.</div>';
+  } catch(err) {
+    console.error('Failed to load news:', err);
+    container.innerHTML = '<div style="color:var(--ink-soft);">Error loading news. Please refresh the page.</div>';
   }
 }
 load();

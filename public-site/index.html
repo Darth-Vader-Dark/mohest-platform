@@ -250,17 +250,20 @@
 
     // --- News ---
     function fmtDate(iso) {
+      if (!iso) return '';
       return new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
     }
     async function loadNews() {
       try {
-        const data = await fetch(`${API}/public-site/news-articles`).then(r => r.json());
+        const res = await fetch(`${API}/public-site/news-articles`);
         const grid = document.getElementById('news-grid');
-        if (!data || data.length === 0) { grid.innerHTML = '<p style="color:var(--ink-soft)">No news articles yet.</p>'; return; }
+        if (!res.ok) { grid.innerHTML = '<p style="color:var(--ink-soft)">Unable to load news at this time.</p>'; return; }
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) { grid.innerHTML = '<p style="color:var(--ink-soft)">No news articles yet.</p>'; return; }
         const top3 = data.slice(0, 3);
         const revealClasses = ['reveal left', 'reveal up', 'reveal right'];
         grid.innerHTML = top3.map((a, i) => `
-      <a href="news.html" class="news-card${a.isLead ? ' lead' : ''}${a.thumbStyle === 'gold' ? ' thumb-gold' : ''} ${revealClasses[i % 3]}">
+      <a href="${a.link || 'news.html'}" ${a.link ? 'target="_blank" rel="noopener"' : ''} class="news-card${a.isLead ? ' lead' : ''}${a.thumbStyle === 'gold' ? ' thumb-gold' : ''} ${revealClasses[i % 3]}">
         <div class="thumb"></div>
         <div class="news-body">
           <div class="news-date">${fmtDate(a.publishedAt)}</div>
@@ -268,13 +271,15 @@
           ${a.excerpt ? `<p>${a.excerpt}</p>` : ''}
         </div>
       </a>`).join('');
-      } catch {
+      } catch(err) {
+        console.error('News load error:', err);
         document.getElementById('news-grid').innerHTML = '<p style="color:var(--ink-soft)">No news articles yet.</p>';
       }
     }
 
     loadStats();
     loadNews();
+
   </script>
 </body>
 
