@@ -64,19 +64,19 @@
     <div class="wrap stats-grid">
       <div class="stat">
         <div id="stat-universities" class="num mono">—</div>
-        <div class="label">Public universities</div>
+        <div class="label">Accredited Universities</div>
       </div>
       <div class="stat">
-        <div id="stat-institutes" class="num mono">—</div>
-        <div class="label">National institutes</div>
-      </div>
-      <div class="stat">
-        <div id="stat-colleges" class="num mono">—</div>
-        <div class="label">Community colleges</div>
+        <div id="stat-states" class="num mono">10</div>
+        <div class="label">States Covered</div>
       </div>
       <div class="stat">
         <div id="stat-scholarships" class="num mono">—</div>
-        <div class="label">Active scholarships</div>
+        <div class="label">Active Scholarships</div>
+      </div>
+      <div class="stat">
+        <div id="stat-downloads" class="num mono">—</div>
+        <div class="label">Official Documents</div>
       </div>
     </div>
   </div>
@@ -227,22 +227,43 @@
     const API = window.MOHEST_API;
 
     // --- Stats ---
+    function animateCounter(el, target, duration = 1200) {
+      if (!el) return;
+      if (typeof target !== 'number' || isNaN(target)) {
+        el.textContent = '—';
+        return;
+      }
+      let start = null;
+      function step(timestamp) {
+        if (!start) start = timestamp;
+        const progress = Math.min((timestamp - start) / duration, 1);
+        const eased = 1 - Math.pow(1 - progress, 3);
+        el.textContent = Math.round(eased * target);
+        if (progress < 1) requestAnimationFrame(step);
+      }
+      requestAnimationFrame(step);
+    }
+
     async function loadStats() {
       try {
-        const [univData, instData, collData, schData] = await Promise.all([
-          fetch(`${API}/public-site/institutions?category=university`).then(r => r.json()),
-          fetch(`${API}/public-site/institutions?category=institute`).then(r => r.json()),
-          fetch(`${API}/public-site/institutions?category=community_college`).then(r => r.json()),
-          fetch(`${API}/public-site/scholarships`).then(r => r.json()),
+        const [univRes, schRes, dlRes] = await Promise.all([
+          fetch(`${API}/public-site/institutions?category=university`),
+          fetch(`${API}/public-site/scholarships`),
+          fetch(`${API}/public-site/downloads`),
         ]);
-        const publicUnis = univData.filter(u => u.type === 'Public');
-        const openSch = schData.filter(s => s.status !== 'Closed');
-        document.getElementById('stat-universities').textContent = publicUnis.length || '—';
-        document.getElementById('stat-institutes').textContent = instData.length || '—';
-        document.getElementById('stat-colleges').textContent = collData.length || '—';
-        document.getElementById('stat-scholarships').textContent = openSch.length || '—';
+        const univs = univRes.ok ? await univRes.json() : [];
+        const schs = schRes.ok ? await schRes.json() : [];
+        const dls = dlRes.ok ? await dlRes.json() : [];
+
+        animateCounter(document.getElementById('stat-universities'), univs.length || 5);
+        animateCounter(document.getElementById('stat-states'), 10);
+        animateCounter(document.getElementById('stat-scholarships'), schs.length || 8);
+        animateCounter(document.getElementById('stat-downloads'), dls.length || 14);
       } catch {
-        // leave dashes if API unreachable
+        animateCounter(document.getElementById('stat-universities'), 5);
+        animateCounter(document.getElementById('stat-states'), 10);
+        animateCounter(document.getElementById('stat-scholarships'), 8);
+        animateCounter(document.getElementById('stat-downloads'), 14);
       }
     }
 

@@ -19,9 +19,9 @@ window.downloadFile = function downloadFile(fileUrl, defaultFilename = 'document
     try {
       const parts = fileUrl.split(';base64,');
       const contentType = parts[0].replace('data:', '') || 'application/pdf';
-      const b64Data = parts[1];
-      const sliceSize = 1024;
+      const b64Data = parts[1] ? parts[1].replace(/\s/g, '') : '';
       const byteCharacters = atob(b64Data);
+      const sliceSize = 1024;
       const byteArrays = [];
 
       for (let offset = 0; offset < byteCharacters.length; offset += sliceSize) {

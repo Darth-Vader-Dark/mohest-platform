@@ -13,47 +13,76 @@
 <body>
 <div class="login-screen">
   <div class="login-side">
+    <div class="login-side-bg"></div>
     <a class="brand brand-home-link" href="../public-site/index.html" title="Back to MoHEST public website">
       <div class="brand-mark"><img src="logo.jpg" alt="MoHEST logo" class="brand-logo"></div>
       <div class="brand-text">
-        <div class="top">MoHEST Staff Portal</div>
+        <div class="top">MoHEST Enterprise Portal</div>
         <div class="bottom">Republic of South Sudan</div>
       </div>
     </a>
-    <div>
-      <div class="quote">"One portal, every directorate &mdash; ICT, HR, and every department that joins next."</div>
-      <div class="quote-attrib">Enterprise Portal &middot; Role-based access, one login</div>
+    <div class="login-side-quote">
+      <div class="quote-pill">Authorized Personnel Only</div>
+      <div class="quote">"Building South Sudan's future through knowledge, research, and governance."</div>
+      <div class="quote-attrib">Ministry of Higher Education, Science and Technology &middot; Unified Portal</div>
+    </div>
+    <div class="login-side-footer">
+      <span>&copy; 2026 Republic of South Sudan</span>
+      <span class="mono">Juba, South Sudan</span>
     </div>
   </div>
   <div class="login-form-wrap">
     <div class="login-form">
-      <h1>Sign in</h1>
-      <div class="sub">Use your ministry-issued staff credentials.</div>
-      <div id="error-message" style="color:#d93025; background:rgba(217,48,37,0.08); border:1px solid rgba(217,48,37,0.2); padding:10px 12px; border-radius:6px; margin-bottom:16px; font-size:13px; display:none; line-height:1.4;"></div>
+      <div class="form-header">
+        <h1>Staff Sign In</h1>
+        <div class="sub">Enter your official @mohest.gov.ss credentials to access directorate portals.</div>
+      </div>
+      <div id="error-message" class="error-alert" style="display:none;"></div>
       <form id="login-form">
         <div class="field">
-          <label>Staff email</label>
-          <input type="email" id="email" required placeholder="firstname.lastname@mohest.gov.ss">
+          <label for="email">Staff Email Address</label>
+          <div class="input-icon-wrap">
+            <span class="input-icon">✉</span>
+            <input type="email" id="email" required placeholder="name@mohest.gov.ss">
+          </div>
         </div>
         <div class="field">
-          <label>Password</label>
-          <input type="password" id="password" required placeholder="••••••••••">
+          <label for="password">Password</label>
+          <div class="input-icon-wrap">
+            <span class="input-icon">🔒</span>
+            <input type="password" id="password" required placeholder="••••••••••••">
+            <button type="button" id="toggle-pw-btn" class="pw-toggle-btn" aria-label="Toggle password visibility">👁</button>
+          </div>
         </div>
         <div class="form-row">
-          <label style="display:flex; align-items:center; gap:6px;"><input type="checkbox" style="width:auto;"> Remember this device</label>
-          <a href="#">Forgot password?</a>
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer;"><input type="checkbox" style="width:auto;"> Keep me signed in</label>
+          <a href="#" onclick="alert('Please contact the ICT Directorate administrator at support@mohest.gov.ss to reset your credentials.'); return false;">Forgot password?</a>
         </div>
-        <button class="btn-block" type="submit" id="submit-btn">Sign in</button>
+        <button class="btn-block" type="submit" id="submit-btn">
+          <span>Sign In to Portal</span> &rarr;
+        </button>
       </form>
       <div class="login-note">
-        Accounts are created and managed by the ICT directorate. There is no public self-registration &mdash; contact your department's ICT focal point if you need access.
+        <strong>🔒 Secure Directorate System</strong><br>
+        Access is restricted to authorized MoHEST personnel. All activities are monitored and logged for security compliance.
       </div>
-      <a class="login-back" href="../public-site/index.html">&larr; Back to the public website</a>
+      <a class="login-back" href="../public-site/index.html">&larr; Return to Public Website</a>
     </div>
   </div>
 </div>
 
 <script>
+document.getElementById('toggle-pw-btn').addEventListener('click', function() {
+  const pwInput = document.getElementById('password');
+  if (pwInput.type === 'password') {
+    pwInput.type = 'text';
+    this.textContent = '🙈';
+  } else {
+    pwInput.type = 'password';
+    this.textContent = '👁';
+  }
+});
+
 document.getElementById('login-form').addEventListener('submit', async (e) => {
   e.preventDefault();
   const errorDiv = document.getElementById('error-message');

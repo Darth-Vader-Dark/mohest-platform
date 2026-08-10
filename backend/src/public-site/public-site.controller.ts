@@ -328,25 +328,32 @@ export class PublicSiteController {
   @Get('downloads/:id/file')
   @ApiOperation({ summary: 'Stream download PDF file' })
   async getDownloadFile(
-    @Param('id', ParseUUIDPipe) id: string,
+    @Param('id') id: string,
     @Res() res: Response,
   ) {
-    const item = await this.prisma.publicDownload.findUnique({ where: { id } });
-    if (!item || !item.fileUrl) {
-      throw new NotFoundException('Download file not found');
-    }
-    const safeTitle = (item.title || 'document').replace(/[^a-zA-Z0-9_-]/g, '_');
-    const filename = safeTitle.endsWith('.pdf') ? safeTitle : `${safeTitle}.pdf`;
+    try {
+      const item = await this.prisma.publicDownload.findUnique({ where: { id } });
+      if (!item || !item.fileUrl) {
+        throw new NotFoundException('Download file not found');
+      }
+      const safeTitle = (item.title || 'document').replace(/[^a-zA-Z0-9_-]/g, '_');
+      const filename = safeTitle.endsWith('.pdf') ? safeTitle : `${safeTitle}.pdf`;
 
-    if (item.fileUrl.startsWith('data:')) {
-      const parts = item.fileUrl.split(';base64,');
-      const contentType = parts[0].replace('data:', '') || 'application/pdf';
-      const buffer = Buffer.from(parts[1], 'base64');
-      res.setHeader('Content-Type', contentType);
-      res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-      res.send(buffer);
-    } else {
-      res.redirect(item.fileUrl);
+      if (item.fileUrl.startsWith('data:')) {
+        const parts = item.fileUrl.split(';base64,');
+        const contentType = parts[0].replace('data:', '') || 'application/pdf';
+        const cleanB64 = parts[1] ? parts[1].replace(/\s/g, '') : '';
+        const buffer = Buffer.from(cleanB64, 'base64');
+        res.setHeader('Content-Type', contentType);
+        res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+        res.setHeader('Content-Length', buffer.length.toString());
+        return res.end(buffer);
+      } else {
+        return res.redirect(item.fileUrl);
+      }
+    } catch (err: any) {
+      if (err instanceof NotFoundException) throw err;
+      throw new NotFoundException('Could not retrieve file');
     }
   }
 

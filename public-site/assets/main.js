@@ -111,36 +111,147 @@
     }
   };
 
-  /* ---------- Stat counters, run once when scrolled into view ---------- */
-  var statEls = document.querySelectorAll('.stat .num');
-  var counted = false;
-  function animateStats(){
-    if (counted) return;
-    counted = true;
-    statEls.forEach(function(el){
-      var target = parseInt(el.getAttribute('data-count'), 10) || 0;
-      var suffix = el.getAttribute('data-suffix') || '';
-      var start = null;
-      var duration = 900;
-      function step(ts){
-        if (!start) start = ts;
-        var p = Math.min((ts - start) / duration, 1);
-        var eased = 1 - Math.pow(1 - p, 3);
-        el.textContent = Math.round(eased * target) + suffix;
-        if (p < 1) window.requestAnimationFrame(step);
-      }
-      window.requestAnimationFrame(step);
-    });
-  }
-  var statsBand = document.querySelector('.stats-band');
-  if (statsBand){
-    if ('IntersectionObserver' in window){
-      var statObserver = new IntersectionObserver(function(entries){
-        if (entries[0].isIntersecting) animateStats();
-      }, { threshold: 0.4 });
-      statObserver.observe(statsBand);
-    } else {
-      animateStats();
+  /* ---------- Reveal Helper ---------- */
+  
+  /* ---------- Global In-Page Search Modal ---------- */
+  function initGlobalSearch() {
+    var searchBtns = document.querySelectorAll('a.icon-btn[aria-label="Search"], a.icon-btn[title="Search"], a[href="search.html"]');
+    if (!searchBtns.length) return;
+
+    var modal = document.getElementById('global-search-modal');
+    if (!modal) {
+      modal = document.createElement('div');
+      modal.id = 'global-search-modal';
+      modal.className = 'search-modal-overlay hidden';
+      modal.innerHTML = `
+        <div class="search-modal-box">
+          <div class="search-modal-header">
+            <span class="search-icon-symbol">🔍</span>
+            <input type="text" id="global-search-input" placeholder="Search universities, news, scholarships, documents..." autocomplete="off">
+            <button id="global-search-close" aria-label="Close search">✕</button>
+          </div>
+          <div class="search-modal-body" id="global-search-results">
+            <div class="search-hint">Type a query to search across MoHEST resources.</div>
+          </div>
+        </div>
+      `;
+      document.body.appendChild(modal);
     }
+
+    function openSearchModal(e) {
+      if (e) e.preventDefault();
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      var input = document.getElementById('global-search-input');
+      if (input) { input.value = ''; input.focus(); }
+    }
+
+    function closeSearchModal() {
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+
+    searchBtns.forEach(function(btn){
+      btn.addEventListener('click', openSearchModal);
+    });
+
+    var closeBtn = document.getElementById('global-search-close');
+    if (closeBtn) closeBtn.addEventListener('click', closeSearchModal);
+
+    modal.addEventListener('click', function(e){
+      if (e.target === modal) closeSearchModal();
+    });
+
+    document.addEventListener('keydown', function(e){
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+        closeSearchModal();
+      }
+    });
+
+    var input = document.getElementById('global-search-input');
+    var results = document.getElementById('global-search-results');
+    var searchTimer = null;
+
+    if (input) {
+      input.addEventListener('input', function(){
+        clearTimeout(searchTimer);
+        var q = input.value.trim().toLowerCase();
+        if (!q) {
+          results.innerHTML = '<div class="search-hint">Type a query to search across MoHEST resources.</div>';
+          return;
+        }
+        results.innerHTML = '<div class="search-hint">Searching…</div>';
+        searchTimer = setTimeout(function(){ performSearch(q, results); }, 250);
+      });
+    }
+  }
+
+  async function performSearch(q, container) {
+    var API = window.MOHEST_API || '/api/v1';
+    try {
+      var responses = await Promise.all([
+        fetch(`${API}/public-site/institutions?category=university`).then(r => r.ok ? r.json() : []),
+        fetch(`${API}/public-site/news-articles`).then(r => r.ok ? r.json() : []),
+        fetch(`${API}/public-site/scholarships`).then(r => r.ok ? r.json() : []),
+        fetch(`${API}/public-site/downloads`).then(r => r.ok ? r.json() : []),
+      ]);
+
+      var unis = responses[0].filter(u => u.name && u.name.toLowerCase().includes(q));
+      var news = responses[1].filter(n => (n.title && n.title.toLowerCase().includes(q)) || (n.excerpt && n.excerpt.toLowerCase().includes(q)));
+      var schs = responses[2].filter(s => (s.title && s.title.toLowerCase().includes(q)) || (s.country && s.country.toLowerCase().includes(q)));
+      var dls  = responses[3].filter(d => (d.title && d.title.toLowerCase().includes(q)) || (d.category && d.category.toLowerCase().includes(q)));
+
+      var html = '';
+      if (unis.length) {
+        html += '<div class="search-group-title">Universities</div>';
+        unis.forEach(u => {
+          html += `<a href="universities.html" class="search-result-item">
+            <strong>${u.name}</strong>
+            <span>${u.location || 'South Sudan'} &middot; ${u.type || 'Public'}</span>
+          </a>`;
+        });
+      }
+      if (news.length) {
+        html += '<div class="search-group-title">News &amp; Updates</div>';
+        news.forEach(n => {
+          html += `<a href="news-detail.html?id=${n.id}" class="search-result-item">
+            <strong>${n.title}</strong>
+            <span>${n.excerpt || 'Read full news article'}</span>
+          </a>`;
+        });
+      }
+      if (schs.length) {
+        html += '<div class="search-group-title">Scholarships</div>';
+        schs.forEach(s => {
+          html += `<a href="scholarships.html" class="search-result-item">
+            <strong>${s.title}</strong>
+            <span>${s.country || 'Foreign Study'} &middot; ${s.status || 'Open'}</span>
+          </a>`;
+        });
+      }
+      if (dls.length) {
+        html += '<div class="search-group-title">Official Documents</div>';
+        dls.forEach(d => {
+          html += `<a href="downloads.html" class="search-result-item">
+            <strong>${d.title}</strong>
+            <span>${d.fileLabel || 'PDF'} &middot; ${d.category || 'Form'}</span>
+          </a>`;
+        });
+      }
+
+      if (!html) {
+        container.innerHTML = `<div class="search-hint">No matches found for "${q}".</div>`;
+      } else {
+        container.innerHTML = html;
+      }
+    } catch(err) {
+      container.innerHTML = '<div class="search-hint">Search failed. Please check connection.</div>';
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initGlobalSearch);
+  } else {
+    initGlobalSearch();
   }
 })();

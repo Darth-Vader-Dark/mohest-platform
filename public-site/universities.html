@@ -133,7 +133,7 @@ function renderGrid(rows) {
   const grid = document.getElementById('uni-grid');
   if (!rows.length) { grid.innerHTML = '<div style="color:var(--ink-soft);padding:32px 0;">No institutions match this filter.</div>'; return; }
   grid.innerHTML = rows.map((r, i) => {
-    const logoHtml = r.logoUrl ? `<img src="${r.logoUrl}" alt="${r.name} logo" style="width:72px; height:72px; object-fit:contain; border-radius:8px; border:1px solid var(--line); padding:4px; background:#fff; margin-bottom:12px;">` : `<div style="width:72px; height:72px; border-radius:8px; background:linear-gradient(135deg,var(--nile),var(--nile-deep)); display:flex; align-items:center; justify-content:center; color:#fff; font-size:22px; font-weight:700; margin-bottom:12px;">${r.name.slice(0,2).toUpperCase()}</div>`;
+    const logoHtml = r.logoUrl ? `<div style="width:100%; height:110px; display:flex; align-items:center; justify-content:center; background:#ffffff; border-radius:12px; border:1px solid var(--line); padding:10px; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.04);"><img src="${r.logoUrl}" alt="${r.name} logo" style="max-width:100%; max-height:90px; object-fit:contain;"></div>` : `<div style="width:100%; height:110px; border-radius:12px; background:linear-gradient(135deg,var(--nile),var(--nile-deep)); display:flex; align-items:center; justify-content:center; color:#fff; font-size:32px; font-weight:700; margin-bottom:16px; box-shadow:0 2px 8px rgba(0,0,0,0.08);">${r.name.slice(0,2).toUpperCase()}</div>`;
     const revealClass = i % 3 === 0 ? 'reveal left' : i % 3 === 1 ? 'reveal up' : 'reveal right';
     return `
     <div class="dept-card ${revealClass}" style="text-align:center;">

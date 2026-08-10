@@ -95,8 +95,6 @@
         <h4>Education</h4>
         <ul>
           <li><a href="universities.html">Universities</a></li>
-          <li><a href="institutes.html">Institutes</a></li>
-          <li><a href="community-colleges.html">Community colleges</a></li>
           <li><a href="admissions.html">Admission policies</a></li>
           <li><a href="certification-equivalence.html">Certificate equivalence</a></li>
           <li><a href="scholarships.html">Foreign scholarships</a></li>
@@ -142,7 +140,7 @@
             <h4>${d.title}</h4>
             <div class="file-info">${(d.fileLabel || 'PDF').toUpperCase()} &middot; ${d.fileSize || 'Unknown Size'}</div>
           </div>
-          <a class="dl-btn" href="${API}/public-site/downloads/${d.id}/file" target="_blank" download style="cursor:pointer; border:none; text-decoration:none; display:inline-flex; align-items:center; justify-content:center;">Download</a>
+          <button class="dl-btn" onclick="window.downloadFile(downloadsData[${index}].fileUrl, downloadsData[${index}].title)" style="cursor:pointer; border:none; display:inline-flex; align-items:center; justify-content:center;">Download</button>
         </div>
       `).join('');
 
