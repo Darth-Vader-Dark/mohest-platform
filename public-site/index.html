@@ -271,6 +271,10 @@
           ${a.excerpt ? `<p>${a.excerpt}</p>` : ''}
         </div>
       </a>`).join('');
+        // Trigger reveal animation on newly injected cards
+        if (typeof window.observeReveal === 'function') {
+          window.observeReveal(grid.querySelectorAll('.reveal'));
+        }
       } catch(err) {
         console.error('News load error:', err);
         document.getElementById('news-grid').innerHTML = '<p style="color:var(--ink-soft)">No news articles yet.</p>';

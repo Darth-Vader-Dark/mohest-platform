@@ -147,6 +147,10 @@ async function load() {
           ${a.excerpt ? `<p>${a.excerpt}</p>` : ''}
         </div>
       </a>`).join('');
+    // Trigger reveal animation on the newly injected cards
+    if (typeof window.observeReveal === 'function') {
+      window.observeReveal(container.querySelectorAll('.reveal'));
+    }
   } catch(err) {
     console.error('Failed to load news:', err);
     container.innerHTML = '<div style="color:var(--ink-soft);">Error loading news. Please refresh the page.</div>';
