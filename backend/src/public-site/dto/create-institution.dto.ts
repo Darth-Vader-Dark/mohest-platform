@@ -46,8 +46,13 @@ export class CreateInstitutionDto {
   @IsOptional()
   @Transform(trim)
   @IsString()
-  @MaxLength(50)
+  @MaxLength(100)
   type?: string;
+
+  @IsOptional()
+  @Transform(trim)
+  @IsString()
+  logoUrl?: string;
 
   @IsOptional()
   @Type(() => Number)

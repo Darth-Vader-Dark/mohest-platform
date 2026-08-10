@@ -95,11 +95,12 @@ export class PublicSiteController {
         state: dto.state,
         category: normalizeCategory(dto.category),
         type: dto.type || null,
+        logoUrl: dto.logoUrl || null,
         established: dto.established ?? null,
         status: dto.status || 'Accredited',
         website: dto.website || null,
         sortOrder: dto.sortOrder ?? 0,
-      },
+      } as any,
     });
   }
 
@@ -116,11 +117,12 @@ export class PublicSiteController {
         state: dto.state,
         category: normalizeCategory(dto.category),
         type: dto.type || null,
+        logoUrl: dto.logoUrl || null,
         established: dto.established ?? null,
         status: dto.status || 'Accredited',
         website: dto.website || null,
         sortOrder: dto.sortOrder ?? 0,
-      },
+      } as any,
     });
   }
 

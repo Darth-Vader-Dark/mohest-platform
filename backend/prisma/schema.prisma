@@ -277,6 +277,7 @@ model Institution {
   state       String
   category    String
   type        String?
+  logoUrl     String?
   established Int?
   status      String   @default("Accredited")
   website     String?

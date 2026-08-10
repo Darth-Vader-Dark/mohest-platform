@@ -253,9 +253,10 @@
         if(!items || !items.length){
           document.getElementById('stmt-empty').style.display = 'block'; return;
         }
+        window.stmtItemsData = items;
         const list = document.getElementById('stmt-list');
         list.style.display = 'block';
-        list.innerHTML = items.map(d => `
+        list.innerHTML = items.map((d, idx) => `
           <div class="download-item reveal up">
             <div class="download-icon">${esc(d.fileLabel || 'PDF')}</div>
             <div class="meta">
@@ -263,7 +264,7 @@
               <div class="file-info">Published ${fmtDate(d.createdAt)}${d.fileSize ? ' &middot; ' + fmtSize(d.fileSize) : ''}</div>
               ${d.description ? `<p style="font-size:.82rem;color:#8a7f6a;margin:.4rem 0 0;">${esc(d.description)}</p>` : ''}
             </div>
-            <a class="dl-btn" href="${d.fileUrl.startsWith('http') ? d.fileUrl : 'http://localhost:3000' + d.fileUrl}" target="_blank" rel="noopener">Download</a>
+            <button class="dl-btn" onclick="window.downloadFile(window.stmtItemsData[${idx}].fileUrl, window.stmtItemsData[${idx}].title)" style="cursor:pointer; border:none;">Download</button>
           </div>`).join('');
         if(window.initReveals) window.initReveals();
       })

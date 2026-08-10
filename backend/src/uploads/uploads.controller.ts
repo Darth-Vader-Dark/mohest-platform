@@ -114,4 +114,13 @@ export class UploadsController {
     if (!file) throw new BadRequestException('No image file provided.');
     return { url: toDataUri(file) };
   }
+
+  @Post('institution-logo')
+  @ApiOperation({ summary: 'Upload an institution logo/photo (stored as Base64 in DB)' })
+  @ApiConsumes('multipart/form-data')
+  @UseInterceptors(imageInterceptor())
+  uploadInstitutionLogo(@UploadedFile() file: Express.Multer.File) {
+    if (!file) throw new BadRequestException('No image file provided.');
+    return { url: toDataUri(file) };
+  }
 }

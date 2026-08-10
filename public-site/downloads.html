@@ -125,23 +125,24 @@
   const API = window.MOHEST_API;
   const resolveAssetUrl = window.resolveAssetUrl;
 
+  let downloadsData = [];
   async function loadDownloads() {
     const container = document.getElementById('download-list');
     try {
       const res = await fetch(`${API}/public-site/downloads`);
-      const data = res.ok ? await res.json() : [];
-      if (!data || data.length === 0) {
+      downloadsData = res.ok ? await res.json() : [];
+      if (!downloadsData || downloadsData.length === 0) {
         container.innerHTML = '<p style="color:var(--ink-soft); padding: 20px 0;">No official downloads available at this time.</p>';
         return;
       }
-      container.innerHTML = data.map((d, index) => `
+      container.innerHTML = downloadsData.map((d, index) => `
         <div class="download-item" style="opacity: 0; transform: translateY(20px); transition: all 0.5s ease ${index * 0.05}s;">
           <div class="download-icon">${(d.fileLabel || 'PDF').toUpperCase()}</div>
           <div class="meta">
             <h4>${d.title}</h4>
             <div class="file-info">${(d.fileLabel || 'PDF').toUpperCase()} &middot; ${d.fileSize || 'Unknown Size'}</div>
           </div>
-          <a class="dl-btn" href="${resolveAssetUrl(d.fileUrl)}" target="_blank" download>Download</a>
+          <button class="dl-btn" onclick="window.downloadFile(downloadsData[${index}].fileUrl, downloadsData[${index}].title)" style="cursor:pointer; border:none;">Download</button>
         </div>
       `).join('');
 
