@@ -175,20 +175,20 @@
     </div>
   </section>
 
-  <section class="departments" style="background:var(--paper-raised); border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:64px 0;">
+  <section class="scholarships-updates" style="background:var(--paper-raised); border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:64px 0; position:relative; overflow:hidden;">
     <div class="bg-dots parallax-el" data-speed="0.12" style="--dot-color:rgba(185,130,46,0.4);" aria-hidden="true"></div>
     <div class="bg-glow gold parallax-el" data-speed="0.16" style="width:400px; height:400px; top:30px; right:30px;" aria-hidden="true"></div>
     <div class="wrap">
       <div class="section-head" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
         <div>
-          <span class="kicker">Opportunities Abroad</span>
-          <h2>Current Foreign Scholarships</h2>
-          <p>Government and partner-funded scholarship opportunities for South Sudanese students.</p>
+          <span class="kicker">Scholarship Updates</span>
+          <h2>Latest scholarship opportunities.</h2>
+          <p>Government and partner-funded programmes for South Sudanese students — click to expand details.</p>
         </div>
-        <a class="btn btn-primary" href="scholarships.html" style="margin-bottom:8px;">View All Scholarships &rarr;</a>
+        <a class="btn btn-primary" href="scholarships.html" style="margin-bottom:8px;">All Scholarships &rarr;</a>
       </div>
-      <div id="home-scholarships-grid" class="card-grid" style="margin-top:32px;">
-        <div style="color:var(--ink-soft);padding:32px 0;">Loading scholarship opportunities…</div>
+      <div id="home-scholarships-grid" class="news-grid" style="margin-top:32px;">
+        <div style="color:var(--ink-soft);padding:32px 0;">Loading scholarship updates…</div>
       </div>
     </div>
   </section>
@@ -296,22 +296,38 @@
           grid.innerHTML = '<div style="color:var(--ink-soft);padding:32px 0;">No active scholarships listed at this time.</div>';
           return;
         }
-        const top3 = data.slice(0, 3);
-        const revealClasses = ['reveal left', 'reveal up', 'reveal right'];
-        grid.innerHTML = top3.map((s, i) => {
+        const top4 = data.slice(0, 4);
+        const revealClasses = ['reveal left', 'reveal up', 'reveal right', 'reveal left'];
+
+        grid.innerHTML = top4.map((s, i) => {
           const statusColor = s.status === 'Open' ? '#007A33' : s.status === 'Closed' ? '#DA291C' : '#D4AF37';
-          const deadline = s.deadline ? new Date(s.deadline).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric'}) : null;
+          const deadline = s.deadline ? new Date(s.deadline).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' }) : null;
+          const flagEmoji = s.country ? '🌍 ' : '';
+          const truncDesc = s.description && s.description.length > 90 ? s.description.slice(0, 90) + '…' : (s.description || '');
+          const fullDesc = s.description || '';
+          const hasMore = s.description && s.description.length > 90;
+          const cardId = 'sch-card-' + i;
+
           return `
-          <div class="dept-card ${revealClasses[i % 3]}">
-            <div class="dept-icon">${s.title ? s.title.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase() : 'SC'}</div>
-            <h3 style="font-size:16.5px; margin-bottom:6px;">${s.title}</h3>
-            ${s.country ? `<p style="font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:8px;">${s.country}${s.level ? ' &nbsp;·&nbsp; ' + s.level : ''}</p>` : ''}
-            ${s.description ? `<p style="font-size:13.5px; line-height:1.55; color:var(--ink-soft);">${s.description}</p>` : ''}
-            <div style="display:flex; align-items:center; gap:8px; margin-top:14px; flex-wrap:wrap;">
-              <span style="display:inline-block; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700; color:#fff; background:${statusColor};">${s.status || 'Open'}</span>
-              ${deadline ? `<span style="font-size:12px; color:var(--ink-soft);">Deadline: ${deadline}</span>` : ''}
+          <div class="news-card ${revealClasses[i % 4]}" id="${cardId}" style="cursor:pointer;" onclick="toggleSchCard('${cardId}')">
+            <div class="thumb" style="display:flex; align-items:center; justify-content:center; background:linear-gradient(135deg, #002B49 0%, #173B57 100%); min-height:80px;">
+              <span style="font-size:28px; font-weight:700; color:rgba(255,255,255,0.25); letter-spacing:2px;">${s.title ? s.title.split(' ').map(w=>w[0]).slice(0,3).join('').toUpperCase() : 'SC'}</span>
             </div>
-            ${s.link ? `<a href="${s.link}" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:4px; margin-top:14px; font-size:12px; font-weight:700; color:#fff; background:#002B49; padding:6px 14px; border-radius:6px; text-decoration:none;">Apply / Learn More ↗</a>` : ''}
+            <div class="news-body">
+              <div class="news-date" style="display:flex; align-items:center; gap:6px; flex-wrap:wrap;">
+                <span style="display:inline-block; padding:3px 8px; border-radius:20px; font-size:10px; font-weight:700; color:#fff; background:${statusColor};">${s.status || 'Open'}</span>
+                ${deadline ? `<span style="font-size:11px; color:var(--ink-soft);">Deadline: ${deadline}</span>` : ''}
+              </div>
+              <h3 style="font-size:15.5px; margin:6px 0 4px;">${s.title}</h3>
+              ${s.country ? `<p style="font-size:12px; font-weight:600; color:var(--ink-soft); margin:0 0 6px;">${flagEmoji}${s.country}${s.level ? ' · ' + s.level : ''}${s.fields ? ' · ' + s.fields : ''}</p>` : ''}
+              <p class="sch-preview" style="font-size:13px; line-height:1.5; color:var(--ink-soft); margin:0;">${truncDesc}</p>
+              <div class="sch-expanded" style="display:none;">
+                <p style="font-size:13px; line-height:1.6; color:var(--ink-soft); margin:8px 0 0;">${fullDesc}</p>
+                ${s.link ? `<a href="${s.link}" target="_blank" rel="noopener" onclick="event.stopPropagation();" style="display:inline-flex; align-items:center; gap:5px; margin-top:14px; padding:7px 16px; font-size:12px; font-weight:700; color:#fff; background:#002B49; border-radius:6px; text-decoration:none; transition:background 0.2s;">Apply / Learn More ↗</a>` : ''}
+                ${s.pdfUrl ? `<a href="${s.pdfUrl}" target="_blank" rel="noopener" onclick="event.stopPropagation();" style="display:inline-flex; align-items:center; gap:5px; margin-top:14px; margin-left:6px; padding:7px 16px; font-size:12px; font-weight:700; color:#002B49; background:transparent; border:1.5px solid #002B49; border-radius:6px; text-decoration:none; transition:background 0.2s;">Download PDF ↓</a>` : ''}
+              </div>
+              ${hasMore ? `<span class="sch-toggle" style="display:inline-block; margin-top:8px; font-size:11.5px; font-weight:700; color:#002B49; cursor:pointer;">Read more ▾</span>` : ''}
+            </div>
           </div>`;
         }).join('');
 
@@ -320,6 +336,25 @@
         }
       } catch(err) {
         grid.innerHTML = '<div style="color:var(--ink-soft);padding:32px 0;">No active scholarships listed at this time.</div>';
+      }
+    }
+
+    function toggleSchCard(id) {
+      const card = document.getElementById(id);
+      if (!card) return;
+      const preview = card.querySelector('.sch-preview');
+      const expanded = card.querySelector('.sch-expanded');
+      const toggle = card.querySelector('.sch-toggle');
+      if (!expanded) return;
+      const isOpen = expanded.style.display !== 'none';
+      if (isOpen) {
+        expanded.style.display = 'none';
+        if (preview) preview.style.display = '';
+        if (toggle) toggle.textContent = 'Read more ▾';
+      } else {
+        expanded.style.display = 'block';
+        if (preview) preview.style.display = 'none';
+        if (toggle) toggle.textContent = 'Show less ▴';
       }
     }
 
