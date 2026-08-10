@@ -42,6 +42,16 @@
       <div class="nav-item" data-section="appointment" onclick="showSection('appointment',this)"><span class="ic">📝</span> Appointment Letters</div>
     </div>
 
+    <div class="nav-group">
+      <div class="label">Public Site Content</div>
+      <div class="nav-item" data-section="news" onclick="showSection('news',this)"><span class="ic">📰</span> News articles</div>
+      <div class="nav-item" data-section="institutions" onclick="showSection('institutions',this)"><span class="ic">🏫</span> Institutions</div>
+      <div class="nav-item" data-section="scholarships" onclick="showSection('scholarships',this)"><span class="ic">🎓</span> Scholarships</div>
+      <div class="nav-item" data-section="leaders" onclick="showSection('leaders',this)"><span class="ic">👔</span> Leadership</div>
+      <div class="nav-item" data-section="downloads" onclick="showSection('downloads',this)"><span class="ic">📁</span> Downloads</div>
+      <div class="nav-item" data-section="media" onclick="showSection('media',this)"><span class="ic">🖼️</span> Media &amp; Gallery</div>
+    </div>
+
     <div class="sidebar-foot">
       <div class="avatar" id="sidebar-avatar"></div>
       <div>
@@ -366,6 +376,134 @@
           </div>
         </div>
       </div>
+    <!-- ─── NEWS SECTION ─── -->
+    <div class="content hidden" id="section-news">
+      <div class="page-title">
+        <div>
+          <h1>News Articles</h1>
+          <div class="sub">Manage articles displayed on the public website.</div>
+        </div>
+        <button class="btn-primary" onclick="openNewsModal()">+ New article</button>
+      </div>
+
+      <div class="panel">
+        <table class="table-e">
+          <thead><tr><th>Title</th><th>Published</th><th>Lead?</th><th>Link</th><th>Actions</th></tr></thead>
+          <tbody id="news-tbody"><tr><td colspan="5" class="loading-cell">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── INSTITUTIONS SECTION ─── -->
+    <div class="content hidden" id="section-institutions">
+      <div class="page-title">
+        <div>
+          <h1>Institutions</h1>
+          <div class="sub">Higher education institutions listed on the public site.</div>
+        </div>
+        <button class="btn-primary" onclick="openInstModal()">+ Add institution</button>
+      </div>
+
+      <div class="panel">
+        <table class="table-e">
+          <thead><tr><th>Name</th><th>Category</th><th>State</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="inst-tbody"><tr><td colspan="5" class="loading-cell">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── SCHOLARSHIPS SECTION ─── -->
+    <div class="content hidden" id="section-scholarships">
+      <div class="page-title">
+        <div>
+          <h1>Scholarships</h1>
+          <div class="sub">Scholarship opportunities listed on the public site.</div>
+        </div>
+        <button class="btn-primary" onclick="openScholarModal()">+ Add scholarship</button>
+      </div>
+
+      <div class="panel">
+        <table class="table-e">
+          <thead><tr><th>Title</th><th>Country</th><th>Level</th><th>Deadline</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="scholar-tbody"><tr><td colspan="6" class="loading-cell">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── LEADERS SECTION ─── -->
+    <div class="content hidden" id="section-leaders">
+      <div class="page-title">
+        <div>
+          <h1>Leadership</h1>
+          <div class="sub">Ministry leadership profiles displayed on the public site.</div>
+        </div>
+        <button class="btn-primary" onclick="openLeaderModal()">+ Add leader</button>
+      </div>
+
+      <div class="panel">
+        <div id="leaders-grid" class="leaders-grid"><div class="loading-row">Loading…</div></div>
+      </div>
+    </div>
+
+    <!-- ─── DOWNLOADS SECTION ─── -->
+    <div class="content hidden" id="section-downloads">
+      <div class="page-title">
+        <div>
+          <h1>Downloads</h1>
+          <div class="sub">Manage forms, guidelines, and policy documents listed on the public site.</div>
+        </div>
+        <button class="btn-primary" onclick="openDownloadModal()">+ Add download</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h3>All downloads</h3>
+          <div style="display:flex; gap:8px; align-items:center;">
+            <select id="dl-cat-filter" onchange="filterDownloads()" style="padding:6px 10px; border:1px solid var(--border); border-radius:6px; font-family:inherit; font-size:12.5px; background:var(--surface-2); color:var(--ink);">
+              <option value="">All categories</option>
+              <option value="form">Forms</option>
+              <option value="guideline">Guidelines</option>
+              <option value="policy">Policies</option>
+              <option value="statement">Statements</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+        </div>
+        <table class="table-e">
+          <thead><tr><th>Title</th><th>Category</th><th>File</th><th>Size</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="downloads-tbody"><tr><td colspan="6" class="loading-cell">Loading…</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- ─── MEDIA & GALLERY SECTION ─── -->
+    <div class="content hidden" id="section-media">
+      <div class="page-title">
+        <div>
+          <h1>Media &amp; Gallery</h1>
+          <div class="sub">Manage photo gallery items and ministerial statements shown on the public Media Centre page.</div>
+        </div>
+        <button class="btn-primary" onclick="openGalleryModal()">+ Add photo</button>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head"><h3>Photo Gallery</h3></div>
+        <table class="table-e">
+          <thead><tr><th>Photo</th><th>Title</th><th>Order</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="gallery-tbody"><tr><td colspan="5" class="loading-cell">Loading…</td></tr></tbody>
+        </table>
+      </div>
+
+      <div class="panel" style="margin-top:24px;">
+        <div class="panel-head">
+          <h3>Ministerial Statements</h3>
+          <span class="link" onclick="showSection('downloads',document.querySelector('[data-section=downloads]')); setTimeout(()=>{ const f=document.getElementById('dl-cat-filter'); if(f){ f.value='statement'; filterDownloads(); } },300)">Manage in Downloads →</span>
+        </div>
+        <table class="table-e">
+          <thead><tr><th>Title</th><th>File</th><th>Status</th><th>Actions</th></tr></thead>
+          <tbody id="stmts-tbody"><tr><td colspan="4" class="loading-cell">Loading…</td></tr></tbody>
+        </table>
+      </div>
     </div>
 
   </div><!-- .main -->
@@ -438,6 +576,202 @@
     <div class="modal-foot">
       <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
       <button type="submit" class="btn-primary" id="emp-form-submit">Save employee</button>
+    </div>
+  </form>
+</div>
+
+<!-- News Modal -->
+<div class="modal hidden" id="news-modal">
+  <div class="modal-head">
+    <h2 id="news-modal-title">Add news article</h2>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <form id="news-form" onsubmit="submitNewsForm(event)">
+    <div class="field"><label>Title *</label><input id="n-title" required class="field-input"></div>
+    <div class="field"><label>Excerpt / summary</label><textarea id="n-excerpt" rows="3" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; resize:vertical;"></textarea></div>
+    <div class="form-grid-2">
+      <div class="field"><label>Published date</label><input type="date" id="n-publishedAt" class="field-input"></div>
+      <div class="field"><label>External link</label><input id="n-link" placeholder="https://…" class="field-input"></div>
+    </div>
+    <div class="field" style="display:flex; align-items:center; gap:8px;">
+      <input type="checkbox" id="n-isLead" style="width:auto;">
+      <label for="n-isLead" style="margin:0; font-weight:500;">Feature as lead story</label>
+    </div>
+    <div id="news-form-error" class="form-error hidden"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button type="submit" class="btn-primary" id="news-form-submit">Save article</button>
+    </div>
+  </form>
+</div>
+
+<!-- Institution Modal -->
+<div class="modal hidden" id="inst-modal">
+  <div class="modal-head">
+    <h2 id="inst-modal-title">Add institution</h2>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <form id="inst-form" onsubmit="submitInstForm(event)">
+    <div class="field"><label>Name *</label><input id="i-name" required class="field-input"></div>
+    <div class="form-grid-2">
+      <div class="field"><label>Category *</label>
+        <select id="i-category" class="field-select">
+          <option value="university">University</option>
+          <option value="institute">Institute / Technical</option>
+          <option value="community_college">Community College</option>
+        </select>
+      </div>
+      <div class="field"><label>Type</label><input id="i-type" placeholder="Public / Private" class="field-input"></div>
+    </div>
+    <div class="form-grid-2">
+      <div class="field"><label>State / Region</label><input id="i-state" class="field-input"></div>
+      <div class="field"><label>Location (city)</label><input id="i-location" class="field-input"></div>
+    </div>
+    <div class="form-grid-2">
+      <div class="field"><label>Established year</label><input type="number" id="i-established" min="1900" max="2030" class="field-input"></div>
+      <div class="field"><label>Status</label>
+        <select id="i-status" class="field-select">
+          <option value="Accredited">Accredited</option>
+          <option value="Provisional">Provisional</option>
+          <option value="Revoked">Revoked</option>
+        </select>
+      </div>
+    </div>
+    <div class="field"><label>Website</label><input id="i-website" placeholder="https://…" class="field-input"></div>
+    <div id="inst-form-error" class="form-error hidden"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button type="submit" class="btn-primary" id="inst-form-submit">Save institution</button>
+    </div>
+  </form>
+</div>
+
+<!-- Scholarship Modal -->
+<div class="modal hidden" id="scholar-modal">
+  <div class="modal-head">
+    <h2 id="scholar-modal-title">Add scholarship</h2>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <form id="scholar-form" onsubmit="submitScholarForm(event)">
+    <div class="field"><label>Title *</label><input id="s-title" required class="field-input"></div>
+    <div class="field"><label>Description</label><textarea id="s-description" rows="3" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; resize:vertical;"></textarea></div>
+    <div class="form-grid-2">
+      <div class="field"><label>Country *</label><input id="s-country" required class="field-input"></div>
+      <div class="field"><label>Fields of study *</label><input id="s-fields" required placeholder="e.g. Engineering, Medicine" class="field-input"></div>
+    </div>
+    <div class="form-grid-2">
+      <div class="field"><label>Level</label><input id="s-level" placeholder="Bachelor, Master, PhD" class="field-input"></div>
+      <div class="field"><label>Deadline</label><input type="date" id="s-deadline" class="field-input"></div>
+    </div>
+    <div class="form-grid-2">
+      <div class="field"><label>Status</label>
+        <select id="s-status" class="field-select">
+          <option value="Open">Open</option>
+          <option value="Closed">Closed</option>
+          <option value="Upcoming">Upcoming</option>
+        </select>
+      </div>
+      <div class="field"><label>Link</label><input id="s-link" placeholder="https://…" class="field-input"></div>
+    </div>
+    <div id="scholar-form-error" class="form-error hidden"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button type="submit" class="btn-primary" id="scholar-form-submit">Save scholarship</button>
+    </div>
+  </form>
+</div>
+
+<!-- Leader Modal -->
+<div class="modal hidden" id="leader-modal">
+  <div class="modal-head">
+    <h2 id="leader-modal-title">Add leader</h2>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <form id="leader-form" onsubmit="submitLeaderForm(event)">
+    <div class="form-grid-2">
+      <div class="field"><label>Full name *</label><input id="l-name" required class="field-input"></div>
+      <div class="field"><label>Title / Position *</label><input id="l-title" required placeholder="e.g. Minister" class="field-input"></div>
+    </div>
+    <div class="field"><label>Directorate</label><input id="l-directorate" placeholder="e.g. Higher Education" class="field-input"></div>
+    <div class="field"><label>Bio</label><textarea id="l-bio" rows="3" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; resize:vertical;"></textarea></div>
+    <div class="field"><label>Profile photo</label>
+      <input type="file" id="l-photoFile" accept="image/jpeg,image/png,image/webp,image/gif" class="field-input">
+      <div id="l-photo-preview" style="margin-top:8px; display:none;">
+        <img id="l-photo-preview-img" alt="Preview" style="width:80px; height:80px; object-fit:cover; border-radius:50%; border:1px solid var(--border);">
+      </div>
+      <input type="hidden" id="l-photoUrl">
+    </div>
+    <div id="leader-form-error" class="form-error hidden"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button type="submit" class="btn-primary" id="leader-form-submit">Save leader</button>
+    </div>
+  </form>
+</div>
+
+<!-- Download Modal -->
+<div class="modal hidden" id="download-modal">
+  <div class="modal-head">
+    <h2 id="download-modal-title">Add download</h2>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <form id="download-form" onsubmit="submitDownloadForm(event)">
+    <div class="field"><label>Title *</label><input id="dl-title" required class="field-input" placeholder="e.g. Scholarship Application Form 2026"></div>
+    <div class="field"><label>Description</label><textarea id="dl-description" rows="2" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; resize:vertical;" placeholder="Brief description of the document..."></textarea></div>
+    <div class="form-grid-2">
+      <div class="field"><label>Category *</label>
+        <select id="dl-category" class="field-select">
+          <option value="form">Form</option>
+          <option value="guideline">Guideline</option>
+          <option value="policy">Policy</option>
+          <option value="statement">Statement</option>
+          <option value="other">Other</option>
+        </select>
+      </div>
+      <div class="field"><label>Sort order</label><input type="number" id="dl-sortOrder" class="field-input" value="0" min="0"></div>
+    </div>
+    <div class="field"><label>PDF File</label>
+      <input type="file" id="dl-file" accept="application/pdf" class="field-input">
+      <div id="dl-file-info" style="margin-top:6px; font-size:12.5px; color:var(--ink-soft); display:none;"></div>
+      <input type="hidden" id="dl-fileUrl">
+      <input type="hidden" id="dl-fileSize">
+    </div>
+    <div class="field" style="display:flex; align-items:center; gap:8px;">
+      <input type="checkbox" id="dl-isPublished" style="width:auto;" checked>
+      <label for="dl-isPublished" style="margin:0; font-weight:500;">Published (visible on public site)</label>
+    </div>
+    <div id="download-form-error" class="form-error hidden"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button type="submit" class="btn-primary" id="download-form-submit">Save download</button>
+    </div>
+  </form>
+</div>
+
+<!-- Gallery Photo Modal -->
+<div class="modal hidden" id="gallery-modal">
+  <div class="modal-head">
+    <h2 id="gallery-modal-title">Add gallery photo</h2>
+    <button class="modal-close" onclick="closeModal()">✕</button>
+  </div>
+  <form id="gallery-form" onsubmit="submitGalleryForm(event)">
+    <div class="field"><label>Caption / Title *</label><input id="g-title" required class="field-input" placeholder="e.g. Graduation ceremony — Juba University 2026"></div>
+    <div class="field"><label>Photo</label>
+      <input type="file" id="g-file" accept="image/*" class="field-input">
+      <div id="g-file-info" style="margin-top:6px; font-size:12.5px; color:var(--ink-soft); display:none;"></div>
+      <input type="hidden" id="g-imageUrl">
+    </div>
+    <div class="form-grid-2">
+      <div class="field"><label>Sort order</label><input type="number" id="g-sortOrder" class="field-input" value="0" min="0"></div>
+      <div class="field" style="display:flex; align-items:center; gap:8px; padding-top:22px;">
+        <input type="checkbox" id="g-isPublished" style="width:auto;" checked>
+        <label for="g-isPublished" style="margin:0; font-weight:500;">Published</label>
+      </div>
+    </div>
+    <div id="gallery-form-error" class="form-error hidden"></div>
+    <div class="modal-foot">
+      <button type="button" class="btn-secondary" onclick="closeModal()">Cancel</button>
+      <button type="submit" class="btn-primary" id="gallery-form-submit">Save photo</button>
     </div>
   </form>
 </div>
@@ -559,8 +893,18 @@ function showSection(id, el) {
   document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
   document.getElementById('section-' + id).classList.remove('hidden');
   if (el) el.classList.add('active');
-  const titles = { overview:'Dashboard', employees:'Employee Records', 'id-cards':'ID Card Generator', leave:'Leave Letters', appointment:'Appointment Letters' };
+  const titles = {
+    overview:'Dashboard', employees:'Employee Records', 'id-cards':'ID Card Generator', leave:'Leave Letters', appointment:'Appointment Letters',
+    news: 'News Articles', institutions: 'Institutions', scholarships: 'Scholarships', leaders: 'Leadership', downloads: 'Downloads', media: 'Media & Gallery'
+  };
   document.getElementById('topbar-title').textContent = titles[id] || id;
+
+  if (id === 'news') loadNews();
+  if (id === 'institutions') loadInstitutions();
+  if (id === 'scholarships') loadScholarships();
+  if (id === 'leaders') loadLeaders();
+  if (id === 'downloads') loadDownloads();
+  if (id === 'media') loadMedia();
 }
 
 // ── Employees ───────────────────────────────────────────────
@@ -1151,6 +1495,598 @@ function fmtDate(d) {
 document.querySelector('[data-section=employees]').addEventListener('click', () => {
   setTimeout(() => renderEmployeesTable(allEmployees), 0);
 });
+
+// ── Public Site Content Handlers ─────────────────────────────
+let editingNewsId = null;
+let editingInstId = null;
+let editingScholarId = null;
+let editingLeaderId = null;
+let editingDownloadId = null;
+let editingGalleryId = null;
+
+let newsList = [];
+let instList = [];
+let scholarList = [];
+let leaderList = [];
+let downloadList = [];
+
+function esc(str) {
+  if (!str) return '';
+  return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+// ── News ──────────────────────────────────────────────────────
+async function loadNews() {
+  const tbody = document.getElementById('news-tbody');
+  tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">Loading…</td></tr>';
+  try {
+    const res = await fetch(`${API}/public-site/news-articles`, { headers: authHeaders() });
+    newsList = await res.json();
+    if (!newsList.length) { tbody.innerHTML = `<tr><td colspan="5" class="loading-cell">No news articles yet.</td></tr>`; return; }
+    tbody.innerHTML = newsList.map(n => `
+      <tr>
+        <td style="font-weight:500; max-width:280px;">${esc(n.title)}</td>
+        <td class="mono" style="font-size:12px;">${fmtDate(n.publishedAt)}</td>
+        <td>${n.isLead ? '<span class="badge-e success">Lead</span>' : '—'}</td>
+        <td style="font-size:12px;">${n.link ? `<a href="${n.link}" target="_blank" style="color:var(--accent);">Link ↗</a>` : '—'}</td>
+        <td>
+          <button class="action-btn" onclick="openNewsModal('${n.id}')">✏️</button>
+          <button class="action-btn danger" onclick="confirmDelete('news','${n.id}','Delete news article &quot;${esc(n.title)}&quot;?')">🗑</button>
+        </td>
+      </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="5" class="loading-cell" style="color:red;">Error loading news.</td></tr>`;
+  }
+}
+
+function openNewsModal(id = null) {
+  editingNewsId = id;
+  const n = id ? newsList.find(x => x.id === id) : null;
+  document.getElementById('news-modal-title').textContent = n ? 'Edit news article' : 'Add news article';
+  document.getElementById('n-title').value       = n ? n.title : '';
+  document.getElementById('n-excerpt').value     = n ? (n.excerpt||'') : '';
+  document.getElementById('n-publishedAt').value = n && n.publishedAt ? n.publishedAt.slice(0,10) : new Date().toISOString().slice(0,10);
+  document.getElementById('n-link').value        = n ? (n.link||'') : '';
+  document.getElementById('n-isLead').checked    = n ? n.isLead : false;
+  document.getElementById('news-form-error').classList.add('hidden');
+  openModal('news-modal');
+}
+
+async function submitNewsForm(e) {
+  e.preventDefault();
+  const btn = document.getElementById('news-form-submit');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const payload = {
+    title: document.getElementById('n-title').value,
+    excerpt: document.getElementById('n-excerpt').value || null,
+    publishedAt: document.getElementById('n-publishedAt').value || null,
+    link: document.getElementById('n-link').value || null,
+    isLead: document.getElementById('n-isLead').checked,
+  };
+  try {
+    const url = editingNewsId ? `${API}/public-site/news-articles/${editingNewsId}` : `${API}/public-site/news-articles`;
+    const method = editingNewsId ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(payload) });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.message || 'Error'); }
+    showToast('News article saved.'); closeModal(); loadNews();
+  } catch(err) { showFormError('news-form-error', err.message); }
+  finally { btn.disabled = false; btn.textContent = 'Save article'; }
+}
+
+// ── Institutions ──────────────────────────────────────────────
+async function loadInstitutions() {
+  const tbody = document.getElementById('inst-tbody');
+  tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">Loading…</td></tr>';
+  try {
+    const res = await fetch(`${API}/public-site/institutions`, { headers: authHeaders() });
+    instList = await res.json();
+    if (!instList.length) { tbody.innerHTML = `<tr><td colspan="5" class="loading-cell">No institutions yet.</td></tr>`; return; }
+    tbody.innerHTML = instList.map(i => `
+      <tr>
+        <td style="font-weight:500;">${esc(i.name)}</td>
+        <td><span class="badge-e">${i.category}</span></td>
+        <td>${esc(i.state||'—')}</td>
+        <td><span class="badge-e ${i.status==='Accredited'?'success':'warn'}">${i.status||'Accredited'}</span></td>
+        <td>
+          <button class="action-btn" onclick="openInstModal('${i.id}')">✏️</button>
+          <button class="action-btn danger" onclick="confirmDelete('institution','${i.id}','Delete ${esc(i.name)}?')">🗑</button>
+        </td>
+      </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="5" class="loading-cell" style="color:red;">Error loading institutions.</td></tr>`;
+  }
+}
+
+function openInstModal(id = null) {
+  editingInstId = id;
+  const inst = id ? instList.find(i => i.id === id) : null;
+  document.getElementById('inst-modal-title').textContent = inst ? 'Edit institution' : 'Add institution';
+  document.getElementById('i-name').value        = inst ? inst.name : '';
+  document.getElementById('i-category').value    = inst ? (inst.category||'university') : 'university';
+  document.getElementById('i-type').value        = inst ? (inst.type||'') : '';
+  document.getElementById('i-state').value       = inst ? (inst.state||'') : '';
+  document.getElementById('i-location').value    = inst ? (inst.location||'') : '';
+  document.getElementById('i-established').value = inst ? (inst.established||'') : '';
+  document.getElementById('i-status').value      = inst ? (inst.status||'Accredited') : 'Accredited';
+  document.getElementById('i-website').value     = inst ? (inst.website||'') : '';
+  document.getElementById('inst-form-error').classList.add('hidden');
+  openModal('inst-modal');
+}
+
+async function submitInstForm(e) {
+  e.preventDefault();
+  const btn = document.getElementById('inst-form-submit');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const payload = {
+    name: document.getElementById('i-name').value,
+    category: document.getElementById('i-category').value,
+    type: document.getElementById('i-type').value || null,
+    state: document.getElementById('i-state').value,
+    location: document.getElementById('i-location').value,
+    established: document.getElementById('i-established').value ? parseInt(document.getElementById('i-established').value) : null,
+    status: document.getElementById('i-status').value,
+    website: document.getElementById('i-website').value || null,
+  };
+  try {
+    const url = editingInstId ? `${API}/public-site/institutions/${editingInstId}` : `${API}/public-site/institutions`;
+    const method = editingInstId ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(payload) });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.message || 'Error'); }
+    showToast('Institution saved.'); closeModal(); loadInstitutions();
+  } catch(err) { showFormError('inst-form-error', err.message); }
+  finally { btn.disabled = false; btn.textContent = 'Save institution'; }
+}
+
+// ── Scholarships ─────────────────────────────────────────────
+async function loadScholarships() {
+  const tbody = document.getElementById('scholar-tbody');
+  tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">Loading…</td></tr>';
+  try {
+    const res = await fetch(`${API}/public-site/scholarships`, { headers: authHeaders() });
+    scholarList = await res.json();
+    if (!scholarList.length) { tbody.innerHTML = `<tr><td colspan="6" class="loading-cell">No scholarships yet.</td></tr>`; return; }
+    tbody.innerHTML = scholarList.map(s => `
+      <tr>
+        <td style="font-weight:500; max-width:260px;">${esc(s.title)}</td>
+        <td>${esc(s.country||'—')}</td>
+        <td>${esc(s.level||'—')}</td>
+        <td class="mono" style="font-size:12px;">${s.deadline ? fmtDate(s.deadline) : '—'}</td>
+        <td><span class="badge-e ${s.status==='Open'?'success':s.status==='Upcoming'?'warn':'danger'}">${s.status||'—'}</span></td>
+        <td>
+          <button class="action-btn" onclick="openScholarModal('${s.id}')">✏️</button>
+          <button class="action-btn danger" onclick="confirmDelete('scholarship','${s.id}','Delete this scholarship?')">🗑</button>
+        </td>
+      </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = `<tr><td colspan="6" class="loading-cell" style="color:red;">Error loading scholarships.</td></tr>`;
+  }
+}
+
+function openScholarModal(id = null) {
+  editingScholarId = id;
+  const s = id ? scholarList.find(x => x.id === id) : null;
+  document.getElementById('scholar-modal-title').textContent = s ? 'Edit scholarship' : 'Add scholarship';
+  document.getElementById('s-title').value       = s ? s.title : '';
+  document.getElementById('s-description').value = s ? (s.description||'') : '';
+  document.getElementById('s-country').value     = s ? s.country : '';
+  document.getElementById('s-fields').value      = s ? s.fields : '';
+  document.getElementById('s-level').value       = s ? (s.level||'') : '';
+  document.getElementById('s-deadline').value    = s && s.deadline ? s.deadline.slice(0,10) : '';
+  document.getElementById('s-status').value      = s ? (s.status||'Open') : 'Open';
+  document.getElementById('s-link').value        = s ? (s.link||'') : '';
+  document.getElementById('scholar-form-error').classList.add('hidden');
+  openModal('scholar-modal');
+}
+
+async function submitScholarForm(e) {
+  e.preventDefault();
+  const btn = document.getElementById('scholar-form-submit');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  const payload = {
+    title: document.getElementById('s-title').value,
+    description: document.getElementById('s-description').value || null,
+    country: document.getElementById('s-country').value,
+    fields: document.getElementById('s-fields').value,
+    level: document.getElementById('s-level').value || null,
+    deadline: document.getElementById('s-deadline').value || null,
+    status: document.getElementById('s-status').value,
+    link: document.getElementById('s-link').value || null,
+  };
+  try {
+    const url = editingScholarId ? `${API}/public-site/scholarships/${editingScholarId}` : `${API}/public-site/scholarships`;
+    const method = editingScholarId ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(payload) });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.message || 'Error'); }
+    showToast('Scholarship saved.'); closeModal(); loadScholarships();
+  } catch(err) { showFormError('scholar-form-error', err.message); }
+  finally { btn.disabled = false; btn.textContent = 'Save scholarship'; }
+}
+
+// ── Leaders ───────────────────────────────────────────────────
+async function loadLeaders() {
+  const grid = document.getElementById('leaders-grid');
+  grid.innerHTML = '<div class="loading-row">Loading…</div>';
+  try {
+    const res = await fetch(`${API}/public-site/leaders`, { headers: authHeaders() });
+    leaderList = await res.json();
+    if (!leaderList.length) { grid.innerHTML = '<div class="empty-state">No leaders yet. Add one above.</div>'; return; }
+    grid.innerHTML = leaderList.map(l => `
+      <div class="leader-card">
+        <div class="leader-photo">${l.photoUrl ? `<img src="${resolveAssetUrl(l.photoUrl)}" alt="${esc(l.name)}" onerror="this.style.display='none'">` : l.name[0]}</div>
+        <div class="leader-info">
+          <div style="font-weight:600;">${esc(l.name)}</div>
+          <div style="font-size:12.5px; color:var(--ink-soft);">${esc(l.title)}</div>
+          ${l.directorate ? `<div style="font-size:12px; color:var(--ink-faint); margin-top:2px;">${esc(l.directorate)}</div>` : ''}
+        </div>
+        <div class="leader-actions">
+          <button class="action-btn" onclick="openLeaderModal('${l.id}')">✏️</button>
+          <button class="action-btn danger" onclick="confirmDelete('leader','${l.id}','Delete ${esc(l.name)}?')">🗑</button>
+        </div>
+      </div>`).join('');
+  } catch(e) {
+    grid.innerHTML = '<div class="empty-state">Error loading leaders.</div>';
+  }
+}
+
+function openLeaderModal(id = null) {
+  editingLeaderId = id;
+  const l = id ? leaderList.find(x => x.id === id) : null;
+  document.getElementById('leader-modal-title').textContent = l ? 'Edit leader' : 'Add leader';
+  document.getElementById('l-name').value        = l ? l.name : '';
+  document.getElementById('l-title').value       = l ? l.title : '';
+  document.getElementById('l-directorate').value = l ? (l.directorate||'') : '';
+  document.getElementById('l-bio').value         = l ? (l.bio||'') : '';
+  document.getElementById('l-photoUrl').value    = l ? (l.photoUrl||'') : '';
+  document.getElementById('l-photoFile').value   = '';
+  const preview = document.getElementById('l-photo-preview');
+  const previewImg = document.getElementById('l-photo-preview-img');
+  if (l && l.photoUrl) {
+    preview.style.display = 'block';
+    previewImg.src = resolveAssetUrl(l.photoUrl);
+  } else {
+    preview.style.display = 'none';
+    previewImg.removeAttribute('src');
+  }
+  document.getElementById('leader-form-error').classList.add('hidden');
+  openModal('leader-modal');
+}
+
+// Add event listener for leader photo file input if present
+setTimeout(() => {
+  const lPhotoFile = document.getElementById('l-photoFile');
+  if (lPhotoFile) {
+    lPhotoFile.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      const preview = document.getElementById('l-photo-preview');
+      const previewImg = document.getElementById('l-photo-preview-img');
+      if (!file) { preview.style.display = 'none'; return; }
+      previewImg.src = URL.createObjectURL(file);
+      preview.style.display = 'block';
+    });
+  }
+}, 100);
+
+async function submitLeaderForm(e) {
+  e.preventDefault();
+  const btn = document.getElementById('leader-form-submit');
+  btn.disabled = true; btn.textContent = 'Saving…';
+  let photoUrl = document.getElementById('l-photoUrl').value || null;
+  const photoFile = document.getElementById('l-photoFile').files[0];
+  try {
+    if (photoFile) {
+      const uploaded = await uploadImage(photoFile, 'leader-photo', token);
+      photoUrl = uploaded.url;
+    }
+    const payload = {
+      name: document.getElementById('l-name').value,
+      title: document.getElementById('l-title').value,
+      directorate: document.getElementById('l-directorate').value || null,
+      bio: document.getElementById('l-bio').value || null,
+      photoUrl,
+    };
+    const url = editingLeaderId ? `${API}/public-site/leaders/${editingLeaderId}` : `${API}/public-site/leaders`;
+    const method = editingLeaderId ? 'PUT' : 'POST';
+    const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(payload) });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.message || 'Error'); }
+    showToast('Leader saved.'); closeModal(); loadLeaders();
+  } catch(err) { showFormError('leader-form-error', err.message); }
+  finally { btn.disabled = false; btn.textContent = 'Save leader'; }
+}
+
+// ── Downloads ─────────────────────────────────────────────────
+function fmtFileSize(bytes) {
+  if (!bytes) return '—';
+  if (bytes < 1024) return bytes + ' B';
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
+  return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
+}
+function fmtCategory(cat) {
+  const map = { form: 'Form', guideline: 'Guideline', policy: 'Policy', statement: 'Statement', other: 'Other' };
+  return map[cat] || cat;
+}
+
+async function loadDownloads() {
+  const tbody = document.getElementById('downloads-tbody');
+  tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">Loading…</td></tr>';
+  try {
+    const res = await fetch(`${API}/public-site/downloads?all=true`, { headers: authHeaders() });
+    if (!res.ok) throw new Error('Could not load downloads');
+    downloadList = await res.json();
+    renderDownloads(downloadList);
+  } catch (err) {
+    tbody.innerHTML = `<tr><td colspan="6" class="loading-cell" style="color:red;">Error: ${err.message}</td></tr>`;
+  }
+}
+
+function filterDownloads() {
+  const cat = document.getElementById('dl-cat-filter').value;
+  const filtered = cat ? downloadList.filter(d => d.category === cat) : downloadList;
+  renderDownloads(filtered);
+}
+
+function renderDownloads(list) {
+  const tbody = document.getElementById('downloads-tbody');
+  if (!list.length) {
+    tbody.innerHTML = '<tr><td colspan="6" class="loading-cell">No downloads yet. Add one above.</td></tr>';
+    return;
+  }
+  tbody.innerHTML = list.map(d => `
+    <tr>
+      <td><strong>${esc(d.title)}</strong>${d.description ? `<div style="font-size:12px;color:var(--ink-soft);margin-top:2px;">${esc(d.description)}</div>` : ''}</td>
+      <td><span class="badge-e" style="font-size:11.5px;">${fmtCategory(d.category)}</span></td>
+      <td style="font-size:12.5px;">${d.fileUrl ? `<a href="${resolveAssetUrl(d.fileUrl)}" target="_blank" style="color:var(--accent);">📄 ${d.fileLabel || 'PDF'}</a>` : '—'}</td>
+      <td style="font-size:12.5px;">${fmtFileSize(d.fileSize)}</td>
+      <td><span class="badge-e ${d.isPublished ? 'success' : ''}" style="font-size:11.5px;">${d.isPublished ? 'Published' : 'Draft'}</span></td>
+      <td>
+        <button class="action-btn" onclick="openDownloadModal('${d.id}')">✏️</button>
+        <button class="action-btn danger" onclick="confirmDelete('download','${d.id}','Delete &quot;${esc(d.title)}&quot;?')">🗑</button>
+      </td>
+    </tr>`).join('');
+}
+
+function openDownloadModal(id = null) {
+  editingDownloadId = id;
+  const d = id ? downloadList.find(x => x.id === id) : null;
+  document.getElementById('download-modal-title').textContent = d ? 'Edit download' : 'Add download';
+  document.getElementById('dl-title').value       = d ? d.title : '';
+  document.getElementById('dl-description').value = d ? (d.description || '') : '';
+  document.getElementById('dl-category').value    = d ? (d.category || 'form') : 'form';
+  document.getElementById('dl-sortOrder').value   = d ? (d.sortOrder ?? 0) : 0;
+  document.getElementById('dl-isPublished').checked = d ? d.isPublished : true;
+  document.getElementById('dl-fileUrl').value     = d ? (d.fileUrl || '') : '';
+  document.getElementById('dl-fileSize').value    = d ? (d.fileSize || '') : '';
+  document.getElementById('dl-file').value        = '';
+  const fileInfo = document.getElementById('dl-file-info');
+  if (d && d.fileUrl) {
+    fileInfo.textContent = `Current file: ${d.fileLabel || 'PDF'} (${fmtFileSize(d.fileSize)})`;
+    fileInfo.style.display = 'block';
+  } else {
+    fileInfo.style.display = 'none';
+  }
+  document.getElementById('download-form-error').classList.add('hidden');
+  openModal('download-modal');
+}
+
+setTimeout(() => {
+  const dlFile = document.getElementById('dl-file');
+  if (dlFile) {
+    dlFile.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      const fileInfo = document.getElementById('dl-file-info');
+      if (file) {
+        fileInfo.textContent = `Selected: ${file.name} (${fmtFileSize(file.size)})`;
+        fileInfo.style.display = 'block';
+      } else {
+        fileInfo.style.display = 'none';
+      }
+    });
+  }
+}, 100);
+
+async function submitDownloadForm(e) {
+  e.preventDefault();
+  const btn = document.getElementById('download-form-submit');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  let fileUrl  = document.getElementById('dl-fileUrl').value || null;
+  let fileSize = parseInt(document.getElementById('dl-fileSize').value) || null;
+  const pdfFile = document.getElementById('dl-file').files[0];
+
+  try {
+    if (pdfFile) {
+      btn.textContent = 'Uploading…';
+      const form = new FormData();
+      form.append('file', pdfFile);
+      const upRes = await fetch(`${API}/uploads/document`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}` },
+        body: form,
+      });
+      if (!upRes.ok) {
+        const err = await upRes.json().catch(() => ({}));
+        throw new Error(err.message || 'File upload failed');
+      }
+      const upData = await upRes.json();
+      fileUrl  = upData.url;
+      fileSize = upData.size ?? null;
+    }
+
+    if (!fileUrl) throw new Error('Please select a PDF file to upload.');
+
+    const payload = {
+      title:       document.getElementById('dl-title').value,
+      description: document.getElementById('dl-description').value || null,
+      category:    document.getElementById('dl-category').value,
+      fileUrl,
+      fileSize,
+      fileLabel:   'PDF',
+      sortOrder:   parseInt(document.getElementById('dl-sortOrder').value) || 0,
+      isPublished: document.getElementById('dl-isPublished').checked,
+    };
+
+    const url    = editingDownloadId ? `${API}/public-site/downloads/${editingDownloadId}` : `${API}/public-site/downloads`;
+    const method = editingDownloadId ? 'PUT' : 'POST';
+    const res    = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(payload) });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.message || 'Error saving download'); }
+
+    showToast('Download saved.'); closeModal(); loadDownloads();
+  } catch (err) {
+    showFormError('download-form-error', err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save download';
+  }
+}
+
+// ── Media & Gallery ────────────────────────────────────────────
+async function loadMedia() {
+  await Promise.all([loadGallery(), loadStatementsTable()]);
+}
+
+async function loadGallery() {
+  const tbody = document.getElementById('gallery-tbody');
+  tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">Loading…</td></tr>';
+  try {
+    const res = await fetch(`${API}/public-site/gallery-items/all`, { headers: authHeaders() });
+    const items = await res.json();
+    if (!items || !items.length) {
+      tbody.innerHTML = '<tr><td colspan="5" class="loading-cell">No gallery photos yet.</td></tr>'; return;
+    }
+    tbody.innerHTML = items.map(g => `
+      <tr>
+        <td><img src="${resolveAssetUrl(g.imageUrl)}" style="width:64px;height:44px;object-fit:cover;border-radius:6px;" alt="${esc(g.title)}"></td>
+        <td>${esc(g.title)}</td>
+        <td>${g.sortOrder}</td>
+        <td><span class="badge-e ${g.isPublished ? 'success' : ''}">${g.isPublished ? 'Published' : 'Draft'}</span></td>
+        <td>
+          <button class="action-btn" onclick="openGalleryModal(${JSON.stringify(g).replace(/"/g, '&quot;')})">✏️</button>
+          <button class="action-btn danger" onclick="deleteGalleryItem('${g.id}')">🗑</button>
+        </td>
+      </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="5" class="loading-cell" style="color:red;">Failed to load gallery.</td></tr>';
+  }
+}
+
+async function loadStatementsTable() {
+  const tbody = document.getElementById('stmts-tbody');
+  tbody.innerHTML = '<tr><td colspan="4" class="loading-cell">Loading…</td></tr>';
+  try {
+    const res = await fetch(`${API}/public-site/downloads?category=statement&all=true`, { headers: authHeaders() });
+    const items = await res.json();
+    if (!items || !items.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="loading-cell">No statements yet. Add them via Downloads → Statements.</td></tr>'; return;
+    }
+    tbody.innerHTML = items.map(d => `
+      <tr>
+        <td>${esc(d.title)}</td>
+        <td><a href="${resolveAssetUrl(d.fileUrl)}" target="_blank" style="color:var(--accent);">PDF ↗</a></td>
+        <td><span class="badge-e ${d.isPublished ? 'success' : ''}">${d.isPublished ? 'Published' : 'Draft'}</span></td>
+        <td><button class="action-btn" onclick="showSection('downloads',document.querySelector('[data-section=downloads]')); setTimeout(()=>{ const f=document.getElementById('dl-cat-filter'); if(f){ f.value='statement'; filterDownloads(); } },300)">Manage</button></td>
+      </tr>`).join('');
+  } catch(e) {
+    tbody.innerHTML = '<tr><td colspan="4" class="loading-cell" style="color:red;">Failed to load statements.</td></tr>';
+  }
+}
+
+function openGalleryModal(item) {
+  editingGalleryId = item ? item.id : null;
+  document.getElementById('gallery-modal-title').textContent = item ? 'Edit gallery photo' : 'Add gallery photo';
+  document.getElementById('g-title').value = item ? item.title : '';
+  document.getElementById('g-imageUrl').value = item ? item.imageUrl : '';
+  document.getElementById('g-sortOrder').value = item ? item.sortOrder : 0;
+  document.getElementById('g-isPublished').checked = item ? item.isPublished : true;
+  document.getElementById('g-file').value = '';
+  const fi = document.getElementById('g-file-info');
+  fi.style.display = item && item.imageUrl ? 'block' : 'none';
+  fi.textContent = item && item.imageUrl ? `Current photo` : '';
+  document.getElementById('gallery-form-error').classList.add('hidden');
+  openModal('gallery-modal');
+}
+
+setTimeout(() => {
+  const gFile = document.getElementById('g-file');
+  if (gFile) {
+    gFile.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      const fi = document.getElementById('g-file-info');
+      if (file) { fi.textContent = `Selected: ${file.name} (${fmtFileSize(file.size)})`; fi.style.display = 'block'; }
+      else { fi.style.display = 'none'; }
+    });
+  }
+}, 100);
+
+async function submitGalleryForm(e) {
+  e.preventDefault();
+  const btn = document.getElementById('gallery-form-submit');
+  btn.disabled = true; btn.textContent = 'Saving…';
+
+  let imageUrl = document.getElementById('g-imageUrl').value || null;
+  const imgFile = document.getElementById('g-file').files[0];
+
+  try {
+    if (imgFile) {
+      btn.textContent = 'Uploading…';
+      const uploaded = await uploadImage(imgFile, 'gallery-photo', token);
+      imageUrl = uploaded.url;
+    }
+    if (!imageUrl) throw new Error('Please select a photo to upload.');
+
+    const payload = {
+      title:       document.getElementById('g-title').value,
+      imageUrl,
+      sortOrder:   parseInt(document.getElementById('g-sortOrder').value) || 0,
+      isPublished: document.getElementById('g-isPublished').checked,
+    };
+    const url    = editingGalleryId ? `${API}/public-site/gallery-items/${editingGalleryId}` : `${API}/public-site/gallery-items`;
+    const method = editingGalleryId ? 'PUT' : 'POST';
+    const res    = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(payload) });
+    if (!res.ok) { const d = await res.json(); throw new Error(d.message || 'Error saving gallery item'); }
+    showToast('Gallery photo saved.'); closeModal(); loadGallery();
+  } catch(err) {
+    showFormError('gallery-form-error', err.message);
+  } finally {
+    btn.disabled = false; btn.textContent = 'Save photo';
+  }
+}
+
+async function deleteGalleryItem(id) {
+  if (!confirm('Delete this gallery photo? This cannot be undone.')) return;
+  try {
+    const res = await fetch(`${API}/public-site/gallery-items/${id}`, { method: 'DELETE', headers: authHeaders() });
+    if (!res.ok) throw new Error('Delete failed');
+    showToast('Gallery photo deleted.'); loadGallery();
+  } catch(e) { showToast('Failed to delete photo.', true); }
+}
+
+// ── Deletion Handler ───────────────────────────────────────────
+function confirmDelete(type, id, msg) {
+  document.getElementById('confirm-text').textContent = msg;
+  document.getElementById('confirm-ok-btn').onclick = () => doDelete(type, id);
+  openModal('confirm-modal');
+}
+
+async function doDelete(type, id) {
+  const endpoints = {
+    employee: `${API}/hr/employees/${id}`,
+    news: `${API}/public-site/news-articles/${id}`,
+    institution: `${API}/public-site/institutions/${id}`,
+    scholarship: `${API}/public-site/scholarships/${id}`,
+    leader: `${API}/public-site/leaders/${id}`,
+    download: `${API}/public-site/downloads/${id}`,
+  };
+  try {
+    const res = await fetch(endpoints[type], { method: 'DELETE', headers: authHeaders() });
+    if (!res.ok) throw new Error('Delete failed');
+    showToast('Deleted successfully.');
+    closeModal();
+    if (type==='employee') loadEmployees();
+    if (type==='news') loadNews();
+    if (type==='institution') loadInstitutions();
+    if (type==='scholarship') loadScholarships();
+    if (type==='leader') loadLeaders();
+    if (type==='download') loadDownloads();
+  } catch(err) { showToast('Error: ' + err.message, true); }
+}
 </script>
 </body>
 </html>

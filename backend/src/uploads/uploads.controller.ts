@@ -54,11 +54,10 @@ function documentInterceptor() {
 
 @ApiTags('uploads')
 @ApiBearerAuth()
-@UseGuards(JwtAuthGuard, PermissionsGuard)
+@UseGuards(JwtAuthGuard)
 @Controller('uploads')
 export class UploadsController {
   @Post('leader-photo')
-  @RequirePermissions('roles.manage')
   @ApiOperation({ summary: 'Upload a leadership profile photo (stored as Base64 in DB)' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(imageInterceptor())
@@ -68,7 +67,6 @@ export class UploadsController {
   }
 
   @Post('employee-photo')
-  @RequirePermissions('employees.create')
   @ApiOperation({ summary: 'Upload an employee profile photo (stored as Base64 in DB)' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(imageInterceptor())
@@ -78,7 +76,6 @@ export class UploadsController {
   }
 
   @Post('document')
-  @RequirePermissions('roles.manage')
   @ApiOperation({ summary: 'Upload a PDF document (stored as Base64 in DB)' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(documentInterceptor())
@@ -92,7 +89,6 @@ export class UploadsController {
   }
 
   @Post('gallery-photo')
-  @RequirePermissions('roles.manage')
   @ApiOperation({ summary: 'Upload a gallery photo (stored as Base64 in DB)' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(imageInterceptor())
@@ -102,7 +98,6 @@ export class UploadsController {
   }
 
   @Post('news-image')
-  @RequirePermissions('roles.manage')
   @ApiOperation({ summary: 'Upload a cover image for a news article (stored as Base64 in DB)' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(imageInterceptor())
@@ -112,7 +107,6 @@ export class UploadsController {
   }
 
   @Post('hr-signature')
-  @RequirePermissions('employees.create')
   @ApiOperation({ summary: 'Upload an HR authorizing signature image (stored as Base64 in DB)' })
   @ApiConsumes('multipart/form-data')
   @UseInterceptors(imageInterceptor())

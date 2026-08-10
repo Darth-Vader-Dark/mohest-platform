@@ -10,6 +10,7 @@ coverage/
 
 # Production builds
 dist/
+dist-api/
 build/
 .next/
 out/

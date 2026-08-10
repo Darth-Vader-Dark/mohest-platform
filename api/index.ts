@@ -6,6 +6,8 @@ import helmet from 'helmet';
 import { AppModule } from '../backend/src/app.module';
 import type { IncomingMessage, ServerResponse } from 'http';
 
+import * as express from 'express';
+
 let cachedApp: NestExpressApplication | null = null;
 
 async function createApp(): Promise<NestExpressApplication> {
@@ -14,6 +16,9 @@ async function createApp(): Promise<NestExpressApplication> {
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['error', 'warn'],
   });
+
+  app.use(express.json({ limit: '10mb' }));
+  app.use(express.urlencoded({ limit: '10mb', extended: true }));
 
   app.use(helmet({
     crossOriginResourcePolicy: { policy: 'cross-origin' },
