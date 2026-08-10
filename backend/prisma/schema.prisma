@@ -309,15 +309,17 @@ model Scholarship {
 }
 
 model NewsArticle {
-  id          String   @id @default(uuid())
-  title       String
-  excerpt     String?
-  publishedAt DateTime @default(now())
-  isLead      Boolean  @default(false)
-  thumbStyle  String?
-  link        String?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id             String   @id @default(uuid())
+  title          String
+  excerpt        String?
+  body           String?
+  coverImageUrl  String?
+  publishedAt    DateTime @default(now())
+  isLead         Boolean  @default(false)
+  thumbStyle     String?
+  link           String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
 
   @@index([publishedAt])
   @@map("news_articles")

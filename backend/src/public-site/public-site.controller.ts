@@ -185,6 +185,14 @@ export class PublicSiteController {
     });
   }
 
+  @Get('news-articles/:id')
+  @ApiOperation({ summary: 'Get news article by ID (public)' })
+  async findNewsArticleById(@Param('id', ParseUUIDPipe) id: string) {
+    return this.prisma.newsArticle.findUniqueOrThrow({
+      where: { id },
+    });
+  }
+
   @Post('news-articles')
   @ApiBearerAuth()
   @UseGuards(JwtAuthGuard)
@@ -194,11 +202,13 @@ export class PublicSiteController {
       data: {
         title: dto.title,
         excerpt: dto.excerpt || null,
+        body: (dto as any).body || null,
+        coverImageUrl: dto.coverImageUrl || null,
         publishedAt: dto.publishedAt ? new Date(dto.publishedAt) : new Date(),
         isLead: dto.isLead === true,
         thumbStyle: dto.thumbStyle || null,
         link: dto.link || null,
-      },
+      } as any,
     });
   }
 
@@ -212,11 +222,13 @@ export class PublicSiteController {
       data: {
         title: dto.title,
         excerpt: dto.excerpt || null,
+        body: (dto as any).body || null,
+        coverImageUrl: dto.coverImageUrl || null,
         publishedAt: dto.publishedAt ? new Date(dto.publishedAt) : new Date(),
         isLead: dto.isLead === true,
         thumbStyle: dto.thumbStyle || null,
         link: dto.link || null,
-      },
+      } as any,
     });
   }
 

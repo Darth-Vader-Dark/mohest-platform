@@ -387,10 +387,18 @@
   </div>
   <form id="news-form" onsubmit="submitNewsForm(event)">
     <div class="field"><label>Title *</label><input id="n-title" required></div>
-    <div class="field"><label>Excerpt / summary</label><textarea id="n-excerpt" rows="3" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; resize:vertical;"></textarea></div>
+    <div class="field"><label>Excerpt / summary</label><textarea id="n-excerpt" rows="2" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; resize:vertical;" placeholder="Short summary displayed on cards"></textarea></div>
+    <div class="field"><label>Full article content</label><textarea id="n-body" rows="6" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:8px; font-family:inherit; font-size:13px; resize:vertical;" placeholder="Enter full article text/details here..."></textarea></div>
+    <div class="field"><label>Cover image</label>
+      <input type="file" id="n-coverFile" accept="image/*" class="field-input">
+      <input type="hidden" id="n-coverUrl">
+      <div id="n-cover-preview" style="margin-top:8px; display:none;">
+        <img id="n-cover-preview-img" alt="Cover Preview" style="max-width:100%; max-height:160px; object-fit:cover; border-radius:8px; border:1px solid var(--border);">
+      </div>
+    </div>
     <div class="form-grid-2">
       <div class="field"><label>Published date</label><input type="date" id="n-publishedAt"></div>
-      <div class="field"><label>External link</label><input id="n-link" placeholder="https://…"></div>
+      <div class="field"><label>External link (optional source)</label><input id="n-link" placeholder="https://…"></div>
     </div>
     <div class="field" style="display:flex; align-items:center; gap:8px;">
       <input type="checkbox" id="n-isLead" style="width:auto;">
@@ -1000,25 +1008,65 @@ function openNewsModal(id = null) {
   document.getElementById('news-modal-title').textContent = article ? 'Edit article' : 'Add news article';
   document.getElementById('n-title').value       = article ? article.title : '';
   document.getElementById('n-excerpt').value     = article ? (article.excerpt||'') : '';
-  document.getElementById('n-publishedAt').value = article && article.publishedAt ? article.publishedAt.slice(0,10) : '';
+  document.getElementById('n-body').value        = article ? (article.body||'') : '';
+  document.getElementById('n-publishedAt').value = article && article.publishedAt ? article.publishedAt.slice(0,10) : new Date().toISOString().slice(0,10);
   document.getElementById('n-link').value        = article ? (article.link||'') : '';
   document.getElementById('n-isLead').checked    = article ? !!article.isLead : false;
+  document.getElementById('n-coverUrl').value    = article ? (article.coverImageUrl||'') : '';
+  document.getElementById('n-coverFile').value   = '';
+  
+  const preview = document.getElementById('n-cover-preview');
+  const previewImg = document.getElementById('n-cover-preview-img');
+  if (article && article.coverImageUrl) {
+    preview.style.display = 'block';
+    previewImg.src = resolveAssetUrl(article.coverImageUrl);
+  } else {
+    preview.style.display = 'none';
+    previewImg.removeAttribute('src');
+  }
+
   document.getElementById('news-form-error').classList.add('hidden');
   openModal('news-modal');
 }
+
+setTimeout(() => {
+  const nCoverFile = document.getElementById('n-coverFile');
+  if (nCoverFile) {
+    nCoverFile.addEventListener('change', (e) => {
+      const file = e.target.files[0];
+      const preview = document.getElementById('n-cover-preview');
+      const previewImg = document.getElementById('n-cover-preview-img');
+      if (!file) { preview.style.display = 'none'; return; }
+      previewImg.src = URL.createObjectURL(file);
+      preview.style.display = 'block';
+    });
+  }
+}, 100);
 
 async function submitNewsForm(e) {
   e.preventDefault();
   const btn = document.getElementById('news-form-submit');
   btn.disabled = true; btn.textContent = 'Saving…';
-  const payload = {
-    title: document.getElementById('n-title').value,
-    excerpt: document.getElementById('n-excerpt').value,
-    publishedAt: document.getElementById('n-publishedAt').value || null,
-    link: document.getElementById('n-link').value || null,
-    isLead: document.getElementById('n-isLead').checked,
-  };
+  
+  let coverImageUrl = document.getElementById('n-coverUrl').value || null;
+  const coverFile = document.getElementById('n-coverFile').files[0];
+
   try {
+    if (coverFile) {
+      btn.textContent = 'Uploading cover image…';
+      const uploaded = await uploadImage(coverFile, 'news-image', token);
+      coverImageUrl = uploaded.url;
+    }
+    const payload = {
+      title: document.getElementById('n-title').value,
+      excerpt: document.getElementById('n-excerpt').value || null,
+      body: document.getElementById('n-body').value || null,
+      coverImageUrl,
+      publishedAt: document.getElementById('n-publishedAt').value || null,
+      link: document.getElementById('n-link').value || null,
+      isLead: document.getElementById('n-isLead').checked,
+    };
+    btn.textContent = 'Saving…';
     const url = editingNewsId ? `${API}/public-site/news-articles/${editingNewsId}` : `${API}/public-site/news-articles`;
     const method = editingNewsId ? 'PUT' : 'POST';
     const res = await fetch(url, { method, headers: authHeaders(), body: JSON.stringify(payload) });

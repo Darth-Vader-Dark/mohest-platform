@@ -24,6 +24,18 @@ export class CreateNewsArticleDto {
   @MaxLength(2000)
   excerpt?: string;
 
+  // Full article body — no MaxLength since it stores rich content
+  @IsOptional()
+  @Transform(trim)
+  @IsString()
+  body?: string;
+
+  // Stores a base64 data URI — no MaxLength (data URIs are large)
+  @IsOptional()
+  @Transform(trim)
+  @IsString()
+  coverImageUrl?: string;
+
   @IsOptional()
   @IsDateString()
   publishedAt?: string;

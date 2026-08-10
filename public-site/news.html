@@ -138,15 +138,21 @@ async function load() {
       return;
     }
     const revealClasses = ['reveal left', 'reveal up', 'reveal right'];
-    container.innerHTML = data.map((a, i) => `
-      <a href="${a.link || 'news.html'}" ${a.link ? 'target="_blank" rel="noopener"' : ''} class="news-card${a.isLead ? ' lead' : ''}${a.thumbStyle === 'gold' ? ' thumb-gold' : ''} ${revealClasses[i % 3]}">
-        <div class="thumb"></div>
+    container.innerHTML = data.map((a, i) => {
+      const coverHtml = a.coverImageUrl ? `<img src="${resolveAssetUrl(a.coverImageUrl)}" alt="${a.title}" style="width:100%; height:100%; object-fit:cover;">` : '';
+      const targetUrl = `news-detail.html?id=${a.id}`;
+      const extLink = a.link ? `<div style="margin-top:12px;"><a href="${a.link}" target="_blank" rel="noopener" onclick="event.stopPropagation();" style="display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:600; color:var(--accent); text-decoration:none;">External Source ↗</a></div>` : '';
+      return `
+      <a href="${targetUrl}" class="news-card${a.isLead ? ' lead' : ''}${a.thumbStyle === 'gold' ? ' thumb-gold' : ''} ${revealClasses[i % 3]}">
+        <div class="thumb">${coverHtml}</div>
         <div class="news-body">
           <div class="news-date">${a.publishedAt ? new Date(a.publishedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase() : ''}</div>
           <h3>${a.title}</h3>
           ${a.excerpt ? `<p>${a.excerpt}</p>` : ''}
+          ${extLink}
         </div>
-      </a>`).join('');
+      </a>`;
+    }).join('');
     // Trigger reveal animation on the newly injected cards
     if (typeof window.observeReveal === 'function') {
       window.observeReveal(container.querySelectorAll('.reveal'));
