@@ -76,8 +76,8 @@
         <div class="label">Active Scholarships</div>
       </div>
       <div class="stat">
-        <div id="stat-downloads" class="num mono">—</div>
-        <div class="label">Official Documents</div>
+        <div id="stat-directorates" class="num mono">5</div>
+        <div class="label">Key Directorates</div>
       </div>
     </div>
   </div>
@@ -174,6 +174,24 @@
       </div>
     </div>
   </section>
+
+  <section class="departments" style="background:var(--paper-raised); border-top:1px solid var(--line); border-bottom:1px solid var(--line); padding:64px 0;">
+    <div class="bg-dots parallax-el" data-speed="0.12" style="--dot-color:rgba(185,130,46,0.4);" aria-hidden="true"></div>
+    <div class="bg-glow gold parallax-el" data-speed="0.16" style="width:400px; height:400px; top:30px; right:30px;" aria-hidden="true"></div>
+    <div class="wrap">
+      <div class="section-head" style="display:flex; justify-content:space-between; align-items:flex-end; flex-wrap:wrap; gap:16px;">
+        <div>
+          <span class="kicker">Opportunities Abroad</span>
+          <h2>Current Foreign Scholarships</h2>
+          <p>Government and partner-funded scholarship opportunities for South Sudanese students.</p>
+        </div>
+        <a class="btn btn-primary" href="scholarships.html" style="margin-bottom:8px;">View All Scholarships &rarr;</a>
+      </div>
+      <div id="home-scholarships-grid" class="card-grid" style="margin-top:32px;">
+        <div style="color:var(--ink-soft);padding:32px 0;">Loading scholarship opportunities…</div>
+      </div>
+    </div>
+  </section>
   <footer>
     <div class="wrap">
       <div class="footer-grid">
@@ -247,24 +265,61 @@
 
     async function loadStats() {
       try {
-        const [univRes, schRes, dlRes] = await Promise.all([
+        const [univRes, schRes] = await Promise.all([
           fetch(`${API}/public-site/institutions?category=university`),
           fetch(`${API}/public-site/scholarships`),
-          fetch(`${API}/public-site/downloads`),
         ]);
         const univs = univRes.ok ? await univRes.json() : [];
         const schs = schRes.ok ? await schRes.json() : [];
-        const dls = dlRes.ok ? await dlRes.json() : [];
 
         animateCounter(document.getElementById('stat-universities'), univs.length || 5);
         animateCounter(document.getElementById('stat-states'), 10);
         animateCounter(document.getElementById('stat-scholarships'), schs.length || 8);
-        animateCounter(document.getElementById('stat-downloads'), dls.length || 14);
+        animateCounter(document.getElementById('stat-directorates'), 5);
       } catch {
         animateCounter(document.getElementById('stat-universities'), 5);
         animateCounter(document.getElementById('stat-states'), 10);
         animateCounter(document.getElementById('stat-scholarships'), 8);
-        animateCounter(document.getElementById('stat-downloads'), 14);
+        animateCounter(document.getElementById('stat-directorates'), 5);
+      }
+    }
+
+    // --- Scholarships ---
+    async function loadScholarships() {
+      const grid = document.getElementById('home-scholarships-grid');
+      if (!grid) return;
+      try {
+        const res = await fetch(`${API}/public-site/scholarships`);
+        if (!res.ok) throw new Error('API error');
+        const data = await res.json();
+        if (!Array.isArray(data) || data.length === 0) {
+          grid.innerHTML = '<div style="color:var(--ink-soft);padding:32px 0;">No active scholarships listed at this time.</div>';
+          return;
+        }
+        const top3 = data.slice(0, 3);
+        const revealClasses = ['reveal left', 'reveal up', 'reveal right'];
+        grid.innerHTML = top3.map((s, i) => {
+          const statusColor = s.status === 'Open' ? '#007A33' : s.status === 'Closed' ? '#DA291C' : '#D4AF37';
+          const deadline = s.deadline ? new Date(s.deadline).toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric'}) : null;
+          return `
+          <div class="dept-card ${revealClasses[i % 3]}">
+            <div class="dept-icon">${s.title ? s.title.split(' ').map(w=>w[0]).slice(0,2).join('').toUpperCase() : 'SC'}</div>
+            <h3 style="font-size:16.5px; margin-bottom:6px;">${s.title}</h3>
+            ${s.country ? `<p style="font-size:12px; font-weight:600; color:var(--ink-soft); margin-bottom:8px;">${s.country}${s.level ? ' &nbsp;·&nbsp; ' + s.level : ''}</p>` : ''}
+            ${s.description ? `<p style="font-size:13.5px; line-height:1.55; color:var(--ink-soft);">${s.description}</p>` : ''}
+            <div style="display:flex; align-items:center; gap:8px; margin-top:14px; flex-wrap:wrap;">
+              <span style="display:inline-block; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700; color:#fff; background:${statusColor};">${s.status || 'Open'}</span>
+              ${deadline ? `<span style="font-size:12px; color:var(--ink-soft);">Deadline: ${deadline}</span>` : ''}
+            </div>
+            ${s.link ? `<a href="${s.link}" target="_blank" rel="noopener" style="display:inline-flex; align-items:center; gap:4px; margin-top:14px; font-size:12px; font-weight:700; color:#fff; background:#002B49; padding:6px 14px; border-radius:6px; text-decoration:none;">Apply / Learn More ↗</a>` : ''}
+          </div>`;
+        }).join('');
+
+        if (typeof window.observeReveal === 'function') {
+          window.observeReveal(grid.querySelectorAll('.reveal'));
+        }
+      } catch(err) {
+        grid.innerHTML = '<div style="color:var(--ink-soft);padding:32px 0;">No active scholarships listed at this time.</div>';
       }
     }
 
@@ -309,6 +364,7 @@
 
     loadStats();
     loadNews();
+    loadScholarships();
 
   </script>
 </body>
