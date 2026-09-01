@@ -6,14 +6,13 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Staff Portal Sign In — MoHEST</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="assets/enterprise.css">
 <script src="assets/api.js"></script>
 </head>
 <body>
 <div class="login-screen">
   <div class="login-side">
-    <div class="login-side-bg"></div>
     <a class="brand brand-home-link" href="../public-site/index.html" title="Back to MoHEST public website">
       <div class="brand-mark"><img src="logo.jpg" alt="MoHEST logo" class="brand-logo"></div>
       <div class="brand-text">
@@ -42,16 +41,16 @@
         <div class="field">
           <label for="email">Staff Email Address</label>
           <div class="input-icon-wrap">
-            <span class="input-icon">✉</span>
+            <span class="input-icon">&#9993;</span>
             <input type="email" id="email" required placeholder="name@mohest.gov.ss">
           </div>
         </div>
         <div class="field">
           <label for="password">Password</label>
           <div class="input-icon-wrap">
-            <span class="input-icon">🔒</span>
-            <input type="password" id="password" required placeholder="••••••••••••">
-            <button type="button" id="toggle-pw-btn" class="pw-toggle-btn" aria-label="Toggle password visibility">👁</button>
+            <span class="input-icon">&#128274;</span>
+            <input type="password" id="password" required placeholder="&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;&#8226;">
+            <button type="button" id="toggle-pw-btn" class="pw-toggle-btn" aria-label="Toggle password visibility">&#128065;</button>
           </div>
         </div>
         <div class="form-row">
@@ -63,7 +62,7 @@
         </button>
       </form>
       <div class="login-note">
-        <strong>🔒 Secure Directorate System</strong><br>
+        <strong>&#128274; Secure Directorate System</strong><br>
         Access is restricted to authorized MoHEST personnel. All activities are monitored and logged for security compliance.
       </div>
       <a class="login-back" href="../public-site/index.html">&larr; Return to Public Website</a>
@@ -76,10 +75,10 @@ document.getElementById('toggle-pw-btn').addEventListener('click', function() {
   const pwInput = document.getElementById('password');
   if (pwInput.type === 'password') {
     pwInput.type = 'text';
-    this.textContent = '🙈';
+    this.textContent = '\u{1F648}';
   } else {
     pwInput.type = 'password';
-    this.textContent = '👁';
+    this.textContent = '\u{1F441}';
   }
 });
 
@@ -89,7 +88,7 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
   const submitBtn = document.getElementById('submit-btn');
   errorDiv.style.display = 'none';
   submitBtn.disabled = true;
-  submitBtn.innerText = 'Signing in...';
+  submitBtn.innerHTML = '<span>Signing in&hellip;</span>';
 
   const email = document.getElementById('email').value.trim();
   const password = document.getElementById('password').value;
@@ -103,21 +102,13 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
 
     const rawText = await res.text();
     let data;
-    try {
-      data = JSON.parse(rawText);
-    } catch (e) {
-      data = { message: rawText || `Server error (${res.status})` };
-    }
-    if (!res.ok) {
-      throw new Error(data.message || 'Authentication failed. Please check your credentials.');
-    }
+    try { data = JSON.parse(rawText); } catch (e) { data = { message: rawText || `Server error (${res.status})` }; }
+    if (!res.ok) throw new Error(data.message || 'Authentication failed. Please check your credentials.');
 
-    // Save tokens and user info
     localStorage.setItem('accessToken', data.accessToken);
     localStorage.setItem('refreshToken', data.refreshToken);
     localStorage.setItem('user', JSON.stringify(data.user));
 
-    // Redirect based on department
     const dept = data.user.department ? data.user.department.code : '';
     if (dept === 'ICT') {
       window.location.href = 'ict-dashboard.html';
@@ -126,15 +117,14 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     } else {
       throw new Error('Access denied: your department does not have dashboard privileges.');
     }
-
   } catch (err) {
     const msg = (err.message === 'Failed to fetch' || err.message.includes('fetch'))
-      ? 'Unable to connect to the authentication server. Please try again or check your connection.'
+      ? 'Unable to connect to the authentication server. Please try again.'
       : err.message;
     errorDiv.innerText = msg;
     errorDiv.style.display = 'block';
     submitBtn.disabled = false;
-    submitBtn.innerText = 'Sign in';
+    submitBtn.innerHTML = '<span>Sign In to Portal</span> &rarr;';
   }
 });
 </script>
