@@ -1737,7 +1737,7 @@ async function loadGallery() {
     }
     tbody.innerHTML = items.map(g => `
       <tr>
-        <td><img src="${g.imageUrl.startsWith('http') ? g.imageUrl : 'http://localhost:3000' + g.imageUrl}" style="width:64px;height:44px;object-fit:cover;border-radius:6px;" alt="${esc(g.title)}"></td>
+        <td><img src="${resolveAssetUrl(g.imageUrl)}" style="width:64px;height:44px;object-fit:cover;border-radius:6px;" alt="${esc(g.title)}"></td>
         <td>${esc(g.title)}</td>
         <td>${g.sortOrder}</td>
         <td><span class="badge ${g.isPublished ? 'badge-active' : 'badge-inactive'}">${g.isPublished ? 'Published' : 'Draft'}</span></td>
@@ -1763,7 +1763,7 @@ async function loadStatementsTable() {
     tbody.innerHTML = items.map(d => `
       <tr>
         <td>${esc(d.title)}</td>
-        <td><a href="${d.fileUrl.startsWith('http') ? d.fileUrl : 'http://localhost:3000' + d.fileUrl}" target="_blank" style="color:var(--accent);">PDF ↗</a></td>
+        <td><a href="${resolveAssetUrl(d.fileUrl)}" target="_blank" style="color:var(--accent);">PDF ↗</a></td>
         <td><span class="badge ${d.isPublished ? 'badge-active' : 'badge-inactive'}">${d.isPublished ? 'Published' : 'Draft'}</span></td>
         <td><button class="action-btn" onclick="showSection('downloads',document.querySelector('[data-section=downloads]')); setTimeout(()=>{ filterDownloads(); },300)">Manage</button></td>
       </tr>`).join('');
@@ -1853,6 +1853,19 @@ function fmtDate(d) {
 function fmtDateTime(d) {
   if (!d) return '—';
   return new Date(d).toLocaleString('en-GB', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+/**
+ * Escape HTML special characters to prevent XSS when injecting
+ * user-controlled strings into innerHTML.
+ */
+function esc(str) {
+  if (str == null) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 </script>
 </body>

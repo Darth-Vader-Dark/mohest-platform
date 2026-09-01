@@ -65,7 +65,7 @@ function safeCategoryFilter(category?: string): string | undefined {
 }
 
 // Public GET routes have no auth guards — they serve the public website.
-// Write routes (POST/PUT/DELETE) require ICT administrator permissions.
+// Write routes (POST/PUT/DELETE) require authentication and permissions.
 
 @ApiTags('public-site')
 @Controller('public-site')
@@ -88,7 +88,8 @@ export class PublicSiteController {
 
   @Post('institutions')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('public_site.manage')
   @ApiOperation({ summary: 'Create institution' })
   async createInstitution(@Body() dto: CreateInstitutionDto) {
     return this.prisma.institution.create({
@@ -109,7 +110,8 @@ export class PublicSiteController {
 
   @Put('institutions/:id')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('public_site.manage')
   @ApiOperation({ summary: 'Update institution' })
   async updateInstitution(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateInstitutionDto) {
     return this.prisma.institution.update({
@@ -131,7 +133,8 @@ export class PublicSiteController {
 
   @Delete('institutions/:id')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('public_site.manage')
   @ApiOperation({ summary: 'Delete institution' })
   async deleteInstitution(@Param('id', ParseUUIDPipe) id: string) {
     return this.prisma.institution.delete({ where: { id } });
@@ -151,7 +154,8 @@ export class PublicSiteController {
 
   @Post('scholarships')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('public_site.manage')
   @ApiOperation({ summary: 'Create scholarship' })
   async createScholarship(@Body() dto: CreateScholarshipDto) {
     return this.prisma.scholarship.create({
@@ -161,7 +165,8 @@ export class PublicSiteController {
 
   @Put('scholarships/:id')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('public_site.manage')
   @ApiOperation({ summary: 'Update scholarship' })
   async updateScholarship(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateScholarshipDto) {
     return this.prisma.scholarship.update({
@@ -172,7 +177,8 @@ export class PublicSiteController {
 
   @Delete('scholarships/:id')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('public_site.manage')
   @ApiOperation({ summary: 'Delete scholarship' })
   async deleteScholarship(@Param('id', ParseUUIDPipe) id: string) {
     return this.prisma.scholarship.delete({ where: { id } });
@@ -200,7 +206,8 @@ export class PublicSiteController {
 
   @Post('news-articles')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('public_site.manage')
   @ApiOperation({ summary: 'Create news article' })
   async createNewsArticle(@Body() dto: CreateNewsArticleDto) {
     return this.prisma.newsArticle.create({
@@ -219,7 +226,8 @@ export class PublicSiteController {
 
   @Put('news-articles/:id')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('public_site.manage')
   @ApiOperation({ summary: 'Update news article' })
   async updateNewsArticle(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateNewsArticleDto) {
     return this.prisma.newsArticle.update({
@@ -239,7 +247,8 @@ export class PublicSiteController {
 
   @Delete('news-articles/:id')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('public_site.manage')
   @ApiOperation({ summary: 'Delete news article' })
   async deleteNewsArticle(@Param('id', ParseUUIDPipe) id: string) {
     return this.prisma.newsArticle.delete({ where: { id } });
@@ -259,7 +268,8 @@ export class PublicSiteController {
 
   @Post('leaders')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('public_site.manage')
   @ApiOperation({ summary: 'Create leader' })
   async createLeader(@Body() dto: CreateLeaderDto) {
     return this.prisma.leader.create({
@@ -276,7 +286,8 @@ export class PublicSiteController {
 
   @Put('leaders/:id')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('public_site.manage')
   @ApiOperation({ summary: 'Update leader' })
   async updateLeader(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateLeaderDto) {
     return this.prisma.leader.update({
@@ -294,7 +305,8 @@ export class PublicSiteController {
 
   @Delete('leaders/:id')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('public_site.manage')
   @ApiOperation({ summary: 'Delete leader' })
   async deleteLeader(@Param('id', ParseUUIDPipe) id: string) {
     return this.prisma.leader.delete({ where: { id } });
@@ -359,7 +371,8 @@ export class PublicSiteController {
 
   @Post('downloads')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('public_site.manage')
   @ApiOperation({ summary: 'Create download' })
   async createDownload(@Body() dto: CreatePublicDownloadDto) {
     return this.prisma.publicDownload.create({
@@ -378,7 +391,8 @@ export class PublicSiteController {
 
   @Put('downloads/:id')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('public_site.manage')
   @ApiOperation({ summary: 'Update download' })
   async updateDownload(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdatePublicDownloadDto) {
     return this.prisma.publicDownload.update({
@@ -398,7 +412,8 @@ export class PublicSiteController {
 
   @Delete('downloads/:id')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('public_site.manage')
   @ApiOperation({ summary: 'Delete download' })
   async deleteDownload(@Param('id', ParseUUIDPipe) id: string) {
     return this.prisma.publicDownload.delete({ where: { id } });
@@ -419,7 +434,8 @@ export class PublicSiteController {
 
   @Get('gallery-items/all')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('public_site.manage')
   @ApiOperation({ summary: 'List all gallery items (incl. unpublished)' })
   async findAllGalleryItems() {
     return this.prisma.galleryItem.findMany({
@@ -429,7 +445,8 @@ export class PublicSiteController {
 
   @Post('gallery-items')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('public_site.manage')
   @ApiOperation({ summary: 'Create gallery item' })
   async createGalleryItem(@Body() dto: CreateGalleryItemDto) {
     return this.prisma.galleryItem.create({
@@ -444,7 +461,8 @@ export class PublicSiteController {
 
   @Put('gallery-items/:id')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('public_site.manage')
   @ApiOperation({ summary: 'Update gallery item' })
   async updateGalleryItem(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateGalleryItemDto) {
     return this.prisma.galleryItem.update({
@@ -460,7 +478,8 @@ export class PublicSiteController {
 
   @Delete('gallery-items/:id')
   @ApiBearerAuth()
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, PermissionsGuard)
+  @RequirePermissions('public_site.manage')
   @ApiOperation({ summary: 'Delete gallery item' })
   async deleteGalleryItem(@Param('id', ParseUUIDPipe) id: string) {
     return this.prisma.galleryItem.delete({ where: { id } });

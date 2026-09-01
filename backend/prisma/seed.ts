@@ -33,6 +33,7 @@ const PERMISSIONS = [
   { key: 'id_cards.issue',     module: 'HR_ID_CARDS', description: 'Issue employee ID cards' },
   { key: 'id_cards.reissue',   module: 'HR_ID_CARDS', description: 'Reissue employee ID cards' },
   { key: 'documents.generate', module: 'HR_DOCS',     description: 'Generate HR letters and contracts' },
+  { key: 'public_site.manage', module: 'ICT',         description: 'Manage public website content (news, institutions, scholarships, etc.)' },
 ];
 
 // ---------------------------------------------------------------------------

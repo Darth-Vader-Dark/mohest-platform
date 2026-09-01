@@ -118,6 +118,13 @@ export class UsersService {
         },
       });
 
+      // Revoke all existing refresh tokens for this user so any
+      // previously stolen tokens are immediately invalidated.
+      await tx.refreshToken.updateMany({
+        where: { userId: id, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+
       await tx.auditLog.create({
         data: {
           userId: operatorId,

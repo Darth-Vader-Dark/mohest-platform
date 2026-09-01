@@ -24,8 +24,21 @@ async function createApp(): Promise<NestExpressApplication> {
     crossOriginResourcePolicy: { policy: 'cross-origin' },
   }));
 
+  const allowedOrigins = (process.env.CORS_ORIGIN ?? '')
+    .split(',')
+    .map((s) => s.trim())
+    .filter(Boolean);
+
   app.enableCors({
-    origin: true,
+    origin: allowedOrigins.length > 0
+      ? (origin, callback) => {
+          if (!origin || allowedOrigins.includes(origin)) {
+            callback(null, true);
+          } else {
+            callback(new Error('Not allowed by CORS'));
+          }
+        }
+      : false,
     credentials: true,
   });
 
@@ -61,7 +74,7 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({
       statusCode: 500,
-      message: err?.message || 'Server error during request execution',
+      message: 'Internal server error',
     }));
   }
 }

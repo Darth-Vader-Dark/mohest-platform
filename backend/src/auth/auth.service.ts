@@ -144,10 +144,14 @@ export class AuthService {
   }
 
   private async signAccessToken(userId: string, email: string) {
+    const secret = process.env.JWT_ACCESS_SECRET;
+    if (!secret) {
+      throw new Error('JWT_ACCESS_SECRET environment variable is not set.');
+    }
     return this.jwt.signAsync(
       { sub: userId, email },
       {
-        secret: process.env.JWT_ACCESS_SECRET || 'mohest-enterprise-secret-key-2026',
+        secret,
         expiresIn: (process.env.JWT_ACCESS_EXPIRES_IN ?? '15m') as `${number}m`,
       },
     );
