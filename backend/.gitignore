@@ -4,4 +4,6 @@
 /uploads/
 
 # Environment files
+.env
+.env.*
 .env.example
