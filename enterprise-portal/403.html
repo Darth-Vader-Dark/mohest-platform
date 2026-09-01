@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<link class="brand-favicon" rel="icon" type="image/jpeg" href="logo.jpg">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Access Denied — MoHEST Staff Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Fraunces:wght@500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #F7F8FA;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  color: #111318;
+  padding: 40px 24px;
+}
+.error-card {
+  background: #FFFFFF;
+  border: 1px solid #E5E7EB;
+  border-radius: 16px;
+  box-shadow: 0 1px 2px rgba(17,19,24,0.04), 0 4px 14px rgba(17,19,24,0.05);
+  padding: 56px 48px;
+  text-align: center;
+  max-width: 480px;
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+}
+.error-card::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #C0362C 0%, #E85D54 100%);
+}
+.error-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 64px; height: 64px;
+  border-radius: 16px;
+  background: #FBEBEA;
+  color: #C0362C;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 28px;
+  font-weight: 700;
+  margin-bottom: 24px;
+}
+h1 {
+  font-family: 'Fraunces', serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: #111318;
+  margin-bottom: 12px;
+}
+p {
+  color: #6B7280;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 32px;
+}
+.error-actions {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+.btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+  border: 1px solid transparent;
+  font-family: inherit;
+  transition: transform .15s ease, background .15s ease;
+}
+.btn-primary { background: #2952E3; color: #fff; }
+.btn-primary:hover { background: #1E3FBA; transform: translateY(-1px); }
+.btn-secondary { background: #F7F8FA; color: #6B7280; border-color: #E5E7EB; }
+.btn-secondary:hover { background: #FFFFFF; border-color: #9CA3AF; }
+.error-suggestion {
+  border-top: 1px solid #E5E7EB;
+  padding-top: 20px;
+}
+.error-suggestion p {
+  font-size: 12.5px;
+  color: #9CA3AF;
+  margin: 0;
+}
+.error-suggestion strong { color: #111318; }
+.error-suggestion a {
+  color: #2952E3;
+  font-weight: 600;
+  text-decoration: none;
+}
+.error-suggestion a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+<div class="error-card">
+  <div class="error-badge">403</div>
+  <h1>Access denied</h1>
+  <p>You do not have the required permissions to access this page. Your current role does not include access to this section of the portal.</p>
+  <div class="error-actions">
+    <a class="btn btn-primary" href="ict-dashboard.html">&larr; Back to dashboard</a>
+  </div>
+  <div class="error-suggestion">
+    <p>Need access? Contact the <strong>ICT Directorate</strong> administrator to request the appropriate role.</p>
+  </div>
+</div>
+</body>
+</html>
