@@ -5,9 +5,8 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { JwtStrategy } from './strategies/jwt.strategy';
 
-const jwtAccessSecret = process.env.JWT_ACCESS_SECRET;
-if (!jwtAccessSecret) {
-  throw new Error('JWT_ACCESS_SECRET environment variable is required but not set.');
+if (!process.env.JWT_ACCESS_SECRET) {
+  console.error('[FATAL] JWT_ACCESS_SECRET is not set. Auth will fail. Set it in your environment variables.');
 }
 
 const jwtSignOptions: JwtModuleOptions['signOptions'] = {
@@ -18,7 +17,7 @@ const jwtSignOptions: JwtModuleOptions['signOptions'] = {
   imports: [
     PassportModule,
     JwtModule.register({
-      secret: jwtAccessSecret,
+      secret: process.env.JWT_ACCESS_SECRET || 'MISSING_JWT_SECRET',
       signOptions: jwtSignOptions,
     }),
   ],

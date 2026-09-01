@@ -38,7 +38,7 @@ async function createApp(): Promise<NestExpressApplication> {
             callback(new Error('Not allowed by CORS'));
           }
         }
-      : false,
+      : true,
     credentials: true,
   });
 
@@ -69,12 +69,13 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     const expressInstance = app.getHttpAdapter().getInstance();
     return expressInstance(req, res);
   } catch (err: any) {
-    console.error('Vercel serverless function error:', err);
+    console.error('Vercel serverless function error:', err?.message || err);
+    console.error('Stack:', err?.stack);
     res.statusCode = 500;
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({
       statusCode: 500,
-      message: 'Internal server error',
+      message: err?.message || 'Internal server error',
     }));
   }
 }

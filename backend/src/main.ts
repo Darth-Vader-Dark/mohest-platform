@@ -24,7 +24,7 @@ async function bootstrap() {
 
   app.enableCors({
     origin: isProd
-      ? (allowedOrigins.length ? allowedOrigins : false)
+      ? (allowedOrigins.length ? allowedOrigins : true)
       : (_origin: string | undefined, cb: (err: Error | null, allow?: boolean) => void) =>
           cb(null, true),
     credentials: true,
