@@ -1198,9 +1198,93 @@ async function exportAllEmployeesPdf(){
   toast('Employee directory PDF exported.');
 }
 
-function exportAttendancePdf(){exportAllEmployeesPdf();toast('Attendance report PDF exported.')}
-function exportLeaveReportPdf(){exportAllEmployeesPdf();toast('Leave report PDF exported.');}
-function exportCompPdf(){exportAllEmployeesPdf();toast('Payroll report PDF exported.');}
+async function exportAttendancePdf(){
+  await preloadAssets();
+  const items=getStore('attendance',[]);
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const m=15;let y=20;
+  doc.setFontSize(14);doc.setFont('helvetica','bold');doc.setTextColor(15,43,64);
+  doc.text('MoHEST — Attendance Report',105,y,{align:'center'});y+=6;
+  doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(100);
+  doc.text(`Date: ${new Date().toLocaleDateString('en-GB')} · Total Records: ${items.length}`,105,y,{align:'center'});y+=10;
+  doc.setDrawColor(15,43,64);doc.setLineWidth(0.4);doc.line(m,y,195,y);y+=6;
+  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(50);
+  const cols=[{l:'Employee',w:45},{l:'Check In',w:25},{l:'Check Out',w:25},{l:'Hours',w:20},{l:'Status',w:25}];
+  let x=m;cols.forEach(c=>{doc.text(c.l,x,y);x+=c.w});y+=5;
+  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(40);
+  items.forEach(a=>{
+    if(y>270){doc.addPage();y=20}
+    x=m;const row=[a.empName,a.checkIn,a.checkOut,a.hours+'h',a.status];
+    row.forEach((val,i)=>{doc.text(String(val).slice(0,cols[i].w/1.8),x,y);x+=cols[i].w});y+=5;
+  });
+  y+=8;doc.setFontSize(8);doc.setFont('helvetica','bold');
+  const present=items.filter(a=>a.status==='Present').length;
+  const late=items.filter(a=>a.status==='Late').length;
+  doc.text(`Summary: ${present} Present, ${late} Late, ${items.length} Total`,m,y);
+  doc.save('MoHEST_Attendance_Report.pdf');toast('Attendance report PDF exported.');
+}
+
+async function exportLeaveReportPdf(){
+  await preloadAssets();
+  const items=getStore('leave',[]);
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const m=15;let y=20;
+  doc.setFontSize(14);doc.setFont('helvetica','bold');doc.setTextColor(15,43,64);
+  doc.text('MoHEST — Leave Report',105,y,{align:'center'});y+=6;
+  doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(100);
+  doc.text(`Date: ${new Date().toLocaleDateString('en-GB')} · Total Requests: ${items.length}`,105,y,{align:'center'});y+=10;
+  doc.setDrawColor(15,43,64);doc.setLineWidth(0.4);doc.line(m,y,195,y);y+=6;
+  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(50);
+  const cols=[{l:'Employee',w:40},{l:'Type',w:30},{l:'From',w:25},{l:'To',w:25},{l:'Days',w:15},{l:'Status',w:25}];
+  let x=m;cols.forEach(c=>{doc.text(c.l,x,y);x+=c.w});y+=5;
+  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(40);
+  items.forEach(l=>{
+    if(y>270){doc.addPage();y=20}
+    x=m;const row=[l.empName,l.type,fmtDate(l.from),fmtDate(l.to),String(l.days),l.status];
+    row.forEach((val,i)=>{doc.text(String(val).slice(0,cols[i].w/1.8),x,y);x+=cols[i].w});y+=5;
+  });
+  y+=8;doc.setFontSize(8);doc.setFont('helvetica','bold');
+  const pending=items.filter(l=>l.status==='Pending').length;
+  const approved=items.filter(l=>l.status==='Approved').length;
+  doc.text(`Summary: ${approved} Approved, ${pending} Pending, ${items.length} Total`,m,y);
+  doc.save('MoHEST_Leave_Report.pdf');toast('Leave report PDF exported.');
+}
+
+async function exportCompPdf(){
+  await preloadAssets();
+  const emps=getStore('employees',[]);
+  const pos=getStore('positions',[]);
+  const baseByGrade={'Grade 3':800,'Grade 4':1000,'Grade 5':1200,'Grade 6':1500,'Grade 7':1800,'Grade 8':2200,'Grade 9':2800,'Grade 10':3500,'Grade 11':4200,'Grade 12':5000,'Grade 13':6000,'Grade 14':7500,'Grade 15':9000};
+  const {jsPDF}=window.jspdf;
+  const doc=new jsPDF({unit:'mm',format:'a4'});
+  const m=15;let y=20;
+  doc.setFontSize(14);doc.setFont('helvetica','bold');doc.setTextColor(15,43,64);
+  doc.text('MoHEST — Payroll Summary',105,y,{align:'center'});y+=6;
+  doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(100);
+  doc.text(`Date: ${new Date().toLocaleDateString('en-GB')}`,105,y,{align:'center'});y+=10;
+  doc.setDrawColor(15,43,64);doc.setLineWidth(0.4);doc.line(m,y,195,y);y+=6;
+  doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(50);
+  const cols=[{l:'Employee',w:38},{l:'Grade',w:22},{l:'Basic',w:28},{l:'Allowances',w:28},{l:'Total',w:28}];
+  let x=m;cols.forEach(c=>{doc.text(c.l,x,y);x+=c.w});y+=5;
+  doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(40);
+  let totalBasic=0,totalAllow=0;
+  emps.forEach(e=>{
+    if(y>270){doc.addPage();y=20}
+    const p=pos.find(x=>x.title===e.pos);
+    const grade=p?p.grade:'Grade 5';const basic=baseByGrade[grade]||1200;const allow=Math.round(basic*0.35);
+    totalBasic+=basic;totalAllow+=allow;x=m;
+    const row=[e.first+' '+e.last,grade,'$'+basic.toLocaleString(),'$'+allow.toLocaleString(),'$'+(basic+allow).toLocaleString()];
+    row.forEach((val,i)=>{doc.text(String(val).slice(0,cols[i].w/1.8),x,y);x+=cols[i].w});y+=5;
+  });
+  y+=5;doc.setDrawColor(15,43,64);doc.setLineWidth(0.3);doc.line(m,y,195,y);y+=6;
+  doc.setFont('helvetica','bold');doc.setFontSize(9);
+  doc.text(`Total Basic: $${totalBasic.toLocaleString()}`,m,y);y+=6;
+  doc.text(`Total Allowances: $${totalAllow.toLocaleString()}`,m,y);y+=6;
+  doc.text(`Grand Total: $${(totalBasic+totalAllow).toLocaleString()}`,m,y);
+  doc.save('MoHEST_Payroll_Summary.pdf');toast('Payroll report PDF exported.');
+}
 </script>
 </body>
 </html>
