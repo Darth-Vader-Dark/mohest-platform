@@ -6,15 +6,12 @@ export class PrismaService extends PrismaClient implements OnModuleDestroy {
   constructor() {
     const dbUrl = process.env.DATABASE_URL;
     if (!dbUrl) {
-      throw new Error(
-        'DATABASE_URL environment variable is not set. ' +
-        'Please configure it in your Vercel project settings or local .env file.',
-      );
+      console.error('[DB] DATABASE_URL not set — database queries will fail. Set it in your environment variables.');
     }
 
     super({
       datasources: {
-        db: { url: dbUrl },
+        db: { url: dbUrl || 'postgresql://localhost:5432/fallback' },
       },
     });
   }

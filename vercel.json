@@ -1,6 +1,8 @@
 {
   "cleanUrls": true,
   "outputDirectory": "dist",
+  "buildCommand": "npm run vercel-build",
+  "installCommand": "npm install",
   "builds": [
     { "src": "package.json", "use": "@vercel/static-build" },
     { "src": "api/index.ts", "use": "@vercel/node" }

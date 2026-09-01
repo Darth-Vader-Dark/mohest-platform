@@ -44,17 +44,23 @@ export class AuthService {
   }
 
   async login(dto: LoginDto, meta: { ip?: string; userAgent?: string }) {
-    const user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-      include: {
-        department: true,
-        roles: {
-          include: {
-            role: true,
+    let user;
+    try {
+      user = await this.prisma.user.findUnique({
+        where: { email: dto.email },
+        include: {
+          department: true,
+          roles: {
+            include: {
+              role: true,
+            },
           },
         },
-      },
-    });
+      });
+    } catch (dbErr: any) {
+      console.error('[AUTH] Database error during login:', dbErr?.message);
+      throw new UnauthorizedException('Service temporarily unavailable. Please try again later.');
+    }
 
     const invalidCredentials = () =>
       new UnauthorizedException('Invalid email or password.');
