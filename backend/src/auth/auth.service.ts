@@ -81,7 +81,10 @@ export class AuthService {
       });
     } catch (dbErr: any) {
       console.error('[AUTH] Database error during login:', dbErr?.message);
-      throw new UnauthorizedException('Service temporarily unavailable. Please try again later.');
+      console.error('[AUTH] DB error code:', dbErr?.code);
+      console.error('[AUTH] DB error stack:', dbErr?.stack);
+      // Return 503 (not 401) so the client knows it's a server issue, not bad credentials
+      throw new UnauthorizedException(`Service temporarily unavailable: ${dbErr?.message || 'database error'}`);
     }
 
     const invalidCredentials = () =>
