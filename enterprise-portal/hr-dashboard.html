@@ -518,83 +518,8 @@ function setStore(k,d){localStorage.setItem('hr_'+k,JSON.stringify(d))}
 
 // Seed mock data if empty
 function seedIfEmpty(){
-  if(getStore('employees')?.length) return;
-  const emps=[
-    {id:'e1',first:'James',last:'Kuol',no:'EMP-0001',pos:'ICT Director',dept:'ICT',type:'Permanent',hire:'2020-03-15',status:'Active',gender:'Male',phone:'+211920001001',email:'james.kuol@mohest.gov.ss',natid:'SS-1001',photoUrl:''},
-    {id:'e2',first:'Sarah',last:'Deng',no:'EMP-0002',pos:'HR Manager',dept:'HR',type:'Permanent',hire:'2019-07-20',status:'Active',gender:'Female',phone:'+211920001002',email:'sarah.deng@mohest.gov.ss',natid:'SS-1002',photoUrl:''},
-    {id:'e3',first:'Peter',last:'Malo',no:'EMP-0003',pos:'Education Standards Officer',dept:'HES',type:'Permanent',hire:'2021-01-10',status:'Active',gender:'Male',phone:'+211920001003',email:'peter.malo@mohest.gov.ss',natid:'SS-1003',photoUrl:''},
-    {id:'e4',first:'Grace',last:'Wani',no:'EMP-0004',pos:'Finance Officer',dept:'Admin & Finance',type:'Permanent',hire:'2020-11-05',status:'Active',gender:'Female',phone:'+211920001004',email:'grace.wani@mohest.gov.ss',natid:'SS-1004',photoUrl:''},
-    {id:'e5',first:'Michael',last:'Ajak',no:'EMP-0005',pos:'Scholarship Coordinator',dept:'Scholarships',type:'Contract',hire:'2022-06-01',status:'Active',gender:'Male',phone:'+211920001005',email:'michael.ajak@mohest.gov.ss',natid:'SS-1005',photoUrl:''},
-    {id:'e6',first:'Fatima',last:'Hassan',no:'EMP-0006',pos:'Legal Counsel',dept:'Legal Affairs',type:'Permanent',hire:'2021-09-12',status:'Active',gender:'Female',phone:'+211920001006',email:'fatima.hassan@mohest.gov.ss',natid:'SS-1006',photoUrl:''},
-    {id:'e7',first:'David',last:'Bior',no:'EMP-0007',pos:'Admin Assistant',dept:'Admin & Finance',type:'Contract',hire:'2023-02-14',status:'Active',gender:'Male',phone:'+211920001007',email:'david.bior@mohest.gov.ss',natid:'SS-1007',photoUrl:''},
-    {id:'e8',first:'Mary',last:'Nyabuoy',no:'EMP-0008',pos:'PR Officer',dept:'PR & Media',type:'Permanent',hire:'2020-08-22',status:'Active',gender:'Female',phone:'+211920001008',email:'mary.nyabuoy@mohest.gov.ss',natid:'SS-1008',photoUrl:''},
-    {id:'e9',first:'John',last:'Garang',no:'EMP-0009',pos:'Planning Officer',dept:'Planning & Statistics',type:'Permanent',hire:'2019-04-03',status:'Active',gender:'Male',phone:'+211920001009',email:'john.garang@mohest.gov.ss',natid:'SS-1009',photoUrl:''},
-    {id:'e10',first:'Amina',last:'Doka',no:'EMP-0010',pos:'Records Officer',dept:'HR',type:'Permanent',hire:'2022-01-18',status:'Active',gender:'Female',phone:'+211920001010',email:'amina.doka@mohest.gov.ss',natid:'SS-1010',photoUrl:''},
-    {id:'e11',first:'Thomas',last:'Lokai',no:'EMP-0011',pos:'Science & Tech Specialist',dept:'Science & Technology',type:'Contract',hire:'2023-05-09',status:'Active',gender:'Male',phone:'+211920001011',email:'thomas.lokai@mohest.gov.ss',natid:'SS-1011',photoUrl:''},
-    {id:'e12',first:'Rebecca',last:'Zaku',no:'EMP-0012',pos:'Secretary',dept:'HES',type:'Temporary',hire:'2024-01-02',status:'Active',gender:'Female',phone:'+211920001012',email:'rebecca.zaku@mohest.gov.ss',natid:'SS-1012',photoUrl:''},
-  ];
-  setStore('employees',emps);
-  setStore('positions',[
-    {id:'p1',title:'ICT Director',dept:'ICT',grade:'Grade 10',sanctioned:1,filled:1},
-    {id:'p2',title:'HR Manager',dept:'HR',grade:'Grade 9',sanctioned:1,filled:1},
-    {id:'p3',title:'Education Standards Officer',dept:'HES',grade:'Grade 8',sanctioned:3,filled:2},
-    {id:'p4',title:'Finance Officer',dept:'Admin & Finance',grade:'Grade 8',sanctioned:2,filled:1},
-    {id:'p5',title:'Scholarship Coordinator',dept:'Scholarships',grade:'Grade 7',sanctioned:2,filled:1},
-    {id:'p6',title:'Legal Counsel',dept:'Legal Affairs',grade:'Grade 9',sanctioned:1,filled:1},
-    {id:'p7',title:'Admin Assistant',dept:'Admin & Finance',grade:'Grade 4',sanctioned:4,filled:2},
-    {id:'p8',title:'PR Officer',dept:'PR & Media',grade:'Grade 7',sanctioned:2,filled:1},
-    {id:'p9',title:'Planning Officer',dept:'Planning & Statistics',grade:'Grade 7',sanctioned:2,filled:1},
-    {id:'p10',title:'Records Officer',dept:'HR',grade:'Grade 5',sanctioned:2,filled:1},
-    {id:'p11',title:'Science & Tech Specialist',dept:'Science & Technology',grade:'Grade 8',sanctioned:2,filled:1},
-    {id:'p12',title:'Secretary',dept:'HES',grade:'Grade 3',sanctioned:6,filled:3},
-  ]);
-  setStore('transfers',[
-    {id:'t1',empId:'e7',empName:'David Bior',from:'HES',to:'Admin & Finance',type:'Transfer',date:'2024-03-01',reason:'Departmental restructuring',status:'Completed'},
-    {id:'t2',empId:'e11',empName:'Thomas Lokai',from:'HES',to:'Science & Technology',type:'Transfer',date:'2024-06-15',reason:'Skillset alignment',status:'Completed'},
-  ]);
-  setStore('promotions',[
-    {id:'pr1',empId:'e2',empName:'Sarah Deng',from:'HR Officer',to:'HR Manager',grade:'Grade 9',date:'2024-01-15',auth:'Minister',status:'Approved'},
-    {id:'pr2',empId:'e5',empName:'Michael Ajak',from:'Assistant Coordinator',to:'Scholarship Coordinator',grade:'Grade 7',date:'2024-07-01',auth:'Director, HR',status:'Approved'},
-  ]);
-  setStore('leave',[
-    {id:'lv1',empId:'e3',empName:'Peter Malo',type:'Annual Leave',from:'2026-02-10',to:'2026-02-21',days:10,status:'Approved',reason:'Family visit'},
-    {id:'lv2',empId:'e8',empName:'Mary Nyabuoy',type:'Sick Leave',from:'2026-03-05',to:'2026-03-07',days:3,status:'Approved',reason:'Medical appointment'},
-    {id:'lv3',empId:'e12',empName:'Rebecca Zaku',type:'Annual Leave',from:'2026-04-01',to:'2026-04-05',days:5,status:'Pending',reason:'Personal'},
-  ]);
-  setStore('attendance',generateMockAttendance());
-  setStore('performance',[
-    {id:'pf1',empId:'e1',empName:'James Kuol',period:'Q1 2026',score:4.5,rating:'Exceeds Expectations',reviewer:'Minister',status:'Completed'},
-    {id:'pf2',empId:'e2',empName:'Sarah Deng',period:'Q1 2026',score:4.2,rating:'Exceeds Expectations',reviewer:'Director, HR',status:'Completed'},
-    {id:'pf3',empId:'e4',empName:'Grace Wani',period:'Q1 2026',score:3.8,rating:'Meets Expectations',reviewer:'Director, Finance',status:'Completed'},
-    {id:'pf4',empId:'e9',empName:'John Garang',period:'Q2 2026',score:0,rating:'—',reviewer:'HR Director',status:'Pending'},
-  ]);
-  setStore('training',[
-    {id:'tr1',name:'Public Service Leadership',type:'Workshop',duration:'5 days',enrolled:8,max:20,start:'2026-03-15',status:'Upcoming'},
-    {id:'tr2',name:'Gender Mainstreaming in HE',type:'Seminar',duration:'2 days',enrolled:15,max:30,start:'2026-02-20',status:'Completed'},
-    {id:'tr3',name:'Financial Management basics',type:'Certificate',duration:'3 months',enrolled:5,max:15,start:'2026-04-01',status:'Upcoming'},
-    {id:'tr4',name:'IT Security Awareness',type:'Online Course',duration:'1 week',enrolled:12,max:50,start:'2026-01-10',status:'Completed'},
-  ]);
-  setStore('discipline',[
-    {id:'dc1',empId:'e7',empName:'David Bior',type:'Verbal Warning',incident:'Late attendance pattern',date:'2026-01-20',severity:'Low',status:'Closed'},
-  ]);
-  setStore('retirement',[]);
-  setStore('recruit',[
-    {id:'r1',title:'IT Support Officer',dept:'ICT',vacancies:1,desc:'Provide first-line IT support',stage:'Open',posted:'2026-03-01'},
-    {id:'r2',title:'Accounts Clerk',dept:'Admin & Finance',vacancies:2,desc:'Handle daily accounting tasks',stage:'Interviewing',posted:'2026-02-15'},
-    {id:'r3',title:'Research Assistant',dept:'Science & Technology',vacancies:1,desc:'Support research projects',stage:'Screening',posted:'2026-03-10'},
-  ]);
-}
-
-function generateMockAttendance(){
-  const emps=getStore('employees',[]);
-  return emps.slice(0,10).map(e=>{
-    const hr=7+Math.floor(Math.random()*2);
-    const min=Math.floor(Math.random()*60);
-    const outHr=hr+7+Math.floor(Math.random()*2);
-    const outMin=Math.floor(Math.random()*60);
-    const late=hr>8;
-    return {empId:e.id,empName:e.first+' '+e.last,checkIn:`${String(hr).padStart(2,'0')}:${String(min).padStart(2,'0')}`,checkOut:`${String(outHr).padStart(2,'0')}:${String(outMin).padStart(2,'0')}`,hours:(outHr-hr+(outMin-min)/60).toFixed(1),status:late?'Late':'Present'};
-  });
+  const keys=['employees','positions','transfers','promotions','leave','attendance','performance','training','discipline','retirement','recruit'];
+  keys.forEach(k=>{if(!getStore(k))setStore(k,[])});
 }
 
 // ═══ BOOTSTRAP ═══
