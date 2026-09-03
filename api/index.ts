@@ -69,13 +69,19 @@ export default async function handler(req: IncomingMessage, res: ServerResponse)
     const expressInstance = app.getHttpAdapter().getInstance();
     return expressInstance(req, res);
   } catch (err: any) {
-    console.error('Vercel serverless function error:', err?.message || err);
+    console.error('=== VERCEL 500 ERROR ===');
+    console.error('URL:', req.method, req.url);
+    console.error('Error:', err?.message || err);
     console.error('Stack:', err?.stack);
+    console.error('JWT_ACCESS_SECRET set:', !!process.env.JWT_ACCESS_SECRET);
+    console.error('DATABASE_URL set:', !!process.env.DATABASE_URL);
+    console.error('========================');
     res.statusCode = 500;
     res.setHeader('Content-Type', 'application/json');
     res.end(JSON.stringify({
       statusCode: 500,
-      message: err?.message || 'Internal server error',
+      message: 'Internal server error',
+      hint: `JWT: ${!!process.env.JWT_ACCESS_SECRET}, DB: ${!!process.env.DATABASE_URL}`,
     }));
   }
 }

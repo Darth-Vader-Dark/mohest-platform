@@ -4,18 +4,27 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import * as argon2 from 'argon2';
 import * as bcrypt from 'bcryptjs';
 import * as crypto from 'crypto';
 import { PrismaService } from '../prisma/prisma.service';
 import { LoginDto } from './dto/login.dto';
 
-const ARGON2_OPTS: argon2.Options = {
-  type: argon2.argon2id,
-  memoryCost: parseInt(process.env.ARGON2_MEMORY_COST ?? '19456', 10),
-  timeCost: parseInt(process.env.ARGON2_TIME_COST ?? '2', 10),
-  parallelism: parseInt(process.env.ARGON2_PARALLELISM ?? '1', 10),
-};
+// Lazy-load argon2 — it's a native C++ module that may fail to compile
+// in serverless environments (Vercel, AWS Lambda, etc.).
+let argon2: typeof import('argon2') | null = null;
+let argon2LoadAttempted = false;
+
+async function loadArgon2(): Promise<typeof import('argon2') | null> {
+  if (argon2LoadAttempted) return argon2;
+  argon2LoadAttempted = true;
+  try {
+    argon2 = await import('argon2');
+    return argon2;
+  } catch (err) {
+    console.warn('[AUTH] argon2 native module unavailable, falling back to bcrypt:', (err as Error).message);
+    return null;
+  }
+}
 
 @Injectable()
 export class AuthService {
@@ -25,20 +34,33 @@ export class AuthService {
   ) {}
 
   async hashPassword(plain: string): Promise<string> {
-    try {
-      return await argon2.hash(plain, ARGON2_OPTS);
-    } catch {
-      return bcrypt.hash(plain, 10);
+    const a2 = await loadArgon2();
+    if (a2) {
+      try {
+        return await a2.hash(plain, {
+          type: a2.argon2id,
+          memoryCost: parseInt(process.env.ARGON2_MEMORY_COST ?? '19456', 10),
+          timeCost: parseInt(process.env.ARGON2_TIME_COST ?? '2', 10),
+          parallelism: parseInt(process.env.ARGON2_PARALLELISM ?? '1', 10),
+        });
+      } catch {
+        // Fall through to bcrypt
+      }
     }
+    return bcrypt.hash(plain, 10);
   }
 
   private async verifyPassword(hash: string, plain: string): Promise<boolean> {
     if (hash.startsWith('$argon2')) {
-      try {
-        return await argon2.verify(hash, plain);
-      } catch (err) {
-        // Fall back to bcrypt if argon2 native module is unavailable
+      const a2 = await loadArgon2();
+      if (a2) {
+        try {
+          return await a2.verify(hash, plain);
+        } catch (err) {
+          // Fall through to bcrypt
+        }
       }
+      return false; // argon2 hash but module unavailable
     }
     return bcrypt.compare(plain, hash).catch(() => false);
   }
@@ -104,7 +126,7 @@ export class AuthService {
           name: user.department.name,
           code: user.department.code,
         } : null,
-        roles: user.roles.map((ur) => ur.role.name),
+        roles: user.roles.map((ur: any) => ur.role.name),
       },
     };
   }
