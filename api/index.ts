@@ -3,15 +3,35 @@ import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import helmet from 'helmet';
+import { execSync } from 'child_process';
 import { AppModule } from '../backend/src/app.module';
 import type { IncomingMessage, ServerResponse } from 'http';
 
 import * as express from 'express';
 
 let cachedApp: NestExpressApplication | null = null;
+let migrationsRun = false;
+
+async function runMigrations(): Promise<void> {
+  if (migrationsRun || !process.env.DATABASE_URL) return;
+  migrationsRun = true;
+  try {
+    console.log('[DB] Running prisma migrate deploy...');
+    execSync('npx prisma migrate deploy --schema=backend/prisma/schema.prisma', {
+      timeout: 60_000,
+      stdio: 'pipe',
+    });
+    console.log('[DB] Migrations applied successfully.');
+  } catch (err: any) {
+    console.error('[DB] Migration failed (non-fatal):', err?.stderr?.toString() || err?.message);
+  }
+}
 
 async function createApp(): Promise<NestExpressApplication> {
   if (cachedApp) return cachedApp;
+
+  // Run migrations on first cold start, before NestJS initializes
+  await runMigrations();
 
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     logger: ['error', 'warn'],
