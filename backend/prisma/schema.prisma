@@ -150,6 +150,12 @@ model Employee {
   promotions          Promotion[]
   qualifications      Qualification[]
   workExperience      WorkExperience[]
+  leaveRequests       LeaveRequest[]
+  attendanceRecords   AttendanceRecord[]
+  performanceReviews  PerformanceReview[]
+  trainingEnrollments TrainingEnrollment[]
+  disciplineActions   DisciplineAction[]
+  separations         SeparationRecord[]
 
   @@index([departmentId])
   @@map("employees")
@@ -241,6 +247,113 @@ model IdCard {
   @@map("id_cards")
 }
 
+model LeaveRequest {
+  id         String   @id @default(uuid())
+  employeeId String
+  leaveType  String
+  fromDate   DateTime
+  toDate     DateTime
+  days       Int
+  reason     String?
+  status     String   @default("Pending")
+  approvedBy String?
+  createdAt  DateTime @default(now())
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("leave_requests")
+}
+
+model AttendanceRecord {
+  id         String   @id @default(uuid())
+  employeeId String
+  date       DateTime
+  checkIn    String?
+  checkOut   String?
+  hours      Float?
+  status     String   @default("Present")
+  createdAt  DateTime @default(now())
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, date])
+  @@index([employeeId])
+  @@map("attendance_records")
+}
+
+model PerformanceReview {
+  id           String   @id @default(uuid())
+  employeeId   String
+  reviewPeriod String
+  score        Float
+  rating       String
+  reviewer     String?
+  comments     String?
+  status       String   @default("Completed")
+  createdAt    DateTime @default(now())
+  employee     Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("performance_reviews")
+}
+
+model TrainingProgram {
+  id          String               @id @default(uuid())
+  name        String
+  type        String
+  duration    String?
+  startDate   DateTime?
+  maxEnroll   Int                  @default(20)
+  status      String               @default("Upcoming")
+  createdAt   DateTime             @default(now())
+  enrollments TrainingEnrollment[]
+
+  @@map("training_programs")
+}
+
+model TrainingEnrollment {
+  id         String          @id @default(uuid())
+  employeeId String
+  programId  String
+  enrolledAt DateTime        @default(now())
+  employee   Employee        @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  program    TrainingProgram @relation(fields: [programId], references: [id], onDelete: Cascade)
+
+  @@unique([employeeId, programId])
+  @@index([employeeId])
+  @@index([programId])
+  @@map("training_enrollments")
+}
+
+model DisciplineAction {
+  id         String   @id @default(uuid())
+  employeeId String
+  actionType String
+  severity   String?
+  incident   String
+  date       DateTime
+  status     String   @default("Open")
+  createdAt  DateTime @default(now())
+  employee   Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("discipline_actions")
+}
+
+model SeparationRecord {
+  id              String   @id @default(uuid())
+  employeeId      String
+  separationType  String
+  lastWorkingDay  DateTime
+  reason          String?
+  benefitsCleared Boolean  @default(false)
+  status          String   @default("In Progress")
+  createdAt       DateTime @default(now())
+  employee        Employee @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@index([employeeId])
+  @@map("separation_records")
+}
+
 model AuditLog {
   id         String   @id @default(uuid())
   userId     String?
@@ -310,17 +423,17 @@ model Scholarship {
 }
 
 model NewsArticle {
-  id             String   @id @default(uuid())
-  title          String
-  excerpt        String?
-  body           String?
-  coverImageUrl  String?
-  publishedAt    DateTime @default(now())
-  isLead         Boolean  @default(false)
-  thumbStyle     String?
-  link           String?
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id            String   @id @default(uuid())
+  title         String
+  excerpt       String?
+  body          String?
+  coverImageUrl String?
+  publishedAt   DateTime @default(now())
+  isLead        Boolean  @default(false)
+  thumbStyle    String?
+  link          String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
 
   @@index([publishedAt])
   @@map("news_articles")

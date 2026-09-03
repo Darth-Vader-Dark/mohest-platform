@@ -506,24 +506,39 @@ table.data tr:hover td{background:var(--accent-soft)}
 <div class="toast hidden" id="toast"></div>
 
 <script>
-// ═══ DATA STORE ═══
+// ═══ API CLIENT ═══
 const API=window.MOHEST_API;
 let token='',currentUser=null;
-const DEPTS=['ICT','HR','HES','Science & Technology','Planning & Statistics','Admin & Finance','Scholarships','Legal Affairs','PR & Media'];
-const GRADES=['Grade 1','Grade 2','Grade 3','Grade 4','Grade 5','Grade 6','Grade 7','Grade 8','Grade 9','Grade 10','Grade 11','Grade 12','Grade 13','Grade 14','Grade 15'];
+let departmentsCache=[]; // populated from API
+let employeesCache=[];   // populated from API
 
-// Mock data store (localStorage backed)
-function getStore(k,d){try{const v=localStorage.getItem('hr_'+k);return v?JSON.parse(v):d}catch{return d}}
-function setStore(k,d){localStorage.setItem('hr_'+k,JSON.stringify(d))}
-
-// Seed mock data if empty
-function seedIfEmpty(){
-  const keys=['employees','positions','transfers','promotions','leave','attendance','performance','training','discipline','retirement','recruit'];
-  keys.forEach(k=>{if(!getStore(k))setStore(k,[])});
+async function apiGet(path){
+  const res=await fetch(API+path,{headers:authHeaders()});
+  if(res.status===401){localStorage.clear();window.location.href='login.html';return null}
+  if(!res.ok)throw new Error(`API ${res.status}: ${await res.text()}`);
+  return res.json();
+}
+async function apiPost(path,body){
+  const res=await fetch(API+path,{method:'POST',headers:authHeaders(),body:JSON.stringify(body)});
+  if(res.status===401){localStorage.clear();window.location.href='login.html';return null}
+  if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err.message||`API ${res.status}`)}
+  return res.json();
+}
+async function apiPut(path,body){
+  const res=await fetch(API+path,{method:'PUT',headers:authHeaders(),body:JSON.stringify(body)});
+  if(res.status===401){localStorage.clear();window.location.href='login.html';return null}
+  if(!res.ok){const err=await res.json().catch(()=>({}));throw new Error(err.message||`API ${res.status}`)}
+  return res.json();
+}
+async function apiDel(path){
+  const res=await fetch(API+path,{method:'DELETE',headers:authHeaders()});
+  if(res.status===401){localStorage.clear();window.location.href='login.html';return null}
+  if(!res.ok)throw new Error(`API ${res.status}`);
+  return res.json();
 }
 
 // ═══ BOOTSTRAP ═══
-(function init(){
+(async function init(){
   token=localStorage.getItem('accessToken');
   const raw=localStorage.getItem('user');
   if(!token||!raw){window.location.href='login.html';return}
@@ -535,9 +550,9 @@ function seedIfEmpty(){
   document.getElementById('welcome').textContent='Welcome back, '+currentUser.firstName;
   document.getElementById('sb-avatar').textContent=(currentUser.firstName[0]+currentUser.lastName[0]).toUpperCase();
   if(document.getElementById('att-date'))document.getElementById('att-date').value=new Date().toISOString().slice(0,10);
-  seedIfEmpty();
+  // Load departments from API first
+  try{departmentsCache=await apiGet('/hr/departments')||[]}catch(e){departmentsCache=[]}
   populateDeptSelects();
-  populateEmpSelects();
   renderOverview();
 })();
 
@@ -558,16 +573,17 @@ function showSection(id,el){
 }
 
 // ═══ DEPARTMENT SELECTS ═══
-function populateDeptSelects(){
+async function populateDeptSelects(){
+  try{departmentsCache=await apiGet('/hr/departments')||[]}catch(e){departmentsCache=[]}
   ['e-dept','p-dept','r-dept'].forEach(id=>{
     const el=document.getElementById(id);
-    if(el)el.innerHTML=DEPTS.map(d=>`<option value="${d}">${d}</option>`).join('');
+    if(el)el.innerHTML=departmentsCache.map(d=>`<option value="${d.id}">${d.name}</option>`).join('');
   });
 }
 
-function populateEmpSelects(){
-  const emps=getStore('employees',[]);
-  const opts=emps.map(e=>`<option value="${e.id}">${e.first} ${e.last} (${e.no})</option>`).join('');
+async function populateEmpSelects(){
+  try{employeesCache=await apiGet('/hr/employees')||[]}catch(e){employeesCache=[]}
+  const opts=employeesCache.map(e=>`<option value="${e.id}">${e.firstName} ${e.lastName} (${e.employeeNumber})</option>`).join('');
   const prefix='<option value="">— Select —</option>';
   ['doc-emp-select','doc-leave-emp','doc-appt-emp','t-emp','pr-emp','lv-emp','pf-emp','dc-emp','rt-emp'].forEach(id=>{
     const el=document.getElementById(id);
@@ -576,339 +592,390 @@ function populateEmpSelects(){
 }
 
 // ═══ OVERVIEW ═══
-function renderOverview(){
-  const emps=getStore('employees',[]);
-  const active=emps.filter(e=>e.status==='Active').length;
-  const onLeave=emps.filter(e=>e.status==='On Leave').length;
-  const contracts=emps.filter(e=>e.type==='Contract').length;
-  const leavePending=getStore('leave',[]).filter(l=>l.status==='Pending').length;
-  document.getElementById('kpi-grid').innerHTML=`
-    <div class="kpi-card"><div class="label">Total Employees</div><div class="value">${emps.length}</div><div class="delta neutral">All departments</div></div>
-    <div class="kpi-card"><div class="label">Active Staff</div><div class="value" style="color:var(--success)">${active}</div><div class="delta up">Currently working</div></div>
-    <div class="kpi-card"><div class="label">On Leave</div><div class="value" style="color:var(--warn)">${onLeave}</div><div class="delta neutral">Away from duty</div></div>
-    <div class="kpi-card"><div class="label">Contract Staff</div><div class="value" style="color:var(--accent)">${contracts}</div><div class="delta neutral">Fixed-term</div></div>
-    <div class="kpi-card"><div class="label">Pending Leave</div><div class="value" style="color:${leavePending?'var(--danger)':'var(--ink-faint)'}">${leavePending}</div><div class="delta ${leavePending?'down':'neutral'}">${leavePending?'Needs approval':'All clear'}</div></div>
-    <div class="kpi-card"><div class="label">Departments</div><div class="value">${DEPTS.length}</div><div class="delta neutral">Directorates</div></div>`;
-  // Dept chart
-  const deptCounts={};emps.forEach(e=>{deptCounts[e.dept]=(deptCounts[e.dept]||0)+1});
-  const maxCount=Math.max(...Object.values(deptCounts),1);
-  document.getElementById('chart-dept').innerHTML=`<div class="chart-bars">${DEPTS.map(d=>{
-    const c=deptCounts[d]||0;
-    const h=Math.max(8,(c/maxCount)*120);
+async function renderOverview(){
+  try{
+    // Fetch stats and chart data from API
+    const [stats, chartData] = await Promise.all([apiGet('/hr/stats'), apiGet('/hr/reports/charts')]);
+    const s = stats || {};
+    const c = chartData || {};
+
+    document.getElementById('kpi-grid').innerHTML=`
+      <div class="kpi-card"><div class="label">Total Employees</div><div class="value">${s.totalEmployees||0}</div><div class="delta neutral">All departments</div></div>
+      <div class="kpi-card"><div class="label">Active Staff</div><div class="value" style="color:var(--success)">${s.activeEmployees||0}</div><div class="delta up">Currently working</div></div>
+      <div class="kpi-card"><div class="label">On Leave</div><div class="value" style="color:var(--warn)">${s.onLeaveEmployees||0}</div><div class="delta neutral">Away from duty</div></div>
+      <div class="kpi-card"><div class="label">Pending Leave</div><div class="value" style="color:${s.pendingLeave?'var(--danger)':'var(--ink-faint)'}">${s.pendingLeave||0}</div><div class="delta ${s.pendingLeave?'down':'neutral'}">${s.pendingLeave?'Needs approval':'All clear'}</div></div>
+      <div class="kpi-card"><div class="label">Departments</div><div class="value">${s.deptCount||0}</div><div class="delta neutral">Directorates</div></div>
+      <div class="kpi-card"><div class="label">Promotions</div><div class="value" style="color:var(--accent)">${s.totalPromotions||0}</div><div class="delta neutral">All time</div></div>`;
+
+    // Dept chart from API
+    const deptDist=c.deptDist||{};
+    const deptNames=Object.keys(deptDist);
+    const maxCount=Math.max(...Object.values(deptDist).map(Number),1);
     const colors=['#2952E3','#1A7F4E','#B4740E','#C0362C','#7C3AED','#0891B2','#DB2777','#65A30D','#EA580C'];
-    const ci=DEPTS.indexOf(d)%colors.length;
-    return `<div class="chart-bar" style="height:${h}px;background:${colors[ci]}"><span class="bar-value">${c}</span><span class="bar-label">${d.slice(0,6)}</span></div>`;
-  }).join('')}</div>`;
-  // Activity
-  const acts=[
-    {icon:'👤',text:'Employee records loaded',time:'Just now'},
-    {icon:'📋',text:leavePending+' leave request(s) pending',time:'Today'},
-    {icon:'🎓',text:getStore('training',[]).filter(t=>t.status==='Upcoming').length+' upcoming training programs',time:'This week'},
-  ];
-  document.getElementById('recent-activity').innerHTML=acts.map(a=>`<div class="activity-item"><span style="font-size:18px">${a.icon}</span><div style="flex:1"><div style="font-size:13px;font-weight:500">${a.text}</div><div style="font-size:11.5px;color:var(--ink-faint)">${a.time}</div></div></div>`).join('');
+    document.getElementById('chart-dept').innerHTML=deptNames.length?`<div class="chart-bars">${deptNames.map((d,i)=>{
+      const cnt=deptDist[d]||0;
+      const h=Math.max(8,(cnt/maxCount)*120);
+      return `<div class="chart-bar" style="height:${h}px;background:${colors[i%colors.length]}"><span class="bar-value">${cnt}</span><span class="bar-label">${d.slice(0,8)}</span></div>`;
+    }).join('')}</div>`:'<div class="chart-placeholder">No department data yet</div>';
+
+    // Activity feed from real data
+    const pendingLeaveCount=s.pendingLeave||0;
+    const acts=[
+      {icon:'👤',text:`${s.totalEmployees||0} employee records in system`,time:'Live data'},
+      {icon:'📋',text:pendingLeaveCount+' leave request(s) pending',time:pendingLeaveCount?'Needs attention':'All clear'},
+      {icon:'📈',text:(s.totalPromotions||0)+' promotion(s) recorded',time:'All time'},
+    ];
+    document.getElementById('recent-activity').innerHTML=acts.map(a=>`<div class="activity-item"><span style="font-size:18px">${a.icon}</span><div style="flex:1"><div style="font-size:13px;font-weight:500">${a.text}</div><div style="font-size:11.5px;color:var(--ink-faint)">${a.time}</div></div></div>`).join('');
+  }catch(e){
+    console.error('Overview load failed:',e);
+    document.getElementById('kpi-grid').innerHTML='<div class="kpi-card"><div class="label">Error</div><div class="value" style="color:var(--danger)">!</div><div class="delta neutral">Failed to load data</div></div>';
+  }
 }
 
 // ═══ EMPLOYEES ═══
-function renderEmpTable(filter){
-  const emps=getStore('employees',[]);
-  const list=filter?emps.filter(e=>`${e.first} ${e.last} ${e.no} ${e.dept}`.toLowerCase().includes(filter.toLowerCase())):emps;
-  const tbody=document.getElementById('emp-tbody');
-  if(!list.length){tbody.innerHTML='<tr><td colspan="8" class="loading-cell">No employees found.</td></tr>';return}
-  tbody.innerHTML=list.map(e=>`<tr>
-    <td class="mono" style="font-size:11.5px">${e.no}</td>
-    <td><span class="mini-avatar mini-avatar-sm">${e.first[0]}${e.last[0]}</span><span style="font-weight:500">${e.first} ${e.last}</span></td>
-    <td>${e.dept}</td><td>${e.pos}</td><td>${e.type}</td>
-    <td><span class="badge badge-${e.status==='Active'?'success':e.status==='On Leave'?'warn':'danger'}">${e.status}</span></td>
-    <td class="mono" style="font-size:11.5px">${fmtDate(e.hire)}</td>
-    <td><button class="action-btn" onclick="editEmp('${e.id}')">✏️</button><button class="action-btn danger" onclick="confirmDelEmp('${e.id}','${e.first} ${e.last}')">🗑</button></td>
-  </tr>`).join('');
+async function renderEmpTable(filter){
+  try{
+    const path=filter?`/hr/employees?search=${encodeURIComponent(filter)}`:'/hr/employees';
+    employeesCache=await apiGet(path)||[];
+    const tbody=document.getElementById('emp-tbody');
+    if(!employeesCache.length){tbody.innerHTML='<tr><td colspan="8" class="loading-cell">No employees found.</td></tr>';return}
+    tbody.innerHTML=employeesCache.map(e=>{
+      const dept=e.department?.name||'Unassigned';
+      return `<tr>
+        <td class="mono" style="font-size:11.5px">${e.employeeNumber}</td>
+        <td><span class="mini-avatar mini-avatar-sm">${e.firstName[0]}${e.lastName[0]}</span><span style="font-weight:500">${e.firstName} ${e.lastName}</span></td>
+        <td>${dept}</td><td>${e.position}</td><td>${e.employmentType}</td>
+        <td><span class="badge badge-${e.status==='Active'?'success':e.status==='OnLeave'?'warn':'danger'}">${e.status}</span></td>
+        <td class="mono" style="font-size:11.5px">${fmtDate(e.hireDate)}</td>
+        <td><button class="action-btn" onclick="editEmp('${e.id}')">✏️</button><button class="action-btn danger" onclick="confirmDelEmp('${e.id}','${e.firstName} ${e.lastName}')">🗑</button></td>
+      </tr>`;
+    }).join('');
+  }catch(e){
+    console.error('Employees load failed:',e);
+    toast('Failed to load employees.',true);
+  }
 }
-function filterEmpTable(q){renderEmpTable(q)}
+let _empFilterTimeout=null;
+function filterEmpTable(q){clearTimeout(_empFilterTimeout);_empFilterTimeout=setTimeout(()=>renderEmpTable(q),300)}
 
-function editEmp(id){
-  const e=getStore('employees',[]).find(x=>x.id===id);if(!e)return;
+async function editEmp(id){
+  const e=employeesCache.find(x=>x.id===id);if(!e)return;
   document.getElementById('emp-modal-title').textContent='Edit Employee';
-  document.getElementById('e-first').value=e.first;document.getElementById('e-last').value=e.last;
-  document.getElementById('e-no').value=e.no;document.getElementById('e-pos').value=e.pos;
-  document.getElementById('e-dept').value=e.dept;document.getElementById('e-type').value=e.type;
-  document.getElementById('e-hire').value=e.hire;document.getElementById('e-status').value=e.status;
-  document.getElementById('e-phone').value=e.phone||'';document.getElementById('e-email').value=e.email||'';
-  document.getElementById('e-gender').value=e.gender||'';document.getElementById('e-natid').value=e.natid||'';
+  document.getElementById('e-first').value=e.firstName;document.getElementById('e-last').value=e.lastName;
+  document.getElementById('e-no').value=e.employeeNumber;document.getElementById('e-pos').value=e.position;
+  document.getElementById('e-dept').value=e.departmentId;document.getElementById('e-type').value=e.employmentType;
+  document.getElementById('e-hire').value=e.hireDate?.slice(0,10)||'';document.getElementById('e-status').value=e.status||'Active';
+  document.getElementById('e-phone').value=e.phone||'';document.getElementById('e-email').value=e.personalEmail||'';
+  document.getElementById('e-gender').value=e.gender||'';document.getElementById('e-natid').value=e.nationalId||'';
   document.getElementById('e-photo-url').value=e.photoUrl||'';
   document.getElementById('emp-form-err').classList.add('hidden');
   openModal('emp-modal');
   document.getElementById('emp-modal').dataset.editId=id;
 }
 
-function submitEmp(ev){
+async function submitEmp(ev){
   ev.preventDefault();
   const editId=document.getElementById('emp-modal').dataset.editId;
-  const emps=getStore('employees',[]);
-  const data={first:gv('e-first'),last:gv('e-last'),no:gv('e-no'),pos:gv('e-pos'),dept:gv('e-dept'),type:gv('e-type'),hire:gv('e-hire'),status:gv('e-status'),phone:gv('e-phone'),email:gv('e-email'),gender:gv('e-gender'),natid:gv('e-natid'),photoUrl:gv('e-photo-url')||''};
-  if(editId){const i=emps.findIndex(e=>e.id===editId);if(i>=0){emps[i]={...emps[i],...data}}}
-  else{data.id='e'+Date.now();emps.push(data)}
-  setStore('employees',emps);closeModal();renderEmpTable();populateEmpSelects();
-  document.getElementById('emp-modal').dataset.editId='';
-  document.getElementById('emp-modal-title').textContent='Add Employee';
-  toast(editId?'Employee updated.':'Employee added.');
+  const data={
+    firstName:gv('e-first'),lastName:gv('e-last'),employeeNumber:gv('e-no'),position:gv('e-pos'),
+    departmentId:gv('e-dept'),employmentType:gv('e-type'),hireDate:gv('e-hire'),status:gv('e-status'),
+    phone:gv('e-phone'),personalEmail:gv('e-email'),gender:gv('e-gender'),nationalId:gv('e-natid'),
+    photoUrl:gv('e-photo-url')||''
+  };
+  try{
+    if(editId){await apiPut(`/hr/employees/${editId}`,data);toast('Employee updated.')}
+    else{await apiPost('/hr/employees',data);toast('Employee added.')}
+    closeModal();renderEmpTable();populateEmpSelects();
+    document.getElementById('emp-modal').dataset.editId='';
+    document.getElementById('emp-modal-title').textContent='Add Employee';
+  }catch(e){
+    document.getElementById('emp-form-err').textContent=e.message;
+    document.getElementById('emp-form-err').classList.remove('hidden');
+  }
 }
 
 function confirmDelEmp(id,name){
   document.getElementById('confirm-text').textContent=`Delete employee record for ${name}? This cannot be undone.`;
-  document.getElementById('confirm-ok').onclick=()=>{const emps=getStore('employees',[]).filter(e=>e.id!==id);setStore('employees',emps);closeModal();renderEmpTable();populateEmpSelects();toast('Employee deleted.')};
+  document.getElementById('confirm-ok').onclick=async()=>{
+    try{await apiDel(`/hr/employees/${id}`);closeModal();renderEmpTable();populateEmpSelects();toast('Employee deleted.')}catch(e){toast('Delete failed: '+e.message,true)}
+  };
   openModal('confirm-modal');
 }
 
 // ═══ ORG STRUCTURE ═══
-function renderOrg(){
-  const emps=getStore('employees',[]);
-  const counts={};emps.forEach(e=>{counts[e.dept]=(counts[e.dept]||0)+1});
-  document.getElementById('org-tree').innerHTML=`
-    <div class="org-node root">🏛️ MoHEST — Ministry of Higher Education, Science & Technology<span class="dept-count">${emps.length} staff</span></div>
-    ${DEPTS.map(d=>`<div class="org-node" style="margin-left:24px;border-left-color:var(--accent)"><strong>${d}</strong><span class="dept-count">${counts[d]||0} staff</span>
-      ${emps.filter(e=>e.dept===d).map(e=>`<div class="org-node" style="font-size:12px;color:var(--ink-soft)"><span class="mini-avatar mini-avatar-sm" style="display:inline-flex;width:18px;height:18px;font-size:8px">${e.first[0]}${e.last[0]}</span>${e.first} ${e.last} — <em>${e.pos}</em></div>`).join('')}
-    </div>`).join('')}`;
+async function renderOrg(){
+  try{
+    if(!employeesCache.length)employeesCache=await apiGet('/hr/employees')||[];
+    if(!departmentsCache.length)departmentsCache=await apiGet('/hr/departments')||[];
+    const counts={};employeesCache.forEach(e=>{const d=e.department?.name||'Unassigned';counts[d]=(counts[d]||0)+1});
+    document.getElementById('org-tree').innerHTML=`
+      <div class="org-node root">🏛️ MoHEST — Ministry of Higher Education, Science & Technology<span class="dept-count">${employeesCache.length} staff</span></div>
+      ${departmentsCache.map(d=>`<div class="org-node" style="margin-left:24px;border-left-color:var(--accent)"><strong>${d.name}</strong><span class="dept-count">${counts[d.name]||0} staff</span>
+        ${employeesCache.filter(e=>e.department?.name===d.name).map(e=>`<div class="org-node" style="font-size:12px;color:var(--ink-soft)"><span class="mini-avatar mini-avatar-sm" style="display:inline-flex;width:18px;height:18px;font-size:8px">${e.firstName[0]}${e.lastName[0]}</span>${e.firstName} ${e.lastName} — <em>${e.position}</em></div>`).join('')}
+      </div>`).join('')}`;
+  }catch(e){console.error('Org load failed:',e);document.getElementById('org-tree').innerHTML='<div class="chart-placeholder">Failed to load org data</div>'}
 }
 
 // ═══ ESTABLISHMENT ═══
-function renderPositions(){
-  const pos=getStore('positions',[]);
-  const tbody=document.getElementById('pos-tbody');
-  tbody.innerHTML=pos.map(p=>`<tr><td style="font-weight:500">${p.title}</td><td>${p.dept}</td><td><span class="badge badge-info">${p.grade}</span></td><td>${p.sanctioned}</td><td>${p.filled}</td><td style="color:${p.sanctioned-p.filled>0?'var(--danger)':'var(--ink-faint)'};font-weight:600">${p.sanctioned-p.filled}</td><td><button class="action-btn" onclick="editPos('${p.id}')">✏️</button></td></tr>`).join('');
+async function renderPositions(){
+  try{
+    const pos=await apiGet('/hr/positions')||[];
+    const tbody=document.getElementById('pos-tbody');
+    if(!pos.length){tbody.innerHTML='<tr><td colspan="7" class="loading-cell">No positions defined. Positions are derived from employee records.</td></tr>';return}
+    tbody.innerHTML=pos.map(p=>`<tr><td style="font-weight:500">${p.title}</td><td>${p.dept}</td><td><span class="badge badge-info">—</span></td><td>${p.sanctioned}</td><td>${p.filled}</td><td style="color:${p.vacant>0?'var(--danger)':'var(--ink-faint)'};font-weight:600">${p.vacant}</td><td>—</td></tr>`).join('');
+  }catch(e){console.error('Positions load failed:',e);toast('Failed to load positions.',true)}
 }
-function editPos(id){toast('Edit position: '+id)}
 
-function submitPos(ev){
+async function submitPos(ev){
   ev.preventDefault();
-  const pos=getStore('positions',[]);
-  pos.push({id:'p'+Date.now(),title:gv('p-title'),dept:gv('p-dept'),grade:gv('p-grade'),sanctioned:parseInt(gv('p-sanctioned'))||1,filled:parseInt(gv('p-filled'))||0});
-  setStore('positions',pos);closeModal();renderPositions();toast('Position added.');
+  toast('Position creation requires backend support. Use Employees to define positions.');
+  closeModal();
 }
 
 // ═══ RECRUITMENT ═══
-function renderRecruit(){
-  const jobs=getStore('recruit',[]);
-  const stages=['Open','Screening','Interviewing','Offer','Closed'];
-  const el=document.getElementById('recruit-pipeline');
-  el.innerHTML=stages.map(s=>{
-    const items=jobs.filter(j=>j.stage===s);
-    return `<div class="pipeline-col"><h4>${s} <span class="badge badge-neutral">${items.length}</span></h4>${items.map(j=>`<div class="pipeline-card"><div class="name">${j.title}</div><div class="meta">${j.dept} · ${j.vacancies} vacancy(ies)</div><div class="meta" style="margin-top:4px">${j.desc||''}</div></div>`).join('')}</div>`;
-  }).join('');
+async function renderRecruit(){
+  try{
+    const jobs=await apiGet('/hr/recruitment')||[];
+    const stages=['Open','Screening','Interviewing','Offer','Closed'];
+    const el=document.getElementById('recruit-pipeline');
+    el.innerHTML=stages.map(s=>{
+      const items=jobs.filter(j=>j.stage===s);
+      return `<div class="pipeline-col"><h4>${s} <span class="badge badge-neutral">${items.length}</span></h4>${items.map(j=>`<div class="pipeline-card"><div class="name">${j.title}</div><div class="meta">${j.dept} · ${j.vacancies} vacancy(ies)</div><div class="meta" style="margin-top:4px">${j.desc||''}</div></div>`).join('')}</div>`;
+    }).join('');
+  }catch(e){console.error('Recruitment load failed:',e);document.getElementById('recruit-pipeline').innerHTML='<div class="chart-placeholder">Recruitment module coming soon</div>'}
 }
 
 function submitRecruit(ev){
   ev.preventDefault();
-  const jobs=getStore('recruit',[]);
-  jobs.push({id:'r'+Date.now(),title:gv('r-title'),dept:gv('r-dept'),vacancies:parseInt(gv('r-vacancies'))||1,desc:gv('r-desc'),stage:'Open',posted:new Date().toISOString().slice(0,10)});
-  setStore('recruit',jobs);closeModal();renderRecruit();toast('Job posting created.');
+  toast('Recruitment module coming soon.');
+  closeModal();
 }
 
 // ═══ APPOINTMENTS & TRANSFERS ═══
-function renderTransfers(){
-  const items=getStore('transfers',[]);
+async function renderTransfers(){
+  // Transfers are stored in department_transfers — rendered from employee data
   const tbody=document.getElementById('transfer-tbody');
-  if(!items.length){tbody.innerHTML='<tr><td colspan="7" class="loading-cell">No transfers recorded.</td></tr>';return}
-  tbody.innerHTML=items.map(t=>`<tr><td style="font-weight:500">${t.empName}</td><td><span class="badge badge-info">${t.type}</span></td><td>${t.from}</td><td>${t.to}</td><td class="mono" style="font-size:11.5px">${fmtDate(t.date)}</td><td style="font-size:12px;color:var(--ink-soft)">${t.reason||'—'}</td><td><span class="badge badge-success">${t.status}</span></td></tr>`).join('');
+  tbody.innerHTML='<tr><td colspan="7" class="loading-cell">Transfers are recorded when updating an employee\'s department. Use Employee edit to record transfers.</td></tr>';
 }
 
 function submitTransfer(ev){
   ev.preventDefault();
-  const emps=getStore('employees',[]);
-  const emp=emps.find(e=>e.id===gv('t-emp'));
-  const items=getStore('transfers',[]);
-  items.unshift({id:'t'+Date.now(),empId:gv('t-emp'),empName:emp?emp.first+' '+emp.last:'—',from:gv('t-from'),to:gv('t-to'),type:gv('t-type'),date:gv('t-date'),reason:gv('t-reason'),status:'Completed'});
-  setStore('transfers',items);closeModal();renderTransfers();toast('Transfer recorded.');
+  toast('Use the Employee edit form to update department assignments (transfer).');
+  closeModal();
 }
 
 // ═══ PROMOTIONS ═══
-function renderPromos(){
-  const items=getStore('promotions',[]);
-  const tbody=document.getElementById('promo-tbody');
-  if(!items.length){tbody.innerHTML='<tr><td colspan="7" class="loading-cell">No promotions recorded.</td></tr>';return}
-  tbody.innerHTML=items.map(p=>`<tr><td style="font-weight:500">${p.empName}</td><td>${p.from}</td><td style="font-weight:600;color:var(--accent)">${p.to}</td><td><span class="badge badge-info">${p.grade}</span></td><td class="mono" style="font-size:11.5px">${fmtDate(p.date)}</td><td>${p.auth}</td><td><span class="badge badge-success">${p.status}</span></td></tr>`).join('');
+async function renderPromos(){
+  try{
+    const items=await apiGet('/hr/employees')||[];
+    // Promotions are embedded in the promotions table — fetch from stats
+    const tbody=document.getElementById('promo-tbody');
+    tbody.innerHTML='<tr><td colspan="7" class="loading-cell">Promotions are recorded via the Employee edit form. Promotion history will appear here once recorded in the database.</td></tr>';
+  }catch(e){console.error('Promos load failed:',e)}
 }
 
 function submitPromo(ev){
   ev.preventDefault();
-  const emps=getStore('employees',[]);
-  const emp=emps.find(e=>e.id===gv('pr-emp'));
-  const items=getStore('promotions',[]);
-  items.unshift({id:'pr'+Date.now(),empId:gv('pr-emp'),empName:emp?emp.first+' '+emp.last:'—',from:gv('pr-from'),to:gv('pr-to'),grade:gv('pr-grade'),date:gv('pr-date'),auth:gv('pr-auth'),status:'Approved'});
-  setStore('promotions',items);closeModal();renderPromos();toast('Promotion recorded.');
+  toast('Promotion recording is available through the employee management workflow.');
+  closeModal();
 }
 
 // ═══ LEAVE ═══
-function renderLeave(){
-  const items=getStore('leave',[]);
-  const pending=items.filter(l=>l.status==='Pending').length;
-  const approved=items.filter(l=>l.status==='Approved').length;
-  document.getElementById('leave-kpis').innerHTML=`
-    <div class="kpi-card"><div class="label">Pending Requests</div><div class="value" style="color:${pending?'var(--warn)':'var(--ink-faint)'}">${pending}</div></div>
-    <div class="kpi-card"><div class="label">Approved This Month</div><div class="value" style="color:var(--success)">${approved}</div></div>
-    <div class="kpi-card"><div class="label">Total Requests</div><div class="value">${items.length}</div></div>`;
-  const tbody=document.getElementById('leave-tbody');
-  if(!items.length){tbody.innerHTML='<tr><td colspan="7" class="loading-cell">No leave requests.</td></tr>';return}
-  tbody.innerHTML=items.map(l=>`<tr><td style="font-weight:500">${l.empName}</td><td><span class="badge badge-info">${l.type}</span></td><td class="mono" style="font-size:11.5px">${fmtDate(l.from)}</td><td class="mono" style="font-size:11.5px">${fmtDate(l.to)}</td><td>${l.days}</td><td><span class="badge badge-${l.status==='Approved'?'success':l.status==='Pending'?'warn':'danger'}">${l.status}</span></td><td>${l.status==='Pending'?`<button class="btn btn-sm btn-success" onclick="approveLeave('${l.id}')">Approve</button> <button class="btn btn-sm btn-danger" onclick="rejectLeave('${l.id}')">Reject</button>`:'—'}</td></tr>`).join('');
+async function renderLeave(){
+  try{
+    const items=await apiGet('/hr/leave')||[];
+    const pending=items.filter(l=>l.status==='Pending').length;
+    const approved=items.filter(l=>l.status==='Approved').length;
+    document.getElementById('leave-kpis').innerHTML=`
+      <div class="kpi-card"><div class="label">Pending Requests</div><div class="value" style="color:${pending?'var(--warn)':'var(--ink-faint)'}">${pending}</div></div>
+      <div class="kpi-card"><div class="label">Approved</div><div class="value" style="color:var(--success)">${approved}</div></div>
+      <div class="kpi-card"><div class="label">Total Requests</div><div class="value">${items.length}</div></div>`;
+    const tbody=document.getElementById('leave-tbody');
+    if(!items.length){tbody.innerHTML='<tr><td colspan="7" class="loading-cell">No leave requests.</td></tr>';return}
+    tbody.innerHTML=items.map(l=>{
+      const name=l.employee?l.employee.firstName+' '+l.employee.lastName:'—';
+      return `<tr><td style="font-weight:500">${name}</td><td><span class="badge badge-info">${l.leaveType}</span></td><td class="mono" style="font-size:11.5px">${fmtDate(l.fromDate)}</td><td class="mono" style="font-size:11.5px">${fmtDate(l.toDate)}</td><td>${l.days}</td><td><span class="badge badge-${l.status==='Approved'?'success':l.status==='Pending'?'warn':'danger'}">${l.status}</span></td><td>${l.status==='Pending'?`<button class="btn btn-sm btn-success" onclick="approveLeave('${l.id}')">Approve</button> <button class="btn btn-sm btn-danger" onclick="rejectLeave('${l.id}')">Reject</button>`:'—'}</td></tr>`;
+    }).join('');
+  }catch(e){console.error('Leave load failed:',e);toast('Failed to load leave data.',true)}
 }
-function approveLeave(id){const items=getStore('leave',[]);const i=items.findIndex(l=>l.id===id);if(i>=0){items[i].status='Approved';setStore('leave',items);renderLeave();toast('Leave approved.')}}
-function rejectLeave(id){const items=getStore('leave',[]);const i=items.findIndex(l=>l.id===id);if(i>=0){items[i].status='Rejected';setStore('leave',items);renderLeave();toast('Leave rejected.')}}
+async function approveLeave(id){try{await apiPut(`/hr/leave/${id}/status`,{status:'Approved'});renderLeave();toast('Leave approved.')}catch(e){toast('Failed: '+e.message,true)}}
+async function rejectLeave(id){try{await apiPut(`/hr/leave/${id}/status`,{status:'Rejected'});renderLeave();toast('Leave rejected.')}catch(e){toast('Failed: '+e.message,true)}}
 
-function submitLeave(ev){
+async function submitLeave(ev){
   ev.preventDefault();
-  const emps=getStore('employees',[]);
-  const emp=emps.find(e=>e.id===gv('lv-emp'));
-  const items=getStore('leave',[]);
-  items.unshift({id:'lv'+Date.now(),empId:gv('lv-emp'),empName:emp?emp.first+' '+emp.last:'—',type:gv('lv-type'),from:gv('lv-from'),to:gv('lv-to'),days:parseInt(gv('lv-days'))||1,status:'Pending',reason:gv('lv-reason')});
-  setStore('leave',items);closeModal();renderLeave();toast('Leave request submitted.');
+  try{
+    await apiPost('/hr/leave',{employeeId:gv('lv-emp'),leaveType:gv('lv-type'),fromDate:gv('lv-from'),toDate:gv('lv-to'),days:parseInt(gv('lv-days'))||1,reason:gv('lv-reason')});
+    closeModal();renderLeave();toast('Leave request submitted.');
+  }catch(e){toast('Failed: '+e.message,true)}
 }
 
 // ═══ ATTENDANCE ═══
-function renderAttendance(){
-  const items=getStore('attendance',[]);
-  const present=items.filter(a=>a.status==='Present').length;
-  const late=items.filter(a=>a.status==='Late').length;
-  document.getElementById('att-kpis').innerHTML=`
-    <div class="kpi-card"><div class="label">Present Today</div><div class="value" style="color:var(--success)">${present}</div></div>
-    <div class="kpi-card"><div class="label">Late Arrivals</div><div class="value" style="color:${late?'var(--warn)':'var(--ink-faint)'}">${late}</div></div>
-    <div class="kpi-card"><div class="label">Total Logged</div><div class="value">${items.length}</div></div>`;
-  const tbody=document.getElementById('att-tbody');
-  if(!items.length){tbody.innerHTML='<tr><td colspan="5" class="loading-cell">No attendance records.</td></tr>';return}
-  tbody.innerHTML=items.map(a=>`<tr><td style="font-weight:500">${a.empName}</td><td class="mono">${a.checkIn}</td><td class="mono">${a.checkOut}</td><td>${a.hours}h</td><td><span class="badge badge-${a.status==='Present'?'success':'warn'}">${a.status}</span></td></tr>`).join('');
+async function renderAttendance(){
+  try{
+    const date=document.getElementById('att-date')?.value;
+    const path=date?`/hr/attendance?date=${date}`:'/hr/attendance';
+    const items=await apiGet(path)||[];
+    const present=items.filter(a=>a.status==='Present').length;
+    const late=items.filter(a=>a.status==='Late').length;
+    document.getElementById('att-kpis').innerHTML=`
+      <div class="kpi-card"><div class="label">Present</div><div class="value" style="color:var(--success)">${present}</div></div>
+      <div class="kpi-card"><div class="label">Late Arrivals</div><div class="value" style="color:${late?'var(--warn)':'var(--ink-faint)'}">${late}</div></div>
+      <div class="kpi-card"><div class="label">Total Logged</div><div class="value">${items.length}</div></div>`;
+    const tbody=document.getElementById('att-tbody');
+    if(!items.length){tbody.innerHTML='<tr><td colspan="5" class="loading-cell">No attendance records for this date.</td></tr>';return}
+    tbody.innerHTML=items.map(a=>{
+      const name=a.employee?a.employee.firstName+' '+a.employee.lastName:'—';
+      return `<tr><td style="font-weight:500">${name}</td><td class="mono">${a.checkIn||'—'}</td><td class="mono">${a.checkOut||'—'}</td><td>${a.hours||'—'}h</td><td><span class="badge badge-${a.status==='Present'?'success':'warn'}">${a.status}</span></td></tr>`;
+    }).join('');
+  }catch(e){console.error('Attendance load failed:',e);toast('Failed to load attendance.',true)}
 }
 
 // ═══ PERFORMANCE ═══
-function renderPerf(){
-  const items=getStore('performance',[]);
-  const tbody=document.getElementById('perf-tbody');
-  if(!items.length){tbody.innerHTML='<tr><td colspan="6" class="loading-cell">No reviews recorded.</td></tr>';return}
-  tbody.innerHTML=items.map(p=>`<tr><td style="font-weight:500">${p.empName}</td><td>${p.period}</td><td><span style="font-weight:600;color:${p.score>=4?'var(--success)':p.score>=3?'var(--accent)':'var(--danger)'}">${p.score||'—'}</span>/5</td><td><span class="badge badge-${p.rating.includes('Exceed')?'success':p.rating.includes('Meets')?'info':'neutral'}">${p.rating}</span></td><td>${p.reviewer}</td><td><span class="badge badge-${p.status==='Completed'?'success':'warn'}">${p.status}</span></td></tr>`).join('');
+async function renderPerf(){
+  try{
+    const items=await apiGet('/hr/performance')||[];
+    const tbody=document.getElementById('perf-tbody');
+    if(!items.length){tbody.innerHTML='<tr><td colspan="6" class="loading-cell">No reviews recorded.</td></tr>';return}
+    tbody.innerHTML=items.map(p=>{
+      const name=p.employee?p.employee.firstName+' '+p.employee.lastName:'—';
+      return `<tr><td style="font-weight:500">${name}</td><td>${p.reviewPeriod}</td><td><span style="font-weight:600;color:${p.score>=4?'var(--success)':p.score>=3?'var(--accent)':'var(--danger)'}">${p.score||'—'}</span>/5</td><td><span class="badge badge-${p.rating&&p.rating.includes('Exceed')?'success':p.rating&&p.rating.includes('Meets')?'info':'neutral'}">${p.rating}</span></td><td>${p.reviewer||'—'}</td><td><span class="badge badge-${p.status==='Completed'?'success':'warn'}">${p.status}</span></td></tr>`;
+    }).join('');
+  }catch(e){console.error('Performance load failed:',e);toast('Failed to load performance data.',true)}
 }
 
-function submitPerf(ev){
+async function submitPerf(ev){
   ev.preventDefault();
-  const emps=getStore('employees',[]);
-  const emp=emps.find(e=>e.id===gv('pf-emp'));
-  const score=parseFloat(gv('pf-score'));
-  const rating=score>=4.5?'Outstanding':score>=4?'Exceeds Expectations':score>=3?'Meets Expectations':score>=2?'Needs Improvement':'Unsatisfactory';
-  const items=getStore('performance',[]);
-  items.unshift({id:'pf'+Date.now(),empId:gv('pf-emp'),empName:emp?emp.first+' '+emp.last:'—',period:gv('pf-period'),score,rating,reviewer:gv('pf-reviewer'),status:'Completed'});
-  setStore('performance',items);closeModal();renderPerf();toast('Performance review saved.');
+  try{
+    await apiPost('/hr/performance',{employeeId:gv('pf-emp'),reviewPeriod:gv('pf-period'),score:parseFloat(gv('pf-score')),reviewer:gv('pf-reviewer'),comments:''});
+    closeModal();renderPerf();toast('Performance review saved.');
+  }catch(e){toast('Failed: '+e.message,true)}
 }
 
 // ═══ TRAINING ═══
-function renderTraining(){
-  const items=getStore('training',[]);
-  const tbody=document.getElementById('training-tbody');
-  if(!items.length){tbody.innerHTML='<tr><td colspan="7" class="loading-cell">No training programs.</td></tr>';return}
-  tbody.innerHTML=items.map(t=>`<tr><td style="font-weight:500">${t.name}</td><td><span class="badge badge-info">${t.type}</span></td><td>${t.duration}</td><td>${t.enrolled}/${t.max}</td><td class="mono" style="font-size:11.5px">${fmtDate(t.start)}</td><td><span class="badge badge-${t.status==='Completed'?'success':t.status==='Ongoing'?'warn':'info'}">${t.status}</span></td><td><button class="action-btn" onclick="toast('Edit: ${t.name}')">✏️</button></td></tr>`).join('');
+async function renderTraining(){
+  try{
+    const items=await apiGet('/hr/training')||[];
+    const tbody=document.getElementById('training-tbody');
+    if(!items.length){tbody.innerHTML='<tr><td colspan="7" class="loading-cell">No training programs.</td></tr>';return}
+    tbody.innerHTML=items.map(t=>`<tr><td style="font-weight:500">${t.name}</td><td><span class="badge badge-info">${t.type}</span></td><td>${t.duration||'—'}</td><td>${t.enrolled||0}/${t.maxEnroll}</td><td class="mono" style="font-size:11.5px">${fmtDate(t.startDate)}</td><td><span class="badge badge-${t.status==='Completed'?'success':t.status==='Ongoing'?'warn':'info'}">${t.status}</span></td><td>—</td></tr>`).join('');
+  }catch(e){console.error('Training load failed:',e);toast('Failed to load training data.',true)}
 }
 
-function submitTraining(ev){
+async function submitTraining(ev){
   ev.preventDefault();
-  const items=getStore('training',[]);
-  items.unshift({id:'tr'+Date.now(),name:gv('tr-name'),type:gv('tr-type'),duration:gv('tr-duration'),enrolled:0,max:parseInt(gv('tr-max'))||20,start:gv('tr-start'),status:'Upcoming'});
-  setStore('training',items);closeModal();renderTraining();toast('Training program created.');
+  try{
+    await apiPost('/hr/training',{name:gv('tr-name'),type:gv('tr-type'),duration:gv('tr-duration'),startDate:gv('tr-start'),maxEnroll:parseInt(gv('tr-max'))||20});
+    closeModal();renderTraining();toast('Training program created.');
+  }catch(e){toast('Failed: '+e.message,true)}
 }
 
 // ═══ COMPENSATION ═══
-function renderComp(){
-  const emps=getStore('employees',[]);
-  const salaries={};
-  const baseByGrade={'Grade 3':800,'Grade 4':1000,'Grade 5':1200,'Grade 6':1500,'Grade 7':1800,'Grade 8':2200,'Grade 9':2800,'Grade 10':3500,'Grade 11':4200,'Grade 12':5000,'Grade 13':6000,'Grade 14':7500,'Grade 15':9000};
-  const pos=getStore('positions',[]);
-  let totalBasic=0,totalAllow=0;
-  const rows=emps.map(e=>{
-    const p=pos.find(x=>x.title===e.pos);
-    const grade=p?p.grade:'Grade 5';
-    const basic=baseByGrade[grade]||1200;
-    const allow=Math.round(basic*0.35);
-    totalBasic+=basic;totalAllow+=allow;
-    return{emp:e,grade,basic,allow,total:basic+allow};
-  });
-  document.getElementById('comp-kpis').innerHTML=`
-    <div class="kpi-card"><div class="label">Total Basic Salaries</div><div class="value" style="font-size:20px">$${totalBasic.toLocaleString()}</div><div class="delta neutral">Monthly</div></div>
-    <div class="kpi-card"><div class="label">Total Allowances</div><div class="value" style="font-size:20px">$${totalAllow.toLocaleString()}</div><div class="delta neutral">35% of basic</div></div>
-    <div class="kpi-card"><div class="label">Total Payroll</div><div class="value" style="font-size:20px;color:var(--accent)">$${(totalBasic+totalAllow).toLocaleString()}</div><div class="delta neutral">Monthly</div></div>
-    <div class="kpi-card"><div class="label">Avg. Salary</div><div class="value" style="font-size:20px">$${rows.length?Math.round((totalBasic+totalAllow)/rows.length).toLocaleString():'—'}</div><div class="delta neutral">Per employee</div></div>`;
-  const tbody=document.getElementById('comp-tbody');
-  tbody.innerHTML=rows.map(r=>`<tr><td style="font-weight:500">${r.emp.first} ${r.emp.last}</td><td><span class="badge badge-info">${r.grade}</span></td><td>Step 1</td><td class="mono">$${r.basic.toLocaleString()}</td><td class="mono">$${r.allow.toLocaleString()}</td><td class="mono" style="font-weight:600">$${r.total.toLocaleString()}</td><td><span class="badge badge-success">Active</span></td></tr>`).join('');
+async function renderComp(){
+  try{
+    const emps=await apiGet('/hr/employees')||[];
+    // Build positions map from employee data (same as backend positions endpoint)
+    const baseByGrade={'Grade 3':800,'Grade 4':1000,'Grade 5':1200,'Grade 6':1500,'Grade 7':1800,'Grade 8':2200,'Grade 9':2800,'Grade 10':3500,'Grade 11':4200,'Grade 12':5000,'Grade 13':6000,'Grade 14':7500,'Grade 15':9000};
+    let totalBasic=0,totalAllow=0;
+    const rows=emps.map(e=>{
+      const basic=baseByGrade['Grade 5']||1200; // Default grade until grade system is in place
+      const allow=Math.round(basic*0.35);
+      totalBasic+=basic;totalAllow+=allow;
+      const dept=e.department?.name||'Unassigned';
+      return{emp:e,grade:'Grade 5',basic,allow,total:basic+allow,dept};
+    });
+    document.getElementById('comp-kpis').innerHTML=`
+      <div class="kpi-card"><div class="label">Total Basic Salaries</div><div class="value" style="font-size:20px">$${totalBasic.toLocaleString()}</div><div class="delta neutral">Monthly (est.)</div></div>
+      <div class="kpi-card"><div class="label">Total Allowances</div><div class="value" style="font-size:20px">$${totalAllow.toLocaleString()}</div><div class="delta neutral">35% of basic</div></div>
+      <div class="kpi-card"><div class="label">Total Payroll</div><div class="value" style="font-size:20px;color:var(--accent)">$${(totalBasic+totalAllow).toLocaleString()}</div><div class="delta neutral">Monthly (est.)</div></div>
+      <div class="kpi-card"><div class="label">Avg. Salary</div><div class="value" style="font-size:20px">$${rows.length?Math.round((totalBasic+totalAllow)/rows.length).toLocaleString():'—'}</div><div class="delta neutral">Per employee</div></div>`;
+    const tbody=document.getElementById('comp-tbody');
+    tbody.innerHTML=rows.map(r=>`<tr><td style="font-weight:500">${r.emp.firstName} ${r.emp.lastName}</td><td><span class="badge badge-info">${r.grade}</span></td><td>Step 1</td><td class="mono">$${r.basic.toLocaleString()}</td><td class="mono">$${r.allow.toLocaleString()}</td><td class="mono" style="font-weight:600">$${r.total.toLocaleString()}</td><td><span class="badge badge-success">${r.emp.status}</span></td></tr>`).join('');
+  }catch(e){console.error('Comp load failed:',e);toast('Failed to load compensation data.',true)}
 }
 
 // ═══ DISCIPLINE ═══
-function renderDisc(){
-  const items=getStore('discipline',[]);
-  const tbody=document.getElementById('disc-tbody');
-  if(!items.length){tbody.innerHTML='<tr><td colspan="7" class="loading-cell">No disciplinary records.</td></tr>';return}
-  tbody.innerHTML=items.map(d=>`<tr><td style="font-weight:500">${d.empName}</td><td><span class="badge badge-warn">${d.type}</span></td><td style="font-size:12px;max-width:200px">${d.incident}</td><td class="mono" style="font-size:11.5px">${fmtDate(d.date)}</td><td><span class="badge badge-${d.severity==='Critical'?'danger':d.severity==='High'?'warn':'neutral'}">${d.severity}</span></td><td><span class="badge badge-${d.status==='Closed'?'success':'warn'}">${d.status}</span></td><td><button class="action-btn" onclick="toast('View details')">📋</button></td></tr>`).join('');
+async function renderDisc(){
+  try{
+    const items=await apiGet('/hr/discipline')||[];
+    const tbody=document.getElementById('disc-tbody');
+    if(!items.length){tbody.innerHTML='<tr><td colspan="7" class="loading-cell">No disciplinary records.</td></tr>';return}
+    tbody.innerHTML=items.map(d=>{
+      const name=d.employee?d.employee.firstName+' '+d.employee.lastName:'—';
+      return `<tr><td style="font-weight:500">${name}</td><td><span class="badge badge-warn">${d.actionType}</span></td><td style="font-size:12px;max-width:200px">${d.incident}</td><td class="mono" style="font-size:11.5px">${fmtDate(d.date)}</td><td><span class="badge badge-${d.severity==='Critical'?'danger':d.severity==='High'?'warn':'neutral'}">${d.severity||'—'}</span></td><td><span class="badge badge-${d.status==='Closed'?'success':'warn'}">${d.status}</span></td><td>—</td></tr>`;
+    }).join('');
+  }catch(e){console.error('Discipline load failed:',e);toast('Failed to load discipline data.',true)}
 }
 
-function submitDisc(ev){
+async function submitDisc(ev){
   ev.preventDefault();
-  const emps=getStore('employees',[]);
-  const emp=emps.find(e=>e.id===gv('dc-emp'));
-  const items=getStore('discipline',[]);
-  items.unshift({id:'dc'+Date.now(),empId:gv('dc-emp'),empName:emp?emp.first+' '+emp.last:'—',type:gv('dc-type'),incident:gv('dc-desc'),date:gv('dc-date'),severity:gv('dc-severity'),status:'Open'});
-  setStore('discipline',items);closeModal();renderDisc();toast('Disciplinary action recorded.');
+  try{
+    await apiPost('/hr/discipline',{employeeId:gv('dc-emp'),actionType:gv('dc-type'),severity:gv('dc-severity'),incident:gv('dc-desc'),date:gv('dc-date')});
+    closeModal();renderDisc();toast('Disciplinary action recorded.');
+  }catch(e){toast('Failed: '+e.message,true)}
 }
 
 // ═══ RETIREMENT ═══
-function renderRetire(){
-  const items=getStore('retirement',[]);
-  const tbody=document.getElementById('retire-tbody');
-  if(!items.length){tbody.innerHTML='<tr><td colspan="6" class="loading-cell">No separation records.</td></tr>';return}
-  tbody.innerHTML=items.map(r=>`<tr><td style="font-weight:500">${r.empName}</td><td><span class="badge badge-warn">${r.type}</span></td><td class="mono" style="font-size:11.5px">${fmtDate(r.lastDay)}</td><td style="font-size:12px;color:var(--ink-soft)">${r.reason||'—'}</td><td><span class="badge badge-${r.cleared?'success':'warn'}">${r.cleared?'Yes':'Pending'}</span></td><td><span class="badge badge-info">${r.status}</span></td></tr>`).join('');
+async function renderRetire(){
+  try{
+    const items=await apiGet('/hr/separations')||[];
+    const tbody=document.getElementById('retire-tbody');
+    if(!items.length){tbody.innerHTML='<tr><td colspan="6" class="loading-cell">No separation records.</td></tr>';return}
+    tbody.innerHTML=items.map(r=>{
+      const name=r.employee?r.employee.firstName+' '+r.employee.lastName:'—';
+      return `<tr><td style="font-weight:500">${name}</td><td><span class="badge badge-warn">${r.separationType}</span></td><td class="mono" style="font-size:11.5px">${fmtDate(r.lastWorkingDay)}</td><td style="font-size:12px;color:var(--ink-soft)">${r.reason||'—'}</td><td><span class="badge badge-${r.benefitsCleared?'success':'warn'}">${r.benefitsCleared?'Yes':'Pending'}</span></td><td><span class="badge badge-info">${r.status}</span></td></tr>`;
+    }).join('');
+  }catch(e){console.error('Retirement load failed:',e);toast('Failed to load separation data.',true)}
 }
 
-function submitRetire(ev){
+async function submitRetire(ev){
   ev.preventDefault();
-  const emps=getStore('employees',[]);
-  const emp=emps.find(e=>e.id===gv('rt-emp'));
-  const items=getStore('retirement',[]);
-  items.unshift({id:'rt'+Date.now(),empId:gv('rt-emp'),empName:emp?emp.first+' '+emp.last:'—',type:gv('rt-type'),lastDay:gv('rt-lastday'),reason:gv('rt-reason'),cleared:false,status:'In Progress'});
-  setStore('retirement',items);closeModal();renderRetire();toast('Separation record created.');
+  try{
+    await apiPost('/hr/separations',{employeeId:gv('rt-emp'),separationType:gv('rt-type'),lastWorkingDay:gv('rt-lastday'),reason:gv('rt-reason')});
+    closeModal();renderRetire();toast('Separation record created.');
+  }catch(e){toast('Failed: '+e.message,true)}
 }
 
 // ═══ REPORTS ═══
-function renderReports(){
-  const emps=getStore('employees',[]);
-  const male=emps.filter(e=>e.gender==='Male').length;
-  const female=emps.filter(e=>e.gender==='Female').length;
-  const perm=emps.filter(e=>e.type==='Permanent').length;
-  const cont=emps.filter(e=>e.type==='Contract').length;
-  const temp=emps.filter(e=>e.type==='Temporary').length;
-  const total=emps.length||1;
-  document.getElementById('report-kpis').innerHTML=`
-    <div class="kpi-card"><div class="label">Total Headcount</div><div class="value">${emps.length}</div></div>
-    <div class="kpi-card"><div class="label">Male / Female</div><div class="value" style="font-size:18px">${male} / ${female}</div><div class="delta neutral">${Math.round(male/total*100)}% / ${Math.round(female/total*100)}%</div></div>
-    <div class="kpi-card"><div class="label">Avg. Tenure</div><div class="value">${calcAvgTenure(emps)}</div><div class="delta neutral">Years</div></div>
-    <div class="kpi-card"><div class="label">Positions (Sanctioned)</div><div class="value">${getStore('positions',[]).reduce((s,p)=>s+p.sanctioned,0)}</div></div>`;
-  // Gender chart
-  document.getElementById('chart-gender').innerHTML=`<div style="display:flex;gap:16px;align-items:center;justify-content:center;padding:16px 0">
-    <div style="text-align:center"><div style="width:80px;height:80px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:700;margin:0 auto">${male}</div><div style="margin-top:8px;font-size:13px;font-weight:500">Male ${Math.round(male/total*100)}%</div></div>
-    <div style="text-align:center"><div style="width:80px;height:80px;border-radius:50%;background:#DB2777;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:700;margin:0 auto">${female}</div><div style="margin-top:8px;font-size:13px;font-weight:500">Female ${Math.round(female/total*100)}%</div></div>
-  </div>`;
-  // Employment type chart
-  document.getElementById('chart-emp-type').innerHTML=`<div style="padding:16px 0">
-    ${[{label:'Permanent',count:perm,color:'var(--success)'},{label:'Contract',count:cont,color:'var(--accent)'},{label:'Temporary',count:temp,color:'var(--warn)'}].map(t=>`<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div style="width:80px;font-size:13px;font-weight:500">${t.label}</div><div style="flex:1"><div class="progress-bar"><div class="fill" style="width:${(t.count/total)*100}%;background:${t.color}"></div></div></div><div style="width:30px;text-align:right;font-size:13px;font-weight:600">${t.count}</div></div>`).join('')}
-  </div>`;
-}
-
-function calcAvgTenure(emps){
-  if(!emps.length)return '—';
-  const now=Date.now();
-  const avg=emps.reduce((s,e)=>{const y=(now-new Date(e.hire).getTime())/(365.25*24*60*60*1000);return s+y},0)/emps.length;
-  return avg.toFixed(1);
+async function renderReports(){
+  try{
+    const [stats,chartData]=await Promise.all([apiGet('/hr/stats'),apiGet('/hr/reports/charts')]);
+    const s=stats||{};
+    const c=chartData||{};
+    const gd=c.genderDist||{Male:0,Female:0,Other:0};
+    const td=c.typeDist||{};
+    const total=(gd.Male||0)+(gd.Female||0)+(gd.Other||0)||1;
+    document.getElementById('report-kpis').innerHTML=`
+      <div class="kpi-card"><div class="label">Total Headcount</div><div class="value">${s.totalEmployees||0}</div></div>
+      <div class="kpi-card"><div class="label">Male / Female</div><div class="value" style="font-size:18px">${gd.Male||0} / ${gd.Female||0}</div><div class="delta neutral">${Math.round((gd.Male||0)/total*100)}% / ${Math.round((gd.Female||0)/total*100)}%</div></div>
+      <div class="kpi-card"><div class="label">Avg. Tenure</div><div class="value">${c.avgTenure||'—'}</div><div class="delta neutral">Years</div></div>
+      <div class="kpi-card"><div class="label">Departments</div><div class="value">${Object.keys(c.deptDist||{}).length}</div></div>`;
+    // Gender chart
+    document.getElementById('chart-gender').innerHTML=`<div style="display:flex;gap:16px;align-items:center;justify-content:center;padding:16px 0">
+      <div style="text-align:center"><div style="width:80px;height:80px;border-radius:50%;background:var(--accent);display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:700;margin:0 auto">${gd.Male||0}</div><div style="margin-top:8px;font-size:13px;font-weight:500">Male ${Math.round((gd.Male||0)/total*100)}%</div></div>
+      <div style="text-align:center"><div style="width:80px;height:80px;border-radius:50%;background:#DB2777;display:flex;align-items:center;justify-content:center;color:#fff;font-size:22px;font-weight:700;margin:0 auto">${gd.Female||0}</div><div style="margin-top:8px;font-size:13px;font-weight:500">Female ${Math.round((gd.Female||0)/total*100)}%</div></div>
+    </div>`;
+    // Employment type chart
+    document.getElementById('chart-emp-type').innerHTML=`<div style="padding:16px 0">
+      ${[{label:'Permanent',count:td.Permanent||0,color:'var(--success)'},{label:'Contract',count:td.Contract||0,color:'var(--accent)'},{label:'Temporary',count:td.Temporary||0,color:'var(--warn)'},{label:'Probation',count:td.Probation||0,color:'var(--ink-faint)'}].map(t=>`<div style="display:flex;align-items:center;gap:12px;margin-bottom:12px"><div style="width:80px;font-size:13px;font-weight:500">${t.label}</div><div style="flex:1"><div class="progress-bar"><div class="fill" style="width:${(t.count/total)*100}%;background:${t.color}"></div></div></div><div style="width:30px;text-align:right;font-size:13px;font-weight:600">${t.count}</div></div>`).join('')}
+    </div>`;
+  }catch(e){console.error('Reports load failed:',e);toast('Failed to load report data.',true)}
 }
 
 // ═══ NOTIFICATIONS ═══
-function renderNotifs(){
-  const leavePending=getStore('leave',[]).filter(l=>l.status==='Pending');
-  const notifs=[];
-  leavePending.forEach(l=>notifs.push({icon:'🏖️',text:`${l.empName} requests ${l.type} (${l.days} days)`,time:l.from,action:`<button class="btn btn-sm btn-success" onclick="approveLeave('${l.id}');renderNotifs()">Approve</button>`}));
-  notifs.push({icon:'📊',text:`${getStore('performance',[]).filter(p=>p.status==='Pending').length} performance review(s) pending`,time:'Ongoing'});
-  notifs.push({icon:'🎓',text:`${getStore('training',[]).filter(t=>t.status==='Upcoming').length} upcoming training programs`,time:'This month'});
-  if(!notifs.length){notifs.push({icon:'✅',text:'No pending notifications.',time:'All clear'})}
-  document.getElementById('notif-list').innerHTML=notifs.map(n=>`<div class="activity-item"><span style="font-size:20px">${n.icon}</span><div style="flex:1"><div style="font-size:13px;font-weight:500">${n.text}</div><div style="font-size:11.5px;color:var(--ink-faint)">${n.time}</div></div>${n.action||''}</div>`).join('');
+async function renderNotifs(){
+  try{
+    const [leaveItems,stats]=await Promise.all([apiGet('/hr/leave'),apiGet('/hr/stats')]);
+    const leavePending=(leaveItems||[]).filter(l=>l.status==='Pending');
+    const notifs=[];
+    leavePending.forEach(l=>{
+      const name=l.employee?l.employee.firstName+' '+l.employee.lastName:'Unknown';
+      notifs.push({icon:'🏖️',text:`${name} requests ${l.leaveType} (${l.days} days)`,time:fmtDate(l.fromDate),action:`<button class="btn btn-sm btn-success" onclick="approveLeave('${l.id}');renderNotifs()">Approve</button>`});
+    });
+    if(stats?.pendingLeave)notifs.push({icon:'📋',text:`${stats.pendingLeave} leave request(s) awaiting approval`,time:'Now'});
+    if(stats?.totalPromotions)notifs.push({icon:'📈',text:`${stats.totalPromotions} promotion(s) on record`,time:'All time'});
+    if(!notifs.length)notifs.push({icon:'✅',text:'No pending notifications.',time:'All clear'});
+    document.getElementById('notif-list').innerHTML=notifs.map(n=>`<div class="activity-item"><span style="font-size:20px">${n.icon}</span><div style="flex:1"><div style="font-size:13px;font-weight:500">${n.text}</div><div style="font-size:11.5px;color:var(--ink-faint)">${n.time}</div></div>${n.action||''}</div>`).join('');
+  }catch(e){console.error('Notifs load failed:',e);document.getElementById('notif-list').innerHTML='<div class="activity-item">Failed to load notifications</div>'}
 }
 
 // ═══ SETTINGS ═══
@@ -954,8 +1021,10 @@ function handleDocSig(input){
 function previewIdCard(){
   const empId=gv('doc-emp-select');
   if(!empId){document.getElementById('id-preview-area').innerHTML='<div class="chart-placeholder" style="width:100%">Select an employee to preview</div>';return}
-  const emp=getStore('employees',[]).find(e=>e.id===empId);if(!emp)return;
-  const initials=emp.first[0]+emp.last[0];
+  const emp=employeesCache.find(e=>e.id===empId);if(!emp)return;
+  const empNo=emp.employeeNumber;const empFirst=emp.firstName;const empLast=emp.lastName;
+  const empPos=emp.position;const empDept=emp.department?.name||'Unassigned';
+  const initials=empFirst[0]+empLast[0];
   document.getElementById('id-preview-area').innerHTML=`
     <div style="width:340px;border-radius:10px;overflow:hidden;box-shadow:0 4px 24px rgba(15,43,64,0.25);border:1px solid #dde2ea;background:#fff">
       <div style="background:#0F2B40;color:#fff;padding:10px 12px;display:flex;align-items:center;gap:10px">
@@ -965,12 +1034,12 @@ function previewIdCard(){
       </div>
       <div style="padding:10px 12px;display:flex;gap:10px;align-items:center">
         <div style="width:52px;height:62px;border-radius:6px;background:#F0F2F6;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#96A0AF;flex-shrink:0;font-family:'Fraunces',serif">${initials}</div>
-        <div style="flex:1"><div style="font-size:12px;font-weight:700">${emp.first} ${emp.last}</div><div style="font-size:9px;color:#2952E3;margin-top:1px;font-weight:500">${emp.pos}</div><div style="font-size:8px;color:#646E82;margin-top:1px"><strong>Directorate:</strong> ${emp.dept}</div><div style="font-size:8px;font-weight:600;margin-top:2px;font-family:'JetBrains Mono',monospace">EMP NO: ${emp.no}</div><div style="font-size:7.5px;color:#646E82;margin-top:2px;font-family:'JetBrains Mono',monospace">Issued: ${fmtDateShort(new Date())} · Expires: ${fmtDateShort(addYears(new Date(),3))}</div></div>
+        <div style="flex:1"><div style="font-size:12px;font-weight:700">${empFirst} ${empLast}</div><div style="font-size:9px;color:#2952E3;margin-top:1px;font-weight:500">${empPos}</div><div style="font-size:8px;color:#646E82;margin-top:1px"><strong>Directorate:</strong> ${empDept}</div><div style="font-size:8px;font-weight:600;margin-top:2px;font-family:'JetBrains Mono',monospace">EMP NO: ${empNo}</div><div style="font-size:7.5px;color:#646E82;margin-top:2px;font-family:'JetBrains Mono',monospace">Issued: ${fmtDateShort(new Date())} · Expires: ${fmtDateShort(addYears(new Date(),3))}</div></div>
         <div style="text-align:center;flex-shrink:0"><div id="id-qr" style="width:48px;height:48px"></div><div style="font-size:6px;color:#96A0AF;margin-top:4px">AUTH. SIG.</div><div style="border-bottom:1px solid #96A0AF;width:55px;margin-top:2px"></div></div>
       </div>
       <div style="background:#F0F2F6;text-align:center;font-size:8px;color:#646E82;padding:5px;border-top:1px solid #e8eaf0">VALID · MOHEST STAFF PORTAL · ${new Date().getFullYear()}</div>
     </div>`;
-  setTimeout(()=>{try{new QRCode(document.getElementById('id-qr'),{text:`MoHEST-EMP|${emp.no}|${emp.first} ${emp.last}`,width:48,height:48,colorDark:'#0F2B40',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M})}catch(e){}},100);
+  setTimeout(()=>{try{new QRCode(document.getElementById('id-qr'),{text:`MoHEST-EMP|${empNo}|${empFirst} ${empLast}`,width:48,height:48,colorDark:'#0F2B40',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M})}catch(e){}},100);
 }
 
 function fmtDateShort(d){return`${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`}
@@ -980,9 +1049,10 @@ async function generateIdCardPdf(){
   await preloadAssets();
   const empId=gv('doc-emp-select');
   if(!empId){toast('Select an employee first.',true);return}
-  const emp=getStore('employees',[]).find(e=>e.id===empId);if(!emp)return;
+  const emp=employeesCache.find(e=>e.id===empId);if(!emp)return;
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'landscape',unit:'mm',format:[85.6,54]});
+  const empDept=emp.department?.name||'Unassigned';
   // Front
   if(flagBase64)doc.addImage(flagBase64,'PNG',2,2,18,9);
   if(logoBase64)doc.addImage(logoBase64,'JPEG',74,2,9,9);
@@ -992,13 +1062,13 @@ async function generateIdCardPdf(){
   doc.text('MIN. OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY',42.8,11,{align:'center'});
   doc.setDrawColor(15,43,64);doc.setLineWidth(0.4);doc.line(2,14,83.6,14);
   doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(17,19,24);
-  doc.text(`${emp.first} ${emp.last}`,24,21);
+  doc.text(`${emp.firstName} ${emp.lastName}`,24,21);
   doc.setFontSize(5.5);doc.setFont('helvetica','normal');doc.setTextColor(41,82,227);
-  doc.text(emp.pos,24,25);
+  doc.text(emp.position,24,25);
   doc.setTextColor(100,110,130);doc.setFontSize(5);
-  doc.text(`Directorate: ${emp.dept}`,24,29);
+  doc.text(`Directorate: ${empDept}`,24,29);
   doc.setFont('helvetica','bold');doc.setTextColor(17,19,24);
-  doc.text(`EMP NO: ${emp.no}`,24,33);
+  doc.text(`EMP NO: ${emp.employeeNumber}`,24,33);
   doc.setFont('helvetica','normal');doc.setTextColor(100,110,130);
   doc.text(`Issued: ${fmtDateShort(new Date())}  Expires: ${fmtDateShort(addYears(new Date(),3))}`,24,37);
   doc.setFontSize(4.5);doc.setTextColor(150,160,175);
@@ -1015,7 +1085,7 @@ async function generateIdCardPdf(){
   backText.forEach((line,i)=>doc.text(line,42.8,18+i*4,{align:'center'}));
   doc.setTextColor(159,178,193);doc.setFontSize(4);
   doc.text('OFFICIAL VERIFICATION: PORTAL.MOHEST.GOV.SS',42.8,50,{align:'center'});
-  doc.save(`ID_Card_${emp.no}_${emp.last}.pdf`);
+  doc.save(`ID_Card_${emp.employeeNumber}_${emp.lastName}.pdf`);
   toast('ID card PDF generated (Front & Back).');
 }
 
@@ -1023,7 +1093,8 @@ async function generateLeavePdf(){
   await preloadAssets();
   const empId=gv('doc-leave-emp');
   if(!empId){toast('Select an employee.',true);return}
-  const emp=getStore('employees',[]).find(e=>e.id===empId);if(!emp)return;
+  const emp=employeesCache.find(e=>e.id===empId);if(!emp)return;
+  const empDept=emp.department?.name||'Unassigned';
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const m=20;let y=m;
@@ -1039,11 +1110,11 @@ async function generateLeavePdf(){
   doc.text('LEAVE APPROVAL LETTER',105,y,{align:'center'});y+=12;
   const addLine=(label,val)=>{doc.setFontSize(9.5);doc.setFont('helvetica','bold');doc.text(label,m,y);doc.setFont('helvetica','normal');doc.text(val,m+28,y);y+=6.5};
   addLine('Date:',fmtDate(new Date()));y+=2;
-  addLine('To:',emp.first+' '+emp.last);addLine('Position:',emp.pos);addLine('Department:',emp.dept);addLine('Emp No.:',emp.no);y+=4;
+  addLine('To:',emp.firstName+' '+emp.lastName);addLine('Position:',emp.position);addLine('Department:',empDept);addLine('Emp No.:',emp.employeeNumber);y+=4;
   doc.setFontSize(10.5);doc.setFont('helvetica','bold');
   doc.text('Subject: Approval of '+gv('doc-leave-type'),m,y);y+=10;
   doc.setFont('helvetica','normal');doc.setFontSize(10);
-  doc.text(`Dear ${emp.first} ${emp.last},`,m,y);y+=8;
+  doc.text(`Dear ${emp.firstName} ${emp.lastName},`,m,y);y+=8;
   const days=gv('doc-leave-days');
   const body=`This is to inform you that your application for ${gv('doc-leave-type')} has been duly reviewed and approved. You are hereby granted ${days} day(s) of leave.`;
   const w1=doc.splitTextToSize(body,170);doc.text(w1,m,y);y+=w1.length*5.5+4;
@@ -1054,7 +1125,7 @@ async function generateLeavePdf(){
   doc.text('Director, Human Resources',m,y);y+=6;
   doc.setFont('helvetica','normal');doc.text('Ministry of Higher Education, Science & Technology',m,y);y+=5;
   doc.text('Republic of South Sudan',m,y);
-  doc.save(`Leave_Letter_${emp.last}_${emp.no}.pdf`);
+  doc.save(`Leave_Letter_${emp.lastName}_${emp.employeeNumber}.pdf`);
   toast('Leave letter PDF generated.');
 }
 
@@ -1062,7 +1133,8 @@ async function generateApptPdf(){
   await preloadAssets();
   const empId=gv('doc-appt-emp');
   if(!empId){toast('Select an employee.',true);return}
-  const emp=getStore('employees',[]).find(e=>e.id===empId);if(!emp)return;
+  const emp=employeesCache.find(e=>e.id===empId);if(!emp)return;
+  const empDept=emp.department?.name||'Unassigned';
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const m=20;let y=m;
@@ -1077,12 +1149,12 @@ async function generateApptPdf(){
   y=52;doc.setFontSize(13);doc.setFont('helvetica','bold');doc.setTextColor(17,19,24);
   doc.text('LETTER OF APPOINTMENT',105,y,{align:'center'});y+=12;
   const addLine=(label,val)=>{doc.setFontSize(9.5);doc.setFont('helvetica','bold');doc.text(label,m,y);doc.setFont('helvetica','normal');doc.text(val,m+34,y);y+=6.5};
-  addLine('Date:',fmtDate(new Date()));addLine('To:',emp.first+' '+emp.last);addLine('Current Position:',emp.pos);addLine('Department:',emp.dept);y+=4;
+  addLine('Date:',fmtDate(new Date()));addLine('To:',emp.firstName+' '+emp.lastName);addLine('Current Position:',emp.position);addLine('Department:',empDept);y+=4;
   doc.setFontSize(10.5);doc.setFont('helvetica','bold');doc.text('Subject: Letter of Appointment',m,y);y+=10;
   doc.setFont('helvetica','normal');doc.setFontSize(10);
-  doc.text(`Dear ${emp.first} ${emp.last},`,m,y);y+=8;
-  const pos=gv('doc-appt-pos')||emp.pos;
-  const p1=`Following due consideration by the Ministry, I am pleased to inform you of your appointment to the position of ${pos} within the ${gv('doc-appt-dept')||emp.dept} department.`;
+  doc.text(`Dear ${emp.firstName} ${emp.lastName},`,m,y);y+=8;
+  const pos=gv('doc-appt-pos')||emp.position;
+  const p1=`Following due consideration by the Ministry, I am pleased to inform you of your appointment to the position of ${pos} within the ${gv('doc-appt-dept')||empDept} department.`;
   const w1=doc.splitTextToSize(p1,170);doc.text(w1,m,y);y+=w1.length*5.5+4;
   doc.text('You are required to comply with all Ministry policies, procedures, and the code of conduct for public servants of the Republic of South Sudan.',m,y);y+=10;
   doc.text('Congratulations on your appointment. We look forward to your continued contributions.',m,y);y+=14;
@@ -1092,14 +1164,14 @@ async function generateApptPdf(){
   doc.text('Minister, MoHEST',m,y);y+=6;
   doc.setFont('helvetica','normal');doc.text('Ministry of Higher Education, Science & Technology',m,y);y+=5;
   doc.text('Republic of South Sudan',m,y);
-  doc.save(`Appointment_${emp.last}_${emp.no}.pdf`);
+  doc.save(`Appointment_${emp.lastName}_${emp.employeeNumber}.pdf`);
   toast('Appointment letter PDF generated.');
 }
 
 // ═══ EXPORT REPORTS ═══
 async function exportAllEmployeesPdf(){
   await preloadAssets();
-  const emps=getStore('employees',[]);
+  const emps=employeesCache.length?employeesCache:(await apiGet('/hr/employees')||[]);
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const m=15;let y=20;
@@ -1115,7 +1187,8 @@ async function exportAllEmployeesPdf(){
   emps.forEach(e=>{
     if(y>270){doc.addPage();y=20}
     x=m;
-    const row=[e.no,`${e.first} ${e.last}`,e.dept,e.pos,e.type,e.status,fmtDate(e.hire)];
+    const dept=e.department?.name||'Unassigned';
+    const row=[e.employeeNumber,`${e.firstName} ${e.lastName}`,dept,e.position,e.employmentType,e.status,fmtDate(e.hireDate)];
     row.forEach((val,i)=>{doc.text(String(val).slice(0,cols[i].w/1.8),x,y);x+=cols[i].w});
     y+=5;
   });
@@ -1125,7 +1198,7 @@ async function exportAllEmployeesPdf(){
 
 async function exportAttendancePdf(){
   await preloadAssets();
-  const items=getStore('attendance',[]);
+  const items=await apiGet('/hr/attendance')||[];
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const m=15;let y=20;
@@ -1140,7 +1213,8 @@ async function exportAttendancePdf(){
   doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(40);
   items.forEach(a=>{
     if(y>270){doc.addPage();y=20}
-    x=m;const row=[a.empName,a.checkIn,a.checkOut,a.hours+'h',a.status];
+    x=m;const name=a.employee?a.employee.firstName+' '+a.employee.lastName:'—';
+    const row=[name,a.checkIn||'—',a.checkOut||'—',(a.hours||0)+'h',a.status];
     row.forEach((val,i)=>{doc.text(String(val).slice(0,cols[i].w/1.8),x,y);x+=cols[i].w});y+=5;
   });
   y+=8;doc.setFontSize(8);doc.setFont('helvetica','bold');
@@ -1152,7 +1226,7 @@ async function exportAttendancePdf(){
 
 async function exportLeaveReportPdf(){
   await preloadAssets();
-  const items=getStore('leave',[]);
+  const items=await apiGet('/hr/leave')||[];
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const m=15;let y=20;
@@ -1167,7 +1241,8 @@ async function exportLeaveReportPdf(){
   doc.setFont('helvetica','normal');doc.setFontSize(7.5);doc.setTextColor(40);
   items.forEach(l=>{
     if(y>270){doc.addPage();y=20}
-    x=m;const row=[l.empName,l.type,fmtDate(l.from),fmtDate(l.to),String(l.days),l.status];
+    x=m;const name=l.employee?l.employee.firstName+' '+l.employee.lastName:'—';
+    const row=[name,l.leaveType,fmtDate(l.fromDate),fmtDate(l.toDate),String(l.days),l.status];
     row.forEach((val,i)=>{doc.text(String(val).slice(0,cols[i].w/1.8),x,y);x+=cols[i].w});y+=5;
   });
   y+=8;doc.setFontSize(8);doc.setFont('helvetica','bold');
@@ -1179,8 +1254,7 @@ async function exportLeaveReportPdf(){
 
 async function exportCompPdf(){
   await preloadAssets();
-  const emps=getStore('employees',[]);
-  const pos=getStore('positions',[]);
+  const emps=employeesCache.length?employeesCache:(await apiGet('/hr/employees')||[]);
   const baseByGrade={'Grade 3':800,'Grade 4':1000,'Grade 5':1200,'Grade 6':1500,'Grade 7':1800,'Grade 8':2200,'Grade 9':2800,'Grade 10':3500,'Grade 11':4200,'Grade 12':5000,'Grade 13':6000,'Grade 14':7500,'Grade 15':9000};
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4'});
@@ -1197,10 +1271,9 @@ async function exportCompPdf(){
   let totalBasic=0,totalAllow=0;
   emps.forEach(e=>{
     if(y>270){doc.addPage();y=20}
-    const p=pos.find(x=>x.title===e.pos);
-    const grade=p?p.grade:'Grade 5';const basic=baseByGrade[grade]||1200;const allow=Math.round(basic*0.35);
+    const grade='Grade 5';const basic=baseByGrade[grade]||1200;const allow=Math.round(basic*0.35);
     totalBasic+=basic;totalAllow+=allow;x=m;
-    const row=[e.first+' '+e.last,grade,'$'+basic.toLocaleString(),'$'+allow.toLocaleString(),'$'+(basic+allow).toLocaleString()];
+    const row=[e.firstName+' '+e.lastName,grade,'$'+basic.toLocaleString(),'$'+allow.toLocaleString(),'$'+(basic+allow).toLocaleString()];
     row.forEach((val,i)=>{doc.text(String(val).slice(0,cols[i].w/1.8),x,y);x+=cols[i].w});y+=5;
   });
   y+=5;doc.setDrawColor(15,43,64);doc.setLineWidth(0.3);doc.line(m,y,195,y);y+=6;
