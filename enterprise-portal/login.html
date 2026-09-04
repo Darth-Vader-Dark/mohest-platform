@@ -13,28 +13,41 @@
 <body>
 <div class="login-screen">
   <div class="login-side">
-    <a class="brand brand-home-link" href="../public-site/index.html" title="Back to MoHEST public website">
-      <div class="brand-mark"><img src="logo.jpg" alt="MoHEST logo" class="brand-logo"></div>
-      <div class="brand-text">
-        <div class="top">MoHEST Enterprise Portal</div>
-        <div class="bottom">Republic of South Sudan</div>
+    <div class="login-side-inner">
+      <div class="login-identity">
+        <div class="flag-strip">
+          <span class="stripe stripe-green"></span>
+          <span class="stripe stripe-white"></span>
+          <span class="stripe stripe-red"></span>
+          <span class="stripe stripe-navy"></span>
+        </div>
+        <div class="ministry-seal">
+          <div class="seal-ring">
+            <div class="seal-star">&#9733;</div>
+            <div class="seal-inner">MoHEST</div>
+          </div>
+          <div class="seal-title">MINISTRY OF HIGHER EDUCATION,<br>SCIENCE AND TECHNOLOGY</div>
+        </div>
+        <div class="login-country">Republic of South Sudan<br><span class="login-juba">Juba &middot; Central Equatoria</span></div>
       </div>
-    </a>
-    <div class="login-side-quote">
-      <div class="quote-pill">Authorized Personnel Only</div>
-      <div class="quote">"Building South Sudan's future through knowledge, research, and governance."</div>
-      <div class="quote-attrib">Ministry of Higher Education, Science and Technology &middot; Unified Portal</div>
-    </div>
-    <div class="login-side-footer">
-      <span>&copy; 2026 Republic of South Sudan</span>
-      <span class="mono">Juba, South Sudan</span>
+      <div class="login-side-footer">
+        <div class="footer-line">Unified Directorate Portal &middot; Staff &amp; Administrative Systems</div>
+        <div class="footer-line">&copy; <span id="copy-year"></span> Republic of South Sudan &middot; All Rights Reserved</div>
+      </div>
     </div>
   </div>
   <div class="login-form-wrap">
     <div class="login-form">
+      <div class="login-form-top">
+        <div class="form-brand-mini">
+          <div class="form-brand-mark"><img src="logo.jpg" alt=""></div>
+          <div class="form-brand-text">MoHEST Staff Portal</div>
+        </div>
+        <div class="form-auth-line"><span>Authorized Access</span><span class="form-dot"></span>Protected by ICT Directorate</div>
+      </div>
       <div class="form-header">
-        <h1>Staff Sign In</h1>
-        <div class="sub">Enter your official @mohest.gov.ss credentials to access directorate portals.</div>
+        <h1>Sign in to your account</h1>
+        <div class="sub">Use your official ministry credentials to continue.</div>
       </div>
       <div id="error-message" class="error-alert" style="display:none;"></div>
       <form id="login-form">
@@ -61,11 +74,12 @@
           <span>Sign In to Portal</span> &rarr;
         </button>
       </form>
-      <div class="login-note">
-        <strong>&#128274; Secure Directorate System</strong><br>
-        Access is restricted to authorized MoHEST personnel. All activities are monitored and logged for security compliance.
+      <div class="login-meta">
+        <div class="meta-row"><span>Login Endpoint</span><span class="meta-value"><code>/api/v1/auth/login</code></span></div>
+        <div class="meta-row"><span>Session</span><span class="meta-value">Secure cookie &middot; 15min access token</span></div>
+        <div class="meta-row"><span>Support</span><span class="meta-value">ict-directorate@mohest.gov.ss</span></div>
       </div>
-      <a class="login-back" href="../public-site/index.html">&larr; Return to Public Website</a>
+      <a class="login-footer-link" href="../public-site/index.html">MoHEST Public Website &rarr;</a>
     </div>
   </div>
 </div>
@@ -81,6 +95,8 @@ document.getElementById('toggle-pw-btn').addEventListener('click', function() {
     this.textContent = '\u{1F441}';
   }
 });
+
+document.getElementById('copy-year').textContent = new Date().getFullYear();
 
 document.getElementById('login-form').addEventListener('submit', async (e) => {
   e.preventDefault();
