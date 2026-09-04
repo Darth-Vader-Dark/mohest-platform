@@ -12,18 +12,59 @@ import * as express from 'express';
 let cachedApp: NestExpressApplication | null = null;
 let migrationsRun = false;
 
+const HR_TABLES_MIGRATION = [
+  `CREATE TABLE IF NOT EXISTS "leave_requests" ("id" TEXT NOT NULL, "employeeId" TEXT NOT NULL, "leaveType" TEXT NOT NULL, "fromDate" TIMESTAMP(3) NOT NULL, "toDate" TIMESTAMP(3) NOT NULL, "days" INTEGER NOT NULL, "reason" TEXT, "status" TEXT NOT NULL DEFAULT 'Pending', "approvedBy" TEXT, "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "leave_requests_pkey" PRIMARY KEY ("id"))`,
+  `CREATE TABLE IF NOT EXISTS "attendance_records" ("id" TEXT NOT NULL, "employeeId" TEXT NOT NULL, "date" TIMESTAMP(3) NOT NULL, "checkIn" TEXT, "checkOut" TEXT, "hours" DOUBLE PRECISION, "status" TEXT NOT NULL DEFAULT 'Present', "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "attendance_records_pkey" PRIMARY KEY ("id"))`,
+  `CREATE TABLE IF NOT EXISTS "performance_reviews" ("id" TEXT NOT NULL, "employeeId" TEXT NOT NULL, "reviewPeriod" TEXT NOT NULL, "score" DOUBLE PRECISION NOT NULL, "rating" TEXT NOT NULL, "reviewer" TEXT, "comments" TEXT, "status" TEXT NOT NULL DEFAULT 'Completed', "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "performance_reviews_pkey" PRIMARY KEY ("id"))`,
+  `CREATE TABLE IF NOT EXISTS "training_programs" ("id" TEXT NOT NULL, "name" TEXT NOT NULL, "type" TEXT NOT NULL, "duration" TEXT, "startDate" TIMESTAMP(3), "maxEnroll" INTEGER NOT NULL DEFAULT 20, "status" TEXT NOT NULL DEFAULT 'Upcoming', "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "training_programs_pkey" PRIMARY KEY ("id"))`,
+  `CREATE TABLE IF NOT EXISTS "training_enrollments" ("id" TEXT NOT NULL, "employeeId" TEXT NOT NULL, "programId" TEXT NOT NULL, "enrolledAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "training_enrollments_pkey" PRIMARY KEY ("id"))`,
+  `CREATE TABLE IF NOT EXISTS "discipline_actions" ("id" TEXT NOT NULL, "employeeId" TEXT NOT NULL, "actionType" TEXT NOT NULL, "severity" TEXT, "incident" TEXT NOT NULL, "date" TIMESTAMP(3) NOT NULL, "status" TEXT NOT NULL DEFAULT 'Open', "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "discipline_actions_pkey" PRIMARY KEY ("id"))`,
+  `CREATE TABLE IF NOT EXISTS "separation_records" ("id" TEXT NOT NULL, "employeeId" TEXT NOT NULL, "separationType" TEXT NOT NULL, "lastWorkingDay" TIMESTAMP(3) NOT NULL, "reason" TEXT, "benefitsCleared" BOOLEAN NOT NULL DEFAULT false, "status" TEXT NOT NULL DEFAULT 'In Progress', "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP, CONSTRAINT "separation_records_pkey" PRIMARY KEY ("id"))`,
+  `CREATE INDEX IF NOT EXISTS "leave_requests_employeeId_idx" ON "leave_requests"("employeeId")`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "attendance_records_employeeId_date_key" ON "attendance_records"("employeeId", "date")`,
+  `CREATE INDEX IF NOT EXISTS "attendance_records_employeeId_idx" ON "attendance_records"("employeeId")`,
+  `CREATE INDEX IF NOT EXISTS "performance_reviews_employeeId_idx" ON "performance_reviews"("employeeId")`,
+  `CREATE UNIQUE INDEX IF NOT EXISTS "training_enrollments_employeeId_programId_key" ON "training_enrollments"("employeeId", "programId")`,
+  `CREATE INDEX IF NOT EXISTS "training_enrollments_employeeId_idx" ON "training_enrollments"("employeeId")`,
+  `CREATE INDEX IF NOT EXISTS "training_enrollments_programId_idx" ON "training_enrollments"("programId")`,
+  `CREATE INDEX IF NOT EXISTS "discipline_actions_employeeId_idx" ON "discipline_actions"("employeeId")`,
+  `CREATE INDEX IF NOT EXISTS "separation_records_employeeId_idx" ON "separation_records"("employeeId")`);
+
 async function runMigrations(): Promise<void> {
   if (migrationsRun || !process.env.DATABASE_URL) return;
   migrationsRun = true;
+
+  // Try prisma migrate deploy first
   try {
     console.log('[DB] Running prisma migrate deploy...');
     execSync('npx prisma migrate deploy --schema=backend/prisma/schema.prisma', {
       timeout: 60_000,
       stdio: 'pipe',
     });
-    console.log('[DB] Migrations applied successfully.');
+    console.log('[DB] Migrations applied successfully via prisma migrate deploy.');
+    return;
   } catch (err: any) {
-    console.error('[DB] Migration failed (non-fatal):', err?.stderr?.toString() || err?.message);
+    console.log('[DB] prisma migrate deploy failed or not available, trying fallback SQL...', err?.stderr?.toString() || err?.message);
+  }
+
+  // Fallback: run CREATE TABLE IF NOT EXISTS directly via PrismaClient
+  try {
+    const { PrismaClient } = require('@prisma/client');
+    const prisma = new PrismaClient({ datasources: { db: { url: process.env.DATABASE_URL } } });
+    for (const sql of HR_TABLES_MIGRATION) {
+      try {
+        await prisma.$executeRawUnsafe(sql);
+      } catch (e: any) {
+        // Table already exists — expected
+        if (!e?.message?.includes('already exists')) {
+          console.warn('[DB] SQL warning:', e?.message);
+        }
+      }
+    }
+    console.log('[DB] Fallback migration completed.');
+    await prisma.$disconnect();
+  } catch (err: any) {
+    console.error('[DB] Fallback migration failed (non-fatal):', err?.message);
   }
 }
 
