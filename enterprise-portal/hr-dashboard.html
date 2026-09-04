@@ -1000,7 +1000,7 @@ async function preloadAssets(){
   if(logoBase64&&flagBase64)return;
   try{
     const img=new Image();img.crossOrigin='anonymous';
-    await new Promise((r,j)=>{img.onload=r;img.onerror=j;img.src='logo.jpg'});
+    await new Promise((r,j)=>{img.onload=r;img.onerror=j;img.src='logo.png'});
     const c=document.createElement('canvas');c.width=img.width;c.height=img.height;c.getContext('2d').drawImage(img,0,0);
     logoBase64=c.toDataURL('image/jpeg');
   }catch(e){console.warn('Logo load failed',e)}
