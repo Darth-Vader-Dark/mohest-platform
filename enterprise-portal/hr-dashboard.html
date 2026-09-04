@@ -1074,16 +1074,41 @@ function previewIdCard(){
   document.getElementById('id-preview-area').innerHTML=`
     <div style="width:340px;border-radius:10px;overflow:hidden;box-shadow:0 4px 24px rgba(15,43,64,0.25);border:1px solid #dde2ea;background:#fff">
       <div style="background:#0F2B40;color:#fff;padding:10px 12px;display:flex;align-items:center;gap:10px">
-        <div style="width:40px;height:20px;background:#078930;border-radius:2px;flex-shrink:0;position:relative;overflow:hidden"><div style="position:absolute;top:0;left:0;right:0;height:33%;background:#fff"></div><div style="position:absolute;top:33%;left:0;right:0;height:17%;background:#000"></div><div style="position:absolute;top:50%;left:0;right:0;height:17%;background:#da121a"></div><div style="position:absolute;top:0;left:0;width:0;height:0;border-top:10px solid transparent;border-bottom:10px solid transparent;border-left:14px solid #0f47af"></div></div>
-        <div style="flex:1;text-align:center"><div style="font-size:11px;font-weight:700">REPUBLIC OF SOUTH SUDAN</div><div style="font-size:8px;color:#E7B75E;margin-top:1px">MIN. OF HIGHER EDUCATION, SCIENCE & TECH</div><div style="font-size:7px;color:#9FB2C1;margin-top:2px">OFFICIAL STAFF IDENTIFICATION</div></div>
-        <div style="width:28px;height:28px;border-radius:4px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:10px;color:#E7B75E;font-weight:700;flex-shrink:0">M</div>
+        <!-- Flag: top-left -->
+        <div style="width:36px;height:28px;flex-shrink:0;border-radius:2px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.15)">
+          <svg viewBox="0 0 800 400" style="width:100%;height:100%;display:block">
+            <rect width="800" height="400" fill="#078930"/>
+            <rect y="0" width="800" height="280" fill="#FFFFFF"/>
+            <rect y="0" width="800" height="120" fill="#000000"/>
+            <rect y="140" width="800" height="120" fill="#DA121A"/>
+            <polygon points="0,0 350,200 0,400" fill="#0F47AF"/>
+            <polygon points="120,100 142,168 80,142 160,142 98,168" fill="#FCDD09"/>
+          </svg>
+        </div>
+        <!-- Title: centered -->
+        <div style="flex:1;text-align:center">
+          <div style="font-size:10.5px;font-weight:700;color:#0B2545">REPUBLIC OF SOUTH SUDAN</div>
+          <div style="font-size:7.5px;color:#0B2545;margin-top:1px">MINISTRY OF HIGHER EDUCATION,<br>SCIENCE AND TECHNOLOGY</div>
+          <div style="font-size:6.5px;color:#9BA2AE;margin-top:2px;font-style:italic">OFFICIAL STAFF IDENTIFICATION</div>
+        </div>
+        <!-- Seal: top-right -->
+        <div style="width:30px;height:30px;border-radius:50%;border:1.5px solid #D4A843;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:rgba(255,255,255,0.95);position:relative">
+          <div style="position:absolute;top:-1px;left:50%;transform:translateX(-50%);font-size:8px;color:#D4A843;font-weight:700">&#9733;</div>
+          <div style="font-size:7px;font-weight:700;color:#0B2545;line-height:1">MoHEST</div>
+        </div>
       </div>
-      <div style="padding:10px 12px;display:flex;gap:10px;align-items:center">
+      <div style="padding:10px 12px;display:flex;gap:10px;align-items:flex-start">
         <div style="width:52px;height:62px;border-radius:6px;background:#F0F2F6;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#96A0AF;flex-shrink:0;font-family:'Fraunces',serif">${initials}</div>
-        <div style="flex:1"><div style="font-size:12px;font-weight:700">${empFirst} ${empLast}</div><div style="font-size:9px;color:#2952E3;margin-top:1px;font-weight:500">${empPos}</div><div style="font-size:8px;color:#646E82;margin-top:1px"><strong>Directorate:</strong> ${empDept}</div><div style="font-size:8px;font-weight:600;margin-top:2px;font-family:'JetBrains Mono',monospace">EMP NO: ${empNo}</div><div style="font-size:7.5px;color:#646E82;margin-top:2px;font-family:'JetBrains Mono',monospace">Issued: ${fmtDateShort(new Date())} · Expires: ${fmtDateShort(addYears(new Date(),3))}</div></div>
-        <div style="text-align:center;flex-shrink:0"><div id="id-qr" style="width:48px;height:48px"></div><div style="font-size:6px;color:#96A0AF;margin-top:4px">AUTH. SIG.</div><div style="border-bottom:1px solid #96A0AF;width:55px;margin-top:2px"></div><div style="margin-top:6px;color:#96A0AF;font-size:5px">QR ✓ VERIFIED</div></div>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:13px;font-weight:700;color:#000">${empFirst} ${empLast}</div>
+          <div style="font-size:9.5px;color:#2952E3;margin-top:1px;font-weight:500">${empPos}</div>
+          <div style="font-size:8px;color:#9CA3AF;margin-top:2px"><strong>Directorate:</strong> ${empDept}</div>
+          <div style="font-size:9px;font-weight:700;color:#000;margin-top:4px;font-family:'JetBrains Mono',monospace">EMP NO: ${empNo}</div>
+          <div style="font-size:7.5px;color:#9CA3AF;margin-top:2px;font-family:'JetBrains Mono',monospace">Issued: ${fmtDateShort(new Date())} &nbsp; Expires: ${fmtDateShort(addYears(new Date(),3))}</div>
+        </div>
+        <div style="text-align:center;flex-shrink:0;padding-top:2px"><div id="id-qr" style="width:44px;height:44px"></div><div style="font-size:5.5px;color:#96A0AF;margin-top:3px">AUTH. SIG.</div><div style="border-bottom:1px solid #96A0AF;width:44px;margin-top:1px"></div></div>
       </div>
-      <div style="background:#F0F2F6;text-align:center;font-size:8px;color:#646E82;padding:5px;border-top:1px solid #e8eaf0">VALID · MOHEST STAFF PORTAL · ${new Date().getFullYear()}</div>
+      <div style="background:#F0F2F6;text-align:center;font-size:7.5px;color:#9CA3AF;padding:5px;border-top:1px solid #e8eaf0">VALID · MOHEST STAFF PORTAL · ${new Date().getFullYear()}<br>Republic of South Sudan</div>
     </div>`;
   setTimeout(()=>{try{new QRCode(document.getElementById('id-qr'),{text:`MoHEST-EMP|${empNo}|${empFirst} ${empLast}`,width:48,height:48,colorDark:'#0F2B40',colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M})}catch(e){}},100);
 }
@@ -1099,32 +1124,42 @@ async function generateIdCardPdf(){
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'landscape',unit:'mm',format:[85.6,54]});
   const empDept=emp.department?.name||'Unassigned';
-  // Front — QR code top-right
-  const qrData='MoHEST-ID|'+emp.employeeNumber+'|'+emp.firstName+' '+emp.lastName+'|'+new Date().toISOString().slice(0,10);
-  const qrCanvas=genQRCanvas(qrData,100);
-  doc.addImage(qrCanvas,'JPEG',67,2,9,9);
-  if(flagBase64)doc.addImage(flagBase64,'PNG',2,2,18,9);
+  // Front
+  // ── Header: flag (top-left), centered title, seal (top-right) ──
+  if(flagBase64)doc.addImage(flagBase64,'PNG',2,2,16,14);
+  // Centered title
+  doc.setTextColor(11,37,69);
+  doc.setFontSize(7);doc.setFont('helvetica','bold');
+  doc.text('REPUBLIC OF SOUTH SUDAN',42.8,8.5,{align:'center'});
+  doc.setFontSize(4.5);doc.setFont('helvetica','normal');
+  doc.text('MINISTRY OF HIGHER EDUCATION, SCIENCE AND TECHNOLOGY',42.8,12.5,{align:'center'});
+  doc.setTextColor(150,160,175);doc.setFontSize(3.5);doc.setFont('helvetica','italic');
+  doc.text('OFFICIAL STAFF IDENTIFICATION',42.8,15.5,{align:'center'});
+  // Seal: top-right (emulate with circle + star)
   if(logoBase64)doc.addImage(logoBase64,'JPEG',74,2,9,9);
-  doc.setFontSize(6);doc.setFont('helvetica','bold');doc.setTextColor(15,43,64);
-  doc.text('REPUBLIC OF SOUTH SUDAN',42.8,7,{align:'center'});
-  doc.setFontSize(5);doc.setFont('helvetica','normal');doc.setTextColor(15,43,64);
-  doc.text('MINISTRY OF HIGHER EDUCATION, SCIENCE AND TECHNOLOGY',42.8,11,{align:'center'});
-  doc.setDrawColor(15,43,64);doc.setLineWidth(0.4);doc.line(2,14,83.6,14);
-  doc.setTextColor(159,178,193);doc.setFontSize(3);
-  doc.text('SCAN QR FOR VERIFICATION',42.8,16.5,{align:'center'});
-  doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(17,19,24);
-  doc.text(`${emp.firstName} ${emp.lastName}`,24,21);
-  doc.setFontSize(5.5);doc.setFont('helvetica','normal');doc.setTextColor(41,82,227);
-  doc.text(emp.position,24,25);
+  // Dark blue divider line
+  doc.setDrawColor(11,37,69);doc.setLineWidth(0.5);doc.line(2,17,83.6,17);
+  // ── Main content: left-aligned ──
+  doc.setTextColor(0,0,0);doc.setFontSize(8.5);doc.setFont('helvetica','bold');
+  doc.text(`${emp.firstName} ${emp.lastName}`,24,22);
+  doc.setTextColor(41,82,227);doc.setFontSize(6);doc.setFont('helvetica','normal');
+  doc.text(emp.position,24,26);
   doc.setTextColor(100,110,130);doc.setFontSize(5);
-  doc.text(`Directorate: ${empDept}`,24,29);
-  doc.setFont('helvetica','bold');doc.setTextColor(17,19,24);
-  doc.text(`EMP NO: ${emp.employeeNumber}`,24,33);
-  doc.setFont('helvetica','normal');doc.setTextColor(100,110,130);
-  doc.text(`Issued: ${fmtDateShort(new Date())}  Expires: ${fmtDateShort(addYears(new Date(),3))}`,24,37);
-  doc.setFontSize(4.5);doc.setTextColor(150,160,175);
-  doc.text('VALID · MOHEST STAFF PORTAL · '+new Date().getFullYear(),42.8,50,{align:'center'});
-  doc.setFontSize(4);doc.text('Republic of South Sudan',42.8,53,{align:'center'});
+  doc.text(`Directorate: ${empDept}`,24,30);
+  doc.setTextColor(0,0,0);doc.setFontSize(6.5);doc.setFont('helvetica','bold');
+  doc.text(`EMP NO: ${emp.employeeNumber}`,24,34);
+  doc.setTextColor(100,110,130);doc.setFontSize(5);doc.setFont('helvetica','normal');
+  doc.text(`Issued: ${fmtDateShort(new Date())}  Expires: ${fmtDateShort(addYears(new Date(),3))}`,24,38);
+  // QR code in the body area (right column)
+  const bodyQr=genQRCanvas('MoHEST-ID|'+emp.employeeNumber+'|'+emp.firstName+' '+emp.lastName+'|'+new Date().toISOString().slice(0,10),100);
+  doc.addImage(bodyQr,'JPEG',60,22,14,14);
+  doc.setTextColor(159,178,193);doc.setFontSize(3.5);doc.setFont('helvetica','normal');
+  doc.text('SCAN FOR VERIFICATION',67,38,{align:'center'});
+  // ── Footer ──
+  doc.setFillColor(240,242,246);doc.rect(0,44,85.6,10,'F');
+  doc.setTextColor(150,160,175);doc.setFontSize(4.5);doc.setFont('helvetica','normal');
+  doc.text('VALID · MOHEST STAFF PORTAL · '+new Date().getFullYear(),42.8,48,{align:'center'});
+  doc.setFontSize(4);doc.text('Republic of South Sudan',42.8,51.5,{align:'center'});
   // Back  doc.addPage([85.6,54],'landscape');
   doc.setFillColor(15,43,64);doc.rect(0,0,85.6,54,'F');
   // Back — QR code bottom-right
