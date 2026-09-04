@@ -1160,7 +1160,8 @@ async function generateIdCardPdf(){
   doc.setTextColor(150,160,175);doc.setFontSize(4.5);doc.setFont('helvetica','normal');
   doc.text('VALID · MOHEST STAFF PORTAL · '+new Date().getFullYear(),42.8,48,{align:'center'});
   doc.setFontSize(4);doc.text('Republic of South Sudan',42.8,51.5,{align:'center'});
-  // Back  doc.addPage([85.6,54],'landscape');
+  // ── Back ──
+  doc.addPage([85.6,54],'landscape');
   doc.setFillColor(15,43,64);doc.rect(0,0,85.6,54,'F');
   // Back — QR code bottom-right
   const backQrCanvas=genQRCanvas('MoHEST-EMP|'+emp.employeeNumber+'|'+emp.firstName+' '+emp.lastName,true);
