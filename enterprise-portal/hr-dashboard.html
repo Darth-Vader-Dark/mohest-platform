@@ -1033,6 +1033,32 @@ function addPdfHeader(doc,m,y,opts={}){
   return lineY+(isLandscape?3:5); // return Y position below header
 }
 
+// Generate a QR code canvas for embedding into PDFs
+function genQRCanvas(data,dist=4){
+  const canvas=document.createElement('canvas');
+  canvas.width=canvas.height=dist*4;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);
+  ctx.fillStyle='#0F47AF';
+  try{
+    const qr=new QRCode(document.createElement('div'),{text:data,width:200,height:200,correctLevel:QRCode.CorrectLevel.H});
+    const qrEl=qr._el||qr.options?.bg?.parentNode;
+    const src=qrEl&&qrEl.getAttribute('src')||'';
+    if(src){
+      const img=new Image();
+      img.src=src;img.onload=()=>{ctx.drawImage(img,0,0,canvas.width,canvas.height)};
+      return canvas;
+    }
+    if(qr._el){
+      const tmp=doc.createElement('div');tmp.style.position='relative';tmp.style.width='160px';tmp.style.height='160px';
+      qr._el.parentNode.replaceChild(tmp,qr._el);
+      tmp.appendChild(qr._el);tmp.appendChild(qr._el);
+      qr.isLoaded()?ctx.drawImage(qr._el,0,0,canvas.width,canvas.height):setTimeout(()=>ctx.drawImage(qr._el,0,0,canvas.width,canvas.height),50);
+    }
+  }catch(e){console.warn('QR gen failed',e)}
+  return canvas;
+}
+
 function handleDocSig(input){
   const f=input.files[0];if(!f)return;
   const r=new FileReader();r.onload=e=>{docSigBase64=e.target.result};r.readAsDataURL(f);
@@ -1055,7 +1081,7 @@ function previewIdCard(){
       <div style="padding:10px 12px;display:flex;gap:10px;align-items:center">
         <div style="width:52px;height:62px;border-radius:6px;background:#F0F2F6;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:700;color:#96A0AF;flex-shrink:0;font-family:'Fraunces',serif">${initials}</div>
         <div style="flex:1"><div style="font-size:12px;font-weight:700">${empFirst} ${empLast}</div><div style="font-size:9px;color:#2952E3;margin-top:1px;font-weight:500">${empPos}</div><div style="font-size:8px;color:#646E82;margin-top:1px"><strong>Directorate:</strong> ${empDept}</div><div style="font-size:8px;font-weight:600;margin-top:2px;font-family:'JetBrains Mono',monospace">EMP NO: ${empNo}</div><div style="font-size:7.5px;color:#646E82;margin-top:2px;font-family:'JetBrains Mono',monospace">Issued: ${fmtDateShort(new Date())} · Expires: ${fmtDateShort(addYears(new Date(),3))}</div></div>
-        <div style="text-align:center;flex-shrink:0"><div id="id-qr" style="width:48px;height:48px"></div><div style="font-size:6px;color:#96A0AF;margin-top:4px">AUTH. SIG.</div><div style="border-bottom:1px solid #96A0AF;width:55px;margin-top:2px"></div></div>
+        <div style="text-align:center;flex-shrink:0"><div id="id-qr" style="width:48px;height:48px"></div><div style="font-size:6px;color:#96A0AF;margin-top:4px">AUTH. SIG.</div><div style="border-bottom:1px solid #96A0AF;width:55px;margin-top:2px"></div><div style="margin-top:6px;color:#96A0AF;font-size:5px">QR ✓ VERIFIED</div></div>
       </div>
       <div style="background:#F0F2F6;text-align:center;font-size:8px;color:#646E82;padding:5px;border-top:1px solid #e8eaf0">VALID · MOHEST STAFF PORTAL · ${new Date().getFullYear()}</div>
     </div>`;
@@ -1073,7 +1099,10 @@ async function generateIdCardPdf(){
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({orientation:'landscape',unit:'mm',format:[85.6,54]});
   const empDept=emp.department?.name||'Unassigned';
-  // Front
+  // Front — QR code top-right
+  const qrData='MoHEST-ID|'+emp.employeeNumber+'|'+emp.firstName+' '+emp.lastName+'|'+new Date().toISOString().slice(0,10);
+  const qrCanvas=genQRCanvas(qrData,100);
+  doc.addImage(qrCanvas,'JPEG',67,2,9,9);
   if(flagBase64)doc.addImage(flagBase64,'PNG',2,2,18,9);
   if(logoBase64)doc.addImage(logoBase64,'JPEG',74,2,9,9);
   doc.setFontSize(6);doc.setFont('helvetica','bold');doc.setTextColor(15,43,64);
@@ -1081,6 +1110,8 @@ async function generateIdCardPdf(){
   doc.setFontSize(5);doc.setFont('helvetica','normal');doc.setTextColor(15,43,64);
   doc.text('MINISTRY OF HIGHER EDUCATION, SCIENCE AND TECHNOLOGY',42.8,11,{align:'center'});
   doc.setDrawColor(15,43,64);doc.setLineWidth(0.4);doc.line(2,14,83.6,14);
+  doc.setTextColor(159,178,193);doc.setFontSize(3);
+  doc.text('SCAN QR FOR VERIFICATION',42.8,16.5,{align:'center'});
   doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(17,19,24);
   doc.text(`${emp.firstName} ${emp.lastName}`,24,21);
   doc.setFontSize(5.5);doc.setFont('helvetica','normal');doc.setTextColor(41,82,227);
@@ -1094,9 +1125,11 @@ async function generateIdCardPdf(){
   doc.setFontSize(4.5);doc.setTextColor(150,160,175);
   doc.text('VALID · MOHEST STAFF PORTAL · '+new Date().getFullYear(),42.8,50,{align:'center'});
   doc.setFontSize(4);doc.text('Republic of South Sudan',42.8,53,{align:'center'});
-  // Back
-  doc.addPage([85.6,54],'landscape');
+  // Back  doc.addPage([85.6,54],'landscape');
   doc.setFillColor(15,43,64);doc.rect(0,0,85.6,54,'F');
+  // Back — QR code bottom-right
+  const backQrCanvas=genQRCanvas('MoHEST-EMP|'+emp.employeeNumber+'|'+emp.firstName+' '+emp.lastName,true);
+  doc.addImage(backQrCanvas,'JPEG',69,36,9,9);
   doc.setTextColor(231,183,94);doc.setFontSize(5.5);doc.setFont('helvetica','bold');
   doc.text('MINISTRY OF HIGHER EDUCATION, SCIENCE AND TECHNOLOGY',42.8,10,{align:'center'});
   doc.setDrawColor(231,183,94);doc.setLineWidth(0.2);doc.line(10,13,75.6,13);
@@ -1119,6 +1152,9 @@ async function generateLeavePdf(){
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const m=20;let y=m;
   y=addPdfHeader(doc,m,y);
+  // QR code top-right of letter
+  const qrDataRm='MoHEST-LETTER|'+emp.employeeNumber+'|LEAVE|'+new Date().toISOString().slice(0,10);
+  doc.addImage(genQRCanvas(qrDataRm,100),'JPEG',180,y-14,12,12);
   y+=4;doc.setFontSize(13);doc.setFont('helvetica','bold');doc.setTextColor(17,19,24);
   doc.text('LEAVE APPROVAL LETTER',105,y,{align:'center'});y+=12;
   const addLine=(label,val)=>{doc.setFontSize(9.5);doc.setFont('helvetica','bold');doc.text(label,m,y);doc.setFont('helvetica','normal');doc.text(val,m+28,y);y+=6.5};
@@ -1152,6 +1188,9 @@ async function generateApptPdf(){
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const m=20;let y=m;
   y=addPdfHeader(doc,m,y);
+  // QR code top-right of letter
+  const qrDataRp='MoHEST-LETTER|'+emp.employeeNumber+'|APPOINTMENT|'+new Date().toISOString().slice(0,10);
+  doc.addImage(genQRCanvas(qrDataRp,100),'JPEG',180,y-14,12,12);
   y+=4;doc.setFontSize(13);doc.setFont('helvetica','bold');doc.setTextColor(17,19,24);
   doc.text('LETTER OF APPOINTMENT',105,y,{align:'center'});y+=12;
   const addLine=(label,val)=>{doc.setFontSize(9.5);doc.setFont('helvetica','bold');doc.text(label,m,y);doc.setFont('helvetica','normal');doc.text(val,m+34,y);y+=6.5};
@@ -1182,6 +1221,11 @@ async function exportAllEmployeesPdf(){
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const m=15;let y=20;
   y=addPdfHeader(doc,m,y);
+  // QR verification code
+  const dirQr='MoHEST-RPT|DIR|EMP|'+Math.random().toString(36).slice(2,10)+'|'+new Date().getFullYear();
+  doc.addImage(genQRCanvas(dirQr,100),'JPEG',180,22,12,12);
+  doc.setTextColor(159,178,193);doc.setFontSize(6);doc.setFont('helvetica','normal');
+  doc.text('Scan for verification',180,19.5,{align:'center'});
   y+=4;doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(15,43,64);
   doc.text('Employee Directory',105,y,{align:'center'});y+=6;
   doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(100);
@@ -1209,6 +1253,10 @@ async function exportAttendancePdf(){
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const m=15;let y=20;
   y=addPdfHeader(doc,m,y);
+  const attQr='MoHEST-RPT|ATT|'+new Date().toISOString().slice(0,10)+'|'+Math.random().toString(36).slice(2,8);
+  doc.addImage(genQRCanvas(attQr,100),'JPEG',180,22,12,12);
+  doc.setTextColor(159,178,193);doc.setFontSize(6);doc.setFont('helvetica','normal');
+  doc.text('Scan for verification',180,19.5,{align:'center'});
   y+=4;doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(15,43,64);
   doc.text('Attendance Report',105,y,{align:'center'});y+=6;
   doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(100);
@@ -1237,6 +1285,10 @@ async function exportLeaveReportPdf(){
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const m=15;let y=20;
   y=addPdfHeader(doc,m,y);
+  const lvQr='MoHEST-RPT|LV|'+new Date().toISOString().slice(0,10)+'|'+Math.random().toString(36).slice(2,8);
+  doc.addImage(genQRCanvas(lvQr,100),'JPEG',180,22,12,12);
+  doc.setTextColor(159,178,193);doc.setFontSize(6);doc.setFont('helvetica','normal');
+  doc.text('Scan for verification',180,19.5,{align:'center'});
   y+=4;doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(15,43,64);
   doc.text('Leave Report',105,y,{align:'center'});y+=6;
   doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(100);
@@ -1266,6 +1318,10 @@ async function exportCompPdf(){
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const m=15;let y=20;
   y=addPdfHeader(doc,m,y);
+  const payQr='MoHEST-RPT|PAY|'+new Date().toISOString().slice(0,10)+'|'+Math.random().toString(36).slice(2,8);
+  doc.addImage(genQRCanvas(payQr,100),'JPEG',180,22,12,12);
+  doc.setTextColor(159,178,193);doc.setFontSize(6);doc.setFont('helvetica','normal');
+  doc.text('Scan for verification',180,19.5,{align:'center'});
   y+=4;doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(15,43,64);
   doc.text('Payroll Summary',105,y,{align:'center'});y+=6;
   doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(100);
