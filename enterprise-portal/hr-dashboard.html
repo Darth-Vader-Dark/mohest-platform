@@ -550,9 +550,10 @@ async function apiDel(path){
   document.getElementById('welcome').textContent='Welcome back, '+currentUser.firstName;
   document.getElementById('sb-avatar').textContent=(currentUser.firstName[0]+currentUser.lastName[0]).toUpperCase();
   if(document.getElementById('att-date'))document.getElementById('att-date').value=new Date().toISOString().slice(0,10);
-  // Load departments from API first
+  // Load departments and employees from API first
   try{departmentsCache=await apiGet('/hr/departments')||[]}catch(e){departmentsCache=[]}
   populateDeptSelects();
+  populateEmpSelects();
   renderOverview();
 })();
 
