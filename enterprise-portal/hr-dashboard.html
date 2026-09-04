@@ -1087,8 +1087,8 @@ function previewIdCard(){
         </div>
         <!-- Title: centered -->
         <div style="flex:1;text-align:center">
-          <div style="font-size:10.5px;font-weight:700;color:#0B2545">REPUBLIC OF SOUTH SUDAN</div>
-          <div style="font-size:7.5px;color:#0B2545;margin-top:1px">MINISTRY OF HIGHER EDUCATION,<br>SCIENCE AND TECHNOLOGY</div>
+          <div style="font-size:10.5px;font-weight:700;color:#FFFFFF">REPUBLIC OF SOUTH SUDAN</div>
+          <div style="font-size:7.5px;color:#E2E8F0;margin-top:1px">MINISTRY OF HIGHER EDUCATION,<br>SCIENCE AND TECHNOLOGY</div>
           <div style="font-size:6.5px;color:#9BA2AE;margin-top:2px;font-style:italic">OFFICIAL STAFF IDENTIFICATION</div>
         </div>
         <!-- Seal: top-right -->
@@ -1128,10 +1128,9 @@ async function generateIdCardPdf(){
   // ── Header: flag (top-left), centered title, seal (top-right) ──
   if(flagBase64)doc.addImage(flagBase64,'PNG',2,2,16,14);
   // Centered title
-  doc.setTextColor(11,37,69);
-  doc.setFontSize(7);doc.setFont('helvetica','bold');
+  doc.setTextColor(255,255,255);doc.setFontSize(7);doc.setFont('helvetica','bold');
   doc.text('REPUBLIC OF SOUTH SUDAN',42.8,8.5,{align:'center'});
-  doc.setFontSize(4.5);doc.setFont('helvetica','normal');
+  doc.setTextColor(226,232,240);doc.setFontSize(4.5);doc.setFont('helvetica','normal');
   doc.text('MINISTRY OF HIGHER EDUCATION, SCIENCE AND TECHNOLOGY',42.8,12.5,{align:'center'});
   doc.setTextColor(150,160,175);doc.setFontSize(3.5);doc.setFont('helvetica','italic');
   doc.text('OFFICIAL STAFF IDENTIFICATION',42.8,15.5,{align:'center'});
