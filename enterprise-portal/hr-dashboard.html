@@ -1005,13 +1005,32 @@ async function preloadAssets(){
     logoBase64=c.toDataURL('image/jpeg');
   }catch(e){console.warn('Logo load failed',e)}
   try{
-    const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400"><rect width="800" height="400" fill="#078930"/><rect y="0" width="800" height="280" fill="#fff"/><rect y="0" width="800" height="120" fill="#000"/><rect y="140" width="800" height="120" fill="#da121a"/><polygon points="0,0 346,200 0,400" fill="#0f47af"/><polygon points="115,152 144,246 86,185 160,185 102,246" fill="#fcdd09"/></svg>`;
+    // Accurate South Sudan flag: green bg, black/white/red stripes, blue triangle with yellow star
+    const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" width="800" height="400"><rect width="800" height="400" fill="#078930"/><rect y="0" width="800" height="280" fill="#FFFFFF"/><rect y="0" width="800" height="120" fill="#000000"/><rect y="140" width="800" height="120" fill="#DA121A"/><polygon points="0,0 350,200 0,400" fill="#0F47AF"/><polygon points="120,100 142,168 80,142 160,142 98,168" fill="#FCDD09"/></svg>`;
     const blob=new Blob([svg],{type:'image/svg+xml'});
     const url=URL.createObjectURL(blob);
     const img2=new Image();await new Promise((r,j)=>{img2.onload=r;img2.onerror=j;img2.src=url});
     const c2=document.createElement('canvas');c2.width=800;c2.height=400;c2.getContext('2d').drawImage(img2,0,0);
     flagBase64=c2.toDataURL('image/png');URL.revokeObjectURL(url);
   }catch(e){console.warn('Flag load failed',e)}
+}
+
+// Standard PDF header: flag (left), logo (right), Republic + Ministry (centered)
+function addPdfHeader(doc,m,y,opts={}){
+  const isLandscape=opts.landscape||false;
+  const fw=isLandscape?18:30,fh=isLandscape?9:15;
+  const lw=isLandscape?9:20,lh=isLandscape?9:20;
+  const centerX=(297-m*2+fw)/2; // approximate center for A4 portrait
+  if(flagBase64)doc.addImage(flagBase64,'PNG',m,y,fw,fh);
+  if(logoBase64)doc.addImage(logoBase64,'JPEG',297-m-lw,y,lw,lh);
+  doc.setTextColor(15,43,64);doc.setFontSize(isLandscape?6:11);doc.setFont('helvetica','bold');
+  doc.text('REPUBLIC OF SOUTH SUDAN',105,y+(isLandscape?5:8),{align:'center'});
+  doc.setFontSize(isLandscape?5:10);doc.setFont('helvetica','normal');
+  doc.text('MINISTRY OF HIGHER EDUCATION, SCIENCE AND TECHNOLOGY',105,y+(isLandscape?9:14),{align:'center'});
+  const lineY=y+(isLandscape?11:18);
+  doc.setDrawColor(15,43,64);doc.setLineWidth(isLandscape?0.3:0.6);doc.line(m,lineY,297-m,lineY);
+  doc.setDrawColor(231,183,94);doc.setLineWidth(isLandscape?0.15:0.2);doc.line(m,lineY+(isLandscape?1:1.5),297-m,lineY+(isLandscape?1:1.5));
+  return lineY+(isLandscape?3:5); // return Y position below header
 }
 
 function handleDocSig(input){
@@ -1029,7 +1048,7 @@ function previewIdCard(){
   document.getElementById('id-preview-area').innerHTML=`
     <div style="width:340px;border-radius:10px;overflow:hidden;box-shadow:0 4px 24px rgba(15,43,64,0.25);border:1px solid #dde2ea;background:#fff">
       <div style="background:#0F2B40;color:#fff;padding:10px 12px;display:flex;align-items:center;gap:10px">
-        <div style="width:40px;height:20px;background:linear-gradient(180deg,#078930 33%,#fff 33%,#fff 50%,#da121a 50%,#da121a 66%,#0f47af 66%);border-radius:2px;flex-shrink:0"></div>
+        <div style="width:40px;height:20px;background:#078930;border-radius:2px;flex-shrink:0;position:relative;overflow:hidden"><div style="position:absolute;top:0;left:0;right:0;height:33%;background:#fff"></div><div style="position:absolute;top:33%;left:0;right:0;height:17%;background:#000"></div><div style="position:absolute;top:50%;left:0;right:0;height:17%;background:#da121a"></div><div style="position:absolute;top:0;left:0;width:0;height:0;border-top:10px solid transparent;border-bottom:10px solid transparent;border-left:14px solid #0f47af"></div></div>
         <div style="flex:1;text-align:center"><div style="font-size:11px;font-weight:700">REPUBLIC OF SOUTH SUDAN</div><div style="font-size:8px;color:#E7B75E;margin-top:1px">MIN. OF HIGHER EDUCATION, SCIENCE & TECH</div><div style="font-size:7px;color:#9FB2C1;margin-top:2px">OFFICIAL STAFF IDENTIFICATION</div></div>
         <div style="width:28px;height:28px;border-radius:4px;background:rgba(255,255,255,0.1);display:flex;align-items:center;justify-content:center;font-size:10px;color:#E7B75E;font-weight:700;flex-shrink:0">M</div>
       </div>
@@ -1060,7 +1079,7 @@ async function generateIdCardPdf(){
   doc.setFontSize(6);doc.setFont('helvetica','bold');doc.setTextColor(15,43,64);
   doc.text('REPUBLIC OF SOUTH SUDAN',42.8,7,{align:'center'});
   doc.setFontSize(5);doc.setFont('helvetica','normal');doc.setTextColor(15,43,64);
-  doc.text('MIN. OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY',42.8,11,{align:'center'});
+  doc.text('MINISTRY OF HIGHER EDUCATION, SCIENCE AND TECHNOLOGY',42.8,11,{align:'center'});
   doc.setDrawColor(15,43,64);doc.setLineWidth(0.4);doc.line(2,14,83.6,14);
   doc.setFontSize(7);doc.setFont('helvetica','bold');doc.setTextColor(17,19,24);
   doc.text(`${emp.firstName} ${emp.lastName}`,24,21);
@@ -1079,7 +1098,7 @@ async function generateIdCardPdf(){
   doc.addPage([85.6,54],'landscape');
   doc.setFillColor(15,43,64);doc.rect(0,0,85.6,54,'F');
   doc.setTextColor(231,183,94);doc.setFontSize(5.5);doc.setFont('helvetica','bold');
-  doc.text('MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY',42.8,10,{align:'center'});
+  doc.text('MINISTRY OF HIGHER EDUCATION, SCIENCE AND TECHNOLOGY',42.8,10,{align:'center'});
   doc.setDrawColor(231,183,94);doc.setLineWidth(0.2);doc.line(10,13,75.6,13);
   doc.setTextColor(226,232,240);doc.setFontSize(5);doc.setFont('helvetica','normal');
   const backText=['This is to certify that the person named and whose photograph','appears on the card is our employee.','','This card is the property of The Ministry of Higher Education,','Science and Technology and must be surrendered on the','termination of the contract of employment.','','IN CASE OF ANY LOSS, CONTACT THE NEAREST POLICE STATION.'];
@@ -1099,15 +1118,8 @@ async function generateLeavePdf(){
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const m=20;let y=m;
-  if(flagBase64)doc.addImage(flagBase64,'PNG',m,18,30,15);
-  if(logoBase64)doc.addImage(logoBase64,'JPEG',190-m-20,16,20,20);
-  doc.setTextColor(100);doc.setFontSize(11);doc.setFont('helvetica','bold');
-  doc.text('REPUBLIC OF SOUTH SUDAN',105,24,{align:'center'});
-  doc.setTextColor(15,43,64);doc.setFontSize(12);
-  doc.text('MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY',105,31,{align:'center'});
-  doc.setDrawColor(15,43,64);doc.setLineWidth(0.6);doc.line(m,42,190-m,42);
-  doc.setDrawColor(231,183,94);doc.setLineWidth(0.2);doc.line(m,43.5,190-m,43.5);
-  y=52;doc.setFontSize(13);doc.setFont('helvetica','bold');doc.setTextColor(17,19,24);
+  y=addPdfHeader(doc,m,y);
+  y+=4;doc.setFontSize(13);doc.setFont('helvetica','bold');doc.setTextColor(17,19,24);
   doc.text('LEAVE APPROVAL LETTER',105,y,{align:'center'});y+=12;
   const addLine=(label,val)=>{doc.setFontSize(9.5);doc.setFont('helvetica','bold');doc.text(label,m,y);doc.setFont('helvetica','normal');doc.text(val,m+28,y);y+=6.5};
   addLine('Date:',fmtDate(new Date()));y+=2;
@@ -1139,15 +1151,8 @@ async function generateApptPdf(){
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const m=20;let y=m;
-  if(flagBase64)doc.addImage(flagBase64,'PNG',m,18,30,15);
-  if(logoBase64)doc.addImage(logoBase64,'JPEG',190-m-20,16,20,20);
-  doc.setTextColor(100);doc.setFontSize(11);doc.setFont('helvetica','bold');
-  doc.text('REPUBLIC OF SOUTH SUDAN',105,24,{align:'center'});
-  doc.setTextColor(15,43,64);doc.setFontSize(12);
-  doc.text('MINISTRY OF HIGHER EDUCATION, SCIENCE & TECHNOLOGY',105,31,{align:'center'});
-  doc.setDrawColor(15,43,64);doc.setLineWidth(0.6);doc.line(m,42,190-m,42);
-  doc.setDrawColor(231,183,94);doc.setLineWidth(0.2);doc.line(m,43.5,190-m,43.5);
-  y=52;doc.setFontSize(13);doc.setFont('helvetica','bold');doc.setTextColor(17,19,24);
+  y=addPdfHeader(doc,m,y);
+  y+=4;doc.setFontSize(13);doc.setFont('helvetica','bold');doc.setTextColor(17,19,24);
   doc.text('LETTER OF APPOINTMENT',105,y,{align:'center'});y+=12;
   const addLine=(label,val)=>{doc.setFontSize(9.5);doc.setFont('helvetica','bold');doc.text(label,m,y);doc.setFont('helvetica','normal');doc.text(val,m+34,y);y+=6.5};
   addLine('Date:',fmtDate(new Date()));addLine('To:',emp.firstName+' '+emp.lastName);addLine('Current Position:',emp.position);addLine('Department:',empDept);y+=4;
@@ -1176,11 +1181,11 @@ async function exportAllEmployeesPdf(){
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const m=15;let y=20;
-  doc.setFontSize(14);doc.setFont('helvetica','bold');doc.setTextColor(15,43,64);
-  doc.text('MoHEST — Employee Directory',105,y,{align:'center'});y+=6;
+  y=addPdfHeader(doc,m,y);
+  y+=4;doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(15,43,64);
+  doc.text('Employee Directory',105,y,{align:'center'});y+=6;
   doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(100);
-  doc.text(`Generated: ${new Date().toLocaleDateString('en-GB')} · Total: ${emps.length} employees`,105,y,{align:'center'});y+=10;
-  doc.setDrawColor(15,43,64);doc.setLineWidth(0.4);doc.line(m,y,195,y);y+=6;
+  doc.text(`Generated: ${new Date().toLocaleDateString('en-GB')} · Total: ${emps.length} employees`,105,y,{align:'center'});y+=6;
   doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(50);
   const cols=[{l:'No.',w:18},{l:'Name',w:42},{l:'Department',w:32},{l:'Position',w:38},{l:'Type',w:20},{l:'Status',w:20},{l:'Hire Date',w:22}];
   let x=m;cols.forEach(c=>{doc.text(c.l,x,y);x+=c.w});y+=5;
@@ -1203,11 +1208,11 @@ async function exportAttendancePdf(){
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const m=15;let y=20;
-  doc.setFontSize(14);doc.setFont('helvetica','bold');doc.setTextColor(15,43,64);
-  doc.text('MoHEST — Attendance Report',105,y,{align:'center'});y+=6;
+  y=addPdfHeader(doc,m,y);
+  y+=4;doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(15,43,64);
+  doc.text('Attendance Report',105,y,{align:'center'});y+=6;
   doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(100);
-  doc.text(`Date: ${new Date().toLocaleDateString('en-GB')} · Total Records: ${items.length}`,105,y,{align:'center'});y+=10;
-  doc.setDrawColor(15,43,64);doc.setLineWidth(0.4);doc.line(m,y,195,y);y+=6;
+  doc.text(`Date: ${new Date().toLocaleDateString('en-GB')} · Total Records: ${items.length}`,105,y,{align:'center'});y+=6;
   doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(50);
   const cols=[{l:'Employee',w:45},{l:'Check In',w:25},{l:'Check Out',w:25},{l:'Hours',w:20},{l:'Status',w:25}];
   let x=m;cols.forEach(c=>{doc.text(c.l,x,y);x+=c.w});y+=5;
@@ -1231,11 +1236,11 @@ async function exportLeaveReportPdf(){
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const m=15;let y=20;
-  doc.setFontSize(14);doc.setFont('helvetica','bold');doc.setTextColor(15,43,64);
-  doc.text('MoHEST — Leave Report',105,y,{align:'center'});y+=6;
+  y=addPdfHeader(doc,m,y);
+  y+=4;doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(15,43,64);
+  doc.text('Leave Report',105,y,{align:'center'});y+=6;
   doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(100);
-  doc.text(`Date: ${new Date().toLocaleDateString('en-GB')} · Total Requests: ${items.length}`,105,y,{align:'center'});y+=10;
-  doc.setDrawColor(15,43,64);doc.setLineWidth(0.4);doc.line(m,y,195,y);y+=6;
+  doc.text(`Date: ${new Date().toLocaleDateString('en-GB')} · Total Requests: ${items.length}`,105,y,{align:'center'});y+=6;
   doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(50);
   const cols=[{l:'Employee',w:40},{l:'Type',w:30},{l:'From',w:25},{l:'To',w:25},{l:'Days',w:15},{l:'Status',w:25}];
   let x=m;cols.forEach(c=>{doc.text(c.l,x,y);x+=c.w});y+=5;
@@ -1260,11 +1265,11 @@ async function exportCompPdf(){
   const {jsPDF}=window.jspdf;
   const doc=new jsPDF({unit:'mm',format:'a4'});
   const m=15;let y=20;
-  doc.setFontSize(14);doc.setFont('helvetica','bold');doc.setTextColor(15,43,64);
-  doc.text('MoHEST — Payroll Summary',105,y,{align:'center'});y+=6;
+  y=addPdfHeader(doc,m,y);
+  y+=4;doc.setFontSize(11);doc.setFont('helvetica','bold');doc.setTextColor(15,43,64);
+  doc.text('Payroll Summary',105,y,{align:'center'});y+=6;
   doc.setFontSize(9);doc.setFont('helvetica','normal');doc.setTextColor(100);
-  doc.text(`Date: ${new Date().toLocaleDateString('en-GB')}`,105,y,{align:'center'});y+=10;
-  doc.setDrawColor(15,43,64);doc.setLineWidth(0.4);doc.line(m,y,195,y);y+=6;
+  doc.text(`Date: ${new Date().toLocaleDateString('en-GB')}`,105,y,{align:'center'});y+=6;
   doc.setFontSize(8);doc.setFont('helvetica','bold');doc.setTextColor(50);
   const cols=[{l:'Employee',w:38},{l:'Grade',w:22},{l:'Basic',w:28},{l:'Allowances',w:28},{l:'Total',w:28}];
   let x=m;cols.forEach(c=>{doc.text(c.l,x,y);x+=c.w});y+=5;
